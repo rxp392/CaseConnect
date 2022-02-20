@@ -1,0 +1,38 @@
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+}
+
+enum Subscription {
+  BASIC
+  PREMIUM
+}
+
+enum Avatar {
+  GORDON_RAMSAY
+  MARTHA_STEWART
+  ANTON_EGON
+  GUY_FIERI
+  REMY_THE_RAT
+  BOB_BELCHER
+  WOLFGANG_PUCK
+  Rachael_RAY
+}
+
+model User {
+  caseID         String       @id
+  role           Role         @default(STUDENT)
+  avatar         Avatar       @default(GORDON_RAMSAY)
+  subscription   Subscription @default(BASIC)
+  accountCreated DateTime     @default(now())
+}
