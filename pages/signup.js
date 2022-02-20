@@ -12,11 +12,10 @@ import {
   Text,
   useColorModeValue,
   Link,
-  Radio,
-  RadioGroup,
   useToast,
+  FormErrorMessage,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import NextLink from "next/link";
 import { signIn } from "next-auth/react";
 import AvatarRadio from "components/AvatarRadio";
@@ -24,26 +23,46 @@ import { IoReturnDownBackOutline } from "react-icons/io5";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 import magic from "lib/magic";
+import { useForm } from "react-hook-form";
 
 export default function SignUp() {
-  const [caseID, setCaseID] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting },
+  } = useForm({ mode: "onBlur" });
+
   const [avatar, setAvatar] = useState("Gordon Ramsay");
-  const [role, setRole] = useState("Student");
-  const [recaptchaCompleted, setRecaptchaCompleted] = useState(false);
+
+  const reRef = useRef();
 
   const toast = useToast();
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (values) => {
+    return new Promise(async (resolve) => {
+      const token = await reRef.current.executeAsync();
+      reRef.current.reset();
 
-    setIsSubmitting(true);
+      const {
+        data: { success },
+      } = await axios.post("/api/auth/verify-human", { token });
 
-    if (process.env.NEXT_PUBLIC_ENV === "production") {
+      if (!success) {
+        toast({
+          title: "Unable to verify human",
+          description: "Please try again.",
+          status: "info",
+          duration: 9000,
+          variant: "left-accent",
+          position: "bottom-right",
+        });
+        return resolve();
+      }
+
       const {
         data: { userExists },
       } = await axios.post("/api/auth/check-user-exists", {
-        caseID,
+        caseID: values.caseID,
       });
 
       if (userExists) {
@@ -55,38 +74,34 @@ export default function SignUp() {
           variant: "left-accent",
           position: "bottom-right",
         });
-        return setIsSubmitting(false);
+        return resolve();
       }
-    }
 
-    const didToken = await magic.auth.loginWithMagicLink({
-      email:
-        process.env.NEXT_PUBLIC_ENV !== "production"
-          ? "test+success@magic.link"
-          : `${caseID}@case.edu`,
-    });
-
-    if (!didToken) {
-      toast({
-        title: "Unable to sign in",
-        description: "Please try again.",
-        status: "info",
-        duration: 9000,
-        variant: "left-accent",
-        position: "bottom-right",
+      const didToken = await magic.auth.loginWithMagicLink({
+        email: `${values.caseID}@case.edu`,
       });
-      return setIsSubmitting(false);
-    }
 
-    await signIn("signup", {
-      didToken,
-      role,
-      avatar,
-      callbackUrl: `${process.env.NEXT_PUBLIC_URL}/home`,
-      redirect: false,
+      if (!didToken) {
+        toast({
+          title: "Unable to sign in",
+          description: "Please try again.",
+          status: "info",
+          duration: 9000,
+          variant: "left-accent",
+          position: "bottom-right",
+        });
+        return resolve();
+      }
+
+      await signIn("signup", {
+        didToken,
+        ...values,
+        avatar,
+        callbackUrl: `${process.env.NEXT_PUBLIC_URL}/home`,
+        redirect: false,
+      });
+      resolve();
     });
-
-    setIsSubmitting(false);
   };
 
   return (
@@ -97,7 +112,7 @@ export default function SignUp() {
       bg={useColorModeValue("gray.50", "gray.800")}
       pb={4}
     >
-      <Box position="absolute" top="10" left="10">
+      <Box position="absolute" top="2.5%" left="2%">
         <NextLink href="/" passHref>
           <Link
             color="blue.500"
@@ -117,56 +132,87 @@ export default function SignUp() {
           <Heading fontSize={"4xl"} textAlign={"center"}>
             Sign up
           </Heading>
-          <Text fontSize={"lg"} color={"gray.600"}>
-            to enjoy all of our cool features ✌️
-          </Text>
         </Stack>
         <Box
           as="form"
-          onSubmit={onSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           rounded={"lg"}
           bg={useColorModeValue("white", "gray.700")}
           boxShadow={"lg"}
           p={8}
         >
           <Stack spacing={6}>
-            <FormControl id="email" isRequired>
-              <FormLabel>CWRU Email</FormLabel>
+            <FormControl isInvalid={errors.caseID} isRequired>
+              <FormLabel htmlFor="caseID">CWRU Email</FormLabel>
               <InputGroup size="sm">
                 <Input
+                  id="caseID"
+                  type="text"
                   placeholder="Case ID"
-                  value={caseID}
-                  onChange={(e) => setCaseID(e.target.value)}
+                  {...register("caseID", {
+                    required: "This is required",
+                    minLength: {
+                      value: 4,
+                      message: "Minimum length should be 4",
+                    },
+                  })}
                 />
                 <InputRightAddon children="@case.edu" />
               </InputGroup>
+              <FormErrorMessage>
+                {errors.caseID && errors.caseID.message}
+              </FormErrorMessage>
             </FormControl>
-            <FormControl id="avatar">
+            <FormControl isInvalid={errors.fullName} isRequired>
+              <FormLabel htmlFor="fullName">Full Name</FormLabel>
+              <Input
+                type="text"
+                id="fullName"
+                {...register("fullName", {
+                  required: "This is required",
+                  minLength: {
+                    value: 4,
+                    message: "Minimum length should be 4",
+                  },
+                })}
+                size="sm"
+              />
+              <FormErrorMessage>
+                {errors.fullName && errors.fullName.message}
+              </FormErrorMessage>
+            </FormControl>
+            <FormControl isInvalid={errors.userName} isRequired>
+              <FormLabel htmlFor="userName">Username</FormLabel>
+              <Input
+                type="text"
+                id="userName"
+                {...register("userName", {
+                  required: "This is required",
+                  minLength: {
+                    value: 4,
+                    message: "Minimum length should be 4",
+                  },
+                })}
+                size="sm"
+              />
+              <FormErrorMessage>
+                {errors.userName && errors.userName.message}
+              </FormErrorMessage>
+            </FormControl>
+            <FormControl>
               <FormLabel mb={7}>Profile Avatar</FormLabel>
               <AvatarRadio setAvatar={setAvatar} />
             </FormControl>
-            <FormControl id="isTutor">
-              <FormLabel>Are you a Student or a Tutor?</FormLabel>
-              <RadioGroup value={role} onChange={setRole}>
-                <Stack direction="row">
-                  <Radio value="Student" defaultChecked>
-                    Student
-                  </Radio>
-                  <Radio value="Tutor">Tutor</Radio>
-                </Stack>
-              </RadioGroup>
-            </FormControl>
+
             <ReCAPTCHA
               sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_KEY}
-              onChange={(value) => {
-                if (value) setRecaptchaCompleted(true);
-              }}
-              onExpired={() => setRecaptchaCompleted(false)}
-              onErrored={() => setRecaptchaCompleted(false)}
+              ref={reRef}
+              size="invisible"
+              badge="bottomright"
             />
+
             <Stack spacing={10} pt={2}>
               <Button
-                isDisabled={!recaptchaCompleted}
                 type="submit"
                 loadingText="Registering"
                 spinnerPlacement="end"

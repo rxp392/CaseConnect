@@ -1,17 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider          = "postgresql"
   url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  caseID         String     @id
+  userName       String
+  avatar         String     @default("Gordon Ramsay")
+  subscription   String     @default("Basic")
+  isFirstLogin   Boolean    @default(true)
+  accountCreated DateTime   @default(now())
+  fullName       String
+  comments       Comment[]
+  questions      Question[]
 }
 
-model User {
-  caseID         String   @id
-  role           String   @default("Student")
-  avatar         String   @default("Gordon Ramsay")
-  subscription   String   @default("Basic")
-  accountCreated DateTime @default(now())
+model Question {
+  id         Int       @id @default(autoincrement())
+  question   String
+  answer     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now())
+  userCaseID String
+  postedBy   User      @relation(fields: [userCaseID], references: [caseID])
+  comments   Comment[]
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  comment    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+  userCaseID String
+  questionID Int
+  question   Question @relation(fields: [questionID], references: [id])
+  postedBy   User     @relation(fields: [userCaseID], references: [caseID])
 }

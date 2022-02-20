@@ -5,9 +5,13 @@ export default async function (req, res) {
     return res.status(405).end();
   }
 
+  const { caseID } = req.body;
+
+  console.log(typeof caseID === "string");
+
   const user = await prisma.user.findUnique({
     where: {
-      caseID: req.body.caseID,
+      caseID,
     },
   });
 

@@ -41,9 +41,10 @@ function AuthRedirect({ children, auth }) {
   if (auth && isUser) {
     return (
       <Sidebar
-        username={session.user.caseID}
-        role={session.user.role}
+        username={session.user.userName}
+        fullName={session.user.fullName}
         avatar={session.user.avatar}
+        subscription={session.user.subscription}
       >
         {children}
       </Sidebar>
