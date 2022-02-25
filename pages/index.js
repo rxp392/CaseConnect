@@ -5,85 +5,104 @@ import {
   Image,
   Stack,
   Text,
+  Center,
   Link,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import { useRouter } from "next/router";
-import NextLink from "next/link";
+import { FcGoogle } from "react-icons/fc";
+import { signIn } from "next-auth/react";
+import { useEffect } from "react";
 
 export default function Index() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const router = useRouter();
+  const toast = useToast();
+
+  useEffect(() => {
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+      get: (searchParams, prop) => searchParams.get(prop),
+    });
+
+    window.onload = function () {
+      if (params.error === "AccessDenied") {
+        window.history.replaceState(
+          null,
+          "",
+          `${process.env.NEXT_PUBLIC_URL}/`
+        );
+        toast({
+          title: "Access Denied",
+          description: "You must have a CWRU email to login.",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+          position: "bottom-left",
+          variant: "left-accent",
+        });
+      }
+    };
+  }, []);
 
   return (
-    <>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>How it works</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>{/* <Lorem count={2} /> */}</ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+    <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
+      <Flex p={8} flex={1} align={"center"} justify={"center"}>
+        <Stack spacing={3} w={"full"} maxW={"lg"}>
+          <Heading fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}>
+            <Text color={"cwru"} as={"span"}>
+              Case Connect
+            </Text>
+          </Heading>
+          <Text fontSize={{ base: "md", lg: "lg" }} color={"gray.500"} pb={5}>
+            Conquer any{" "}
+            <Link color="cwru" href="https://case.edu/" target="_blank">
+              CWRU
+            </Link>{" "}
+            course with ease.
+          </Text>
 
-      <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
-        <Flex p={8} flex={1} align={"center"} justify={"center"}>
-          <Stack spacing={6} w={"full"} maxW={"lg"}>
-            <Heading fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}>
-              <Text color={"blue.400"} as={"span"}>
-                Case Connect
-              </Text>{" "}
-            </Heading>
-            <Text fontSize={{ base: "md", lg: "lg" }} color={"gray.500"}>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Odit
-              temporibus soluta, voluptatum quam animi minima.
-            </Text>
-            <Stack direction={{ base: "column", md: "row" }} spacing={4}>
+          <Flex align="start" flexDirection="column" gap={4}>
+            <Center>
               <Button
-                rounded={"full"}
-                bg={"blue.400"}
-                color={"white"}
-                _hover={{
-                  bg: "blue.500",
+                w={"full"}
+                maxW={"md"}
+                py={5}
+                leftIcon={<FcGoogle />}
+                bg="cwru"
+                color="white"
+                colorScheme="black"
+                onClick={() =>
+                  signIn("google", {
+                    callbackUrl: `${process.env.NEXT_PUBLIC_URL}/home`,
+                  })
+                }
+                _active={{
+                  transform: "scale(0.95)",
                 }}
-                onClick={() => router.push("/signup")}
               >
-                Get Started
+                <Center>
+                  <Text>Continue with Google</Text>
+                </Center>
               </Button>
-              <Button rounded={"full"} onClick={onOpen}>
-                How It Works
-              </Button>
-            </Stack>
-            <Text align={{ base: "center", md: "left" }}>
-              Have an account?{" "}
-              <NextLink href="/signin" passHref>
-                <Link color="blue.500">Sign in</Link>
-              </NextLink>
-            </Text>
-          </Stack>
-        </Flex>
-        <Flex flex={1}>
-          <Image
-            alt={"Login Image"}
-            objectFit={"cover"}
-            src={
-              "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-            }
-          />
-        </Flex>
-      </Stack>
-    </>
+            </Center>
+          </Flex>
+        </Stack>
+      </Flex>
+      <Flex flex={1}>
+        <Image
+          alt={"Login Image"}
+          objectFit={"cover"}
+          src={
+            "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+          }
+        />
+      </Flex>
+    </Stack>
   );
+}
+
+export async function getServerSideProps(ctx) {
+  const { req, res } = ctx;
+  if (req.cookies["case-id"]) {
+    res.setHeader("set-cookie", "case-id=; max-age=0");
+  }
+
+  return { props: {} };
 }

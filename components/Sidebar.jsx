@@ -7,7 +7,6 @@ import {
   HStack,
   VStack,
   Icon,
-  useColorModeValue,
   Link,
   Drawer,
   DrawerContent,
@@ -28,6 +27,8 @@ import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
 
+import axios from "axios";
+
 const LinkItems = [
   { name: "Home", icon: FiHome, href: "/home" },
   { name: "Ask a question", icon: MdOutlineQuestionAnswer, href: "/ask" },
@@ -37,15 +38,15 @@ const LinkItems = [
 
 export default function Sidebar({
   children,
-  username,
-  fullName,
+  caseID,
+  name,
   subscription,
-  avatar,
+  profileImage,
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
+    <Box minH="100vh" bg={"gray.100"}>
       <SidebarContent
         onClose={() => onClose}
         subscription={subscription}
@@ -61,15 +62,15 @@ export default function Sidebar({
         size="full"
       >
         <DrawerContent>
-          <SidebarContent onClose={onClose} />
+          <SidebarContent onClose={onClose} subscription={subscription} />
         </DrawerContent>
       </Drawer>
       {/* mobilenav */}
       <MobileNav
         onOpen={onOpen}
-        username={username}
-        fullName={fullName}
-        avatar={avatar}
+        caseID={caseID}
+        name={name}
+        profileImage={profileImage}
       />
       <Flex
         ml={{ base: 0, md: 60 }}
@@ -88,9 +89,9 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
   return (
     <Box
       transition="3s ease"
-      bg={useColorModeValue("white", "gray.900")}
+      bg={"white"}
       borderRight="1px"
-      borderRightColor={useColorModeValue("gray.200", "gray.700")}
+      borderRightColor={"gray.200"}
       w={{ base: "full", md: 60 }}
       pos="fixed"
       h="full"
@@ -118,10 +119,10 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
           bottom="4%"
           cursor="pointer"
           mx="8"
-          size="md"
+          size="lg"
           borderRadius="full"
           variant="solid"
-          colorScheme="linkedin"
+          bg="cwru"
         >
           {subscription} Plan
         </Tag>
@@ -142,7 +143,7 @@ const NavItem = ({ icon, href, children, ...rest }) => {
           role="group"
           cursor="pointer"
           _hover={{
-            bg: "cyan.400",
+            bg: "blue.400",
             color: "white",
           }}
           {...rest}
@@ -164,7 +165,7 @@ const NavItem = ({ icon, href, children, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, username, fullName, avatar, ...rest }) => {
+const MobileNav = ({ onOpen, caseID, name, profileImage, ...rest }) => {
   const router = useRouter();
 
   return (
@@ -173,9 +174,9 @@ const MobileNav = ({ onOpen, username, fullName, avatar, ...rest }) => {
       px={{ base: 4, md: 4 }}
       height="20"
       alignItems="center"
-      bg={useColorModeValue("white", "gray.900")}
+      bg="white"
       borderBottomWidth={"1px"}
-      borderBottomColor={useColorModeValue("gray.200", "gray.700")}
+      borderBottomColor={"gray.200"}
       justifyContent={{ base: "space-between", md: "flex-end" }}
       {...rest}
     >
@@ -205,19 +206,16 @@ const MobileNav = ({ onOpen, username, fullName, avatar, ...rest }) => {
               _focus={{ boxShadow: "none" }}
             >
               <HStack>
-                <Avatar
-                  size={"sm"}
-                  src={`/avatars/${avatar?.replace(/\s+/g, "")}.png`}
-                />
+                <Avatar size={"sm"} src={profileImage} />
                 <VStack
                   display={{ base: "none", md: "flex" }}
                   alignItems="flex-start"
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">{username}</Text>
+                  <Text fontSize="sm">{caseID}</Text>
                   <Text fontSize="xs" color="gray.600">
-                    {fullName}
+                    {name}
                   </Text>
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
@@ -225,10 +223,7 @@ const MobileNav = ({ onOpen, username, fullName, avatar, ...rest }) => {
                 </Box>
               </HStack>
             </MenuButton>
-            <MenuList
-              bg={useColorModeValue("white", "gray.900")}
-              borderColor={useColorModeValue("gray.200", "gray.700")}
-            >
+            <MenuList bg={"white"} borderColor={"gray.200"}>
               <MenuItem onClick={() => router.push("/profile")}>
                 Profile
               </MenuItem>
@@ -237,13 +232,9 @@ const MobileNav = ({ onOpen, username, fullName, avatar, ...rest }) => {
               </MenuItem>
               <MenuDivider />
               <MenuItem
-                onClick={async () => {
-                  const { url } = await signOut({
-                    redirect: false,
-                    callbackUrl: "/",
-                  });
-                  router.push(url);
-                }}
+                onClick={() =>
+                  signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_URL}` })
+                }
               >
                 Sign out
               </MenuItem>

@@ -36,3 +36,6 @@ yarn-error.log*
 
 # Vscode
 .vscode
+
+# migrations
+/prisma/migrations

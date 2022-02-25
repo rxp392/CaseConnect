@@ -1,11 +1,10 @@
-import "styles/globals.css";
 import { ChakraProvider } from "@chakra-ui/react";
 import { SessionProvider, useSession } from "next-auth/react";
 import Head from "next/head";
 import theme from "theme";
 import Sidebar from "components/Sidebar";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Loader from "components/Loader";
 import "@fontsource/saira-stencil-one";
 
@@ -18,16 +17,16 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
       </Head>
       <SessionProvider session={session}>
         <ChakraProvider theme={theme}>
-          <AuthRedirect auth={Component.auth}>
+          <Auth auth={Component.auth}>
             <Component {...pageProps} />
-          </AuthRedirect>
+          </Auth>
         </ChakraProvider>
       </SessionProvider>
     </>
   );
 }
 
-function AuthRedirect({ children, auth }) {
+function Auth({ children, auth }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const isUser = !!session?.user;
@@ -41,9 +40,9 @@ function AuthRedirect({ children, auth }) {
   if (auth && isUser) {
     return (
       <Sidebar
-        username={session.user.userName}
-        fullName={session.user.fullName}
-        avatar={session.user.avatar}
+        profileImage={session.user.image}
+        caseID={session.user.caseID}
+        name={session.user.name}
         subscription={session.user.subscription}
       >
         {children}

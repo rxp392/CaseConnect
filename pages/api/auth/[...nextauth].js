@@ -1,16 +1,48 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { Magic } from "@magic-sdk/admin";
+import GoogleProvider from "next-auth/providers/google";
 import prisma from "lib/prisma";
 
-const magic = new Magic(process.env.MAGIC_SK);
-
 export default NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
-  session: { jwt: true },
+  session: {
+    strategy: "jwt",
+    maxAge: 86400, // 1 day
+  },
   callbacks: {
-    async jwt({ token, account, user }) {
-      if (account) token.user = user;
+    async signIn({ account, profile, user }) {
+      if (account.provider === "google") {
+        if (!profile.email_verified || !profile.email.endsWith("@case.edu")) {
+          return false;
+        }
+
+        const caseID = profile.email.split("@")[0];
+
+        const { subscription, canAnswer, accountCreated, isFirstLogin } =
+          await prisma.user.upsert({
+            where: { caseID },
+            update: { isFirstLogin: false },
+            create: { caseID, isFirstLogin: true },
+          });
+
+        user.caseID = caseID;
+        user.subscription = subscription;
+        user.canAnswer = canAnswer;
+        user.accountCreated = accountCreated;
+        user.isFirstLogin = isFirstLogin;
+
+        delete user.id;
+
+        return true;
+      }
+      return false;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        delete token.name;
+        delete token.email;
+        delete token.picture;
+
+        token.user = user;
+      }
       return token;
     },
     async session({ session, token }) {
@@ -18,51 +50,11 @@ export default NextAuth({
       return session;
     },
   },
+  pages: { error: process.env.NEXT_PUBLIC_URL },
   providers: [
-    CredentialsProvider({
-      id: "signin",
-      name: "Magic Link",
-      credentials: {
-        didToken: { label: "DID Token", type: "text" },
-      },
-      async authorize({ didToken }, _) {
-        magic.token.validate(didToken);
-
-        const metadata = await magic.users.getMetadataByToken(didToken);
-
-        return await prisma.user.update({
-          where: {
-            caseID: metadata.email.split("@")[0],
-          },
-          data: {
-            isFirstLogin: false,
-          },
-        });
-      },
-    }),
-    CredentialsProvider({
-      id: "signup",
-      name: "Magic Link",
-      credentials: {
-        didToken: { label: "DID Token", type: "text" },
-        fullName: { label: "Full Name", type: "text" },
-        userName: { label: "Username", type: "text" },
-        avatar: { label: "Avatar", type: "text", placeholder: "Gordon Ramsay" },
-      },
-      async authorize({ didToken, fullName, userName, avatar }, _) {
-        magic.token.validate(didToken);
-
-        const metadata = await magic.users.getMetadataByToken(didToken);
-
-        return await prisma.user.create({
-          data: {
-            caseID: metadata.email.split("@")[0],
-            fullName,
-            userName,
-            avatar,
-          },
-        });
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
 });
