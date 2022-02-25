@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model History {
+  id             Int        @id @default(autoincrement())
+  createdAt      DateTime   @default(now())
+  questionID     Int
+  caseID         String     
+  belongs_to     User       @relation(fields: [caseID], references: [caseID], onDelete: Cascade)
+  question       Question   @relation(fields: [questionID], references: [id], onDelete: Cascade)
+}
+
+model User {
+  caseID         String     @id
+  subscription   String     @default("Basic")
+  isFirstLogin   Boolean    @default(true)
+  canAnswer      Boolean    @default(true)
+  browseLimit    Int        @default(10)
+  postLimit      Int        @default(3)
+  accountCreated DateTime   @default(now())
+  questions      Question[]
+  answers        Answer[]
+  courses        Course[]
+  comments       Comment[]
+  votes          Vote[]
+  view_history   History[]    
+}
+
+model Question {
+  id                Int       @id @default(autoincrement())
+  question          String
+  attachment        String?
+  courseId          Int
+  course            Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  answers           Answer[]
+  postedBy          User      @relation(fields: [userCaseID], references: [caseID])
+  userCaseID        String
+  publisherUserName String
+  createdAt         DateTime  @default(now())
+  views             History[]
+}
+
+
+model Answer {
+  id                Int      @id @default(autoincrement())
+  answer            String
+  votes             Vote[]
+  questionId        Int
+  question          Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  postedBy          User     @relation(fields: [userCaseID], references: [caseID])
+  userCaseID        String
+  publisherUserName String
+  num_thumbs_up     Int       
+  num_thumbs_down   Int      
+  createdAt         DateTime @default(now())
+  readOrNot         Boolean  @default(false)
+  comments          Comment[]
+}
+
+model Comment {
+  id                Int       @id @default(autoincrement())
+  comment           String
+  userCaseID        String
+  publisherUserName String
+  postedBy          User      @relation(fields: [userCaseID], references: [caseID])
+  answerID          Int
+  question          Answer    @relation(fields: [answerID], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  nextID            Int?     
+  previous          Comment?  @relation("follow_up")
+  next              Comment?  @relation("follow_up", fields: [nextID], references: [id])
+  readOrNot         Boolean  @default(false)
+}
+
+model Course {
+  id         Int        @id @default(autoincrement())
+  courseName String
+  questions  Question[]
+  users      User[]
+}
+
+model Vote {
+  id                Int    @id @default(autoincrement())
+  voteType          String
+  userCaseID        String
+  publisherUserName String
+  user              User   @relation(fields: [userCaseID], references: [caseID])
+  answerID          Int
+  answer            Answer @relation(fields: [answerID], references: [id], onDelete: Cascade)
+}
+
+
+// Change log
+// Adding readOrNot field in answer and comment: can query unread answers and comments and show them in the notification box. When user click the notification, change its value to true.
+// The user gets notified when his/her questions are answered or answers are commented.
+// Adding history table: now we can find the number of views for each question/post, 
+// I moved comments under the answer instead of the question. 
