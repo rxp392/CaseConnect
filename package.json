@@ -12,9 +12,11 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@fontsource/saira-stencil-one": "^4.5.2",
-    "@prisma/client": "^3.9.2",
+    "@prisma/client": "^3.10.0",
     "@stripe/stripe-js": "^1.23.0",
     "axios": "^0.26.0",
+    "cloudinary": "^1.28.1",
+    "formidable": "^2.0.1",
     "next": "12.1.0",
     "next-auth": "^4.2.1",
     "react": "17.0.2",
@@ -27,6 +29,10 @@
   "devDependencies": {
     "eslint": "8.9.0",
     "eslint-config-next": "12.1.0",
-    "prisma": "^3.9.2"
+    "jssoup": "^0.0.15",
+    "prisma": "^3.10.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

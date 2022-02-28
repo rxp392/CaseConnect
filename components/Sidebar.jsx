@@ -18,16 +18,15 @@ import {
   MenuItem,
   MenuList,
   Tag,
+  Tooltip,
 } from "@chakra-ui/react";
-import { FiHome, FiMenu, FiChevronDown } from "react-icons/fi";
+import { FiHome, FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
 import { MdOutlineQuestionAnswer } from "react-icons/md";
 import { IoSchoolOutline } from "react-icons/io5";
 import { BiBookAlt } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
-
-import axios from "axios";
 
 const LinkItems = [
   { name: "Home", icon: FiHome, href: "/home" },
@@ -38,7 +37,7 @@ const LinkItems = [
 
 export default function Sidebar({
   children,
-  caseID,
+  caseId,
   name,
   subscription,
   profileImage,
@@ -68,7 +67,7 @@ export default function Sidebar({
       {/* mobilenav */}
       <MobileNav
         onOpen={onOpen}
-        caseID={caseID}
+        caseId={caseId}
         name={name}
         profileImage={profileImage}
       />
@@ -78,6 +77,7 @@ export default function Sidebar({
         justify="center"
         align="center"
         height="calc(100vh - 5rem)"
+        overflowX={"hidden"}
       >
         {children}
       </Flex>
@@ -143,7 +143,7 @@ const NavItem = ({ icon, href, children, ...rest }) => {
           role="group"
           cursor="pointer"
           _hover={{
-            bg: "blue.400",
+            bg: "cwru",
             color: "white",
           }}
           {...rest}
@@ -165,7 +165,7 @@ const NavItem = ({ icon, href, children, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, caseID, name, profileImage, ...rest }) => {
+const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
   const router = useRouter();
 
   return (
@@ -198,6 +198,21 @@ const MobileNav = ({ onOpen, caseID, name, profileImage, ...rest }) => {
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>
+        <Tooltip
+          hasArrow
+          label="No new notifications"
+          color="white"
+          bg="black"
+          placement="bottom"
+        >
+          <IconButton
+            size="lg"
+            variant="ghost"
+            aria-label="open menu"
+            icon={<FiBell />}
+          />
+        </Tooltip>
+
         <Flex alignItems={"center"}>
           <Menu>
             <MenuButton
@@ -213,7 +228,7 @@ const MobileNav = ({ onOpen, caseID, name, profileImage, ...rest }) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">{caseID}</Text>
+                  <Text fontSize="sm">{caseId}</Text>
                   <Text fontSize="xs" color="gray.600">
                     {name}
                   </Text>

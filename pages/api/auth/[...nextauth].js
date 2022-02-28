@@ -5,7 +5,7 @@ import prisma from "lib/prisma";
 export default NextAuth({
   session: {
     strategy: "jwt",
-    maxAge: 86400, // 1 day
+    maxAge: 3600,
   },
   callbacks: {
     async signIn({ account, profile, user }) {
@@ -14,16 +14,16 @@ export default NextAuth({
           return false;
         }
 
-        const caseID = profile.email.split("@")[0];
+        const caseId = profile.email.split("@")[0];
 
         const { subscription, canAnswer, accountCreated, isFirstLogin } =
           await prisma.user.upsert({
-            where: { caseID },
+            where: { caseId },
             update: { isFirstLogin: false },
-            create: { caseID, isFirstLogin: true },
+            create: { caseId, isFirstLogin: true },
           });
 
-        user.caseID = caseID;
+        user.caseId = caseId;
         user.subscription = subscription;
         user.canAnswer = canAnswer;
         user.accountCreated = accountCreated;

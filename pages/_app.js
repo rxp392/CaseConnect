@@ -41,7 +41,7 @@ function Auth({ children, auth }) {
     return (
       <Sidebar
         profileImage={session.user.image}
-        caseID={session.user.caseID}
+        caseId={session.user.caseId}
         name={session.user.name}
         subscription={session.user.subscription}
       >

@@ -1,27 +1,31 @@
 import { getSession } from "next-auth/react";
-import axios from "axios";
+// import prisma from "lib/prisma";
 
 export default function Questions({ userQuestions }) {
-  // return <pre>{JSON.stringify(userQuestions, null, 2)}</pre>;
-  return <div>my questions</div>;
+  console.log(userQuestions);
+  return <pre>{JSON.stringify(userQuestions, null, 2)}</pre>;
 }
 
-// export async function getServerSideProps(context) {
-//   const session = await getSession(context);
+export async function getServerSideProps({ req }) {
+  const session = await getSession({ req });
 
-//   const data = await axios.get(`/api/protected/questions/${session.user.caseID}`);
+  console.log(session);
 
-//   console.log(data);
+  const { questions } = await prisma.user.findUnique({
+    where: { caseId: session.user.caseId },
+    select: {
+      questions: true,
+    },
+  });
 
-//   // const {
-//   //   data: { userQuestions },
-//   // } = await axios.get(`/api/questions/${session.user.caseID}`);
-
-//   return {
-//     props: {
-//       userQuestions: [],
-//     },
-//   };
-// }
+  return {
+    props: {
+      userQuestions: questions.map((question) => ({
+        ...question,
+        createdAt: question.createdAt.toISOString(),
+      })),
+    },
+  };
+}
 
 Questions.auth = true;

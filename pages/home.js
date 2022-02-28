@@ -1,4 +1,5 @@
 import prisma from "lib/prisma";
+import { useSession } from "next-auth/react";
 
 export default function Home({ questions }) {
   return <pre>{JSON.stringify(questions, null, 2)}</pre>;
@@ -12,7 +13,6 @@ export async function getServerSideProps() {
       questions: questions.map((question) => ({
         ...question,
         createdAt: question.createdAt.toISOString(),
-        updatedAt: question.updatedAt.toISOString(),
       })),
     },
   };

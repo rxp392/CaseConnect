@@ -11,11 +11,5 @@ export async function middleware(req) {
     );
   }
 
-  let res = NextResponse.next();
-
-  if (!req.cookies["case-id"]) {
-    res.cookie("case-id", token.user.caseID, { httpOnly: true });
-  }
-
-  return res;
+  return NextResponse.next();
 }

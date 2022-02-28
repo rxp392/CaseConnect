@@ -12,14 +12,15 @@ import {
   Link,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import NextLink from "next/link";
-import useSWR from "swr";
+import { useSession } from "next-auth/react";
+import prisma from "lib/prisma";
+import { useRouter } from "next/router";
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
-export default function Ask() {
-  const { data } = useSWR("/courses.json", fetcher);
+export default function Ask({ courses }) {
+  const { data: session } = useSession();
   const toast = useToast();
+  const router = useRouter();
 
   const {
     handleSubmit,
@@ -28,47 +29,55 @@ export default function Ask() {
   } = useForm({ mode: "onChange" });
 
   const onSubmit = async ({ question, courseName, attachment }) => {
-    const [title, courseNumber] = courseName.split("-").map((s) => s.trim());
-    console.log({
-      question,
-      title,
-      courseNumber,
-      attachment,
-    });
-    // const {
-    //   data: { success },
-    // } = await axios.post("/api/questions/protected/post", {
-    //   ...data,
-    //   userCaseID: session.user.caseID,
-    // });
-    // alert(success);
+    try {
+      const [_courseName, courseId] = courseName.split("|");
 
-    // let res;
+      const formData = new FormData();
+      formData.append("question", question);
+      formData.append("courseName", _courseName);
+      formData.append("courseId", courseId);
+      formData.append("caseId", session.user.caseId);
+      formData.append("publisherName", session.user.name);
+      formData.append("attachment", attachment[0]);
 
-    // if (profileImage.length) {
-    //   const formData = new FormData();
-    //   formData.append("file", profileImage[0]);
-    //   formData.append("upload_preset", "profile-images");
+      await fetch("/api/protected/questions/post", {
+        method: "POST",
+        body: formData,
+      });
 
-    //   res = await axios.post(
-    //     "https://api.cloudinary.com/v1_1/case-connect/image/upload",
-    //     formData
-    //   );
-    // }
+      router.push("/home");
+      toast({
+        title: "Success",
+        description: "Your question has been posted.",
+        status: "success",
+        position: "bottom-right",
+        variant: "left-accent",
+        duration: 9000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: "An error occurred",
+        description: "Please try again",
+        status: "error",
+        position: "bottom-right",
+        variant: "left-accent",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
   };
-
-  const onError = (error) => {};
 
   return (
     <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
       <Box pos="absolute" bottom="4" right="4">
-        <NextLink href="/course-request" color="cwru" passHref>
-          <Link>Can't find your course?</Link>
+        <NextLink href="/add-course" color="cwru" passHref>
+          <Link>Can&apos;t find your course?</Link>
         </NextLink>
       </Box>
       <Box
         as="form"
-        onSubmit={(e) => handleSubmit(onSubmit)(e).catch(onError)}
+        onSubmit={handleSubmit(onSubmit)}
         rounded={"lg"}
         bg="white"
         boxShadow={"lg"}
@@ -79,14 +88,11 @@ export default function Ask() {
             <FormLabel htmlFor="question">Question</FormLabel>
             <Textarea
               id="question"
+              h="50px"
               maxH="200px"
               type="text"
               {...register("question", {
-                required: "This is required",
-                minLength: {
-                  value: 4,
-                  message: "Minimum length should be 4",
-                },
+                required: "Enter a question",
                 maxLength: {
                   value: 50,
                   message: "Maximum length should be 50",
@@ -100,21 +106,19 @@ export default function Ask() {
           <FormControl isInvalid={errors.courseName} isRequired>
             <FormLabel htmlFor="courseName">Course</FormLabel>
             <Select
-              placeholder={
-                data?.length ? "Select a course" : "Loading courses..."
-              }
+              placeholder={"Select a course"}
               id="courseName"
               {...register("courseName", {
-                required: "This is required",
+                required: "Pick a course",
                 minLength: {
                   value: 4,
                   message: "Minimum length should be 4",
                 },
               })}
             >
-              {data?.map(({ courseNumber, title }) => (
-                <option key={courseNumber} value={`${courseNumber} - ${title}`}>
-                  {courseNumber} - {title}
+              {courses.map(({ id, courseName }) => (
+                <option key={id} value={`${courseName}|${id}`}>
+                  {courseName}
                 </option>
               ))}
             </Select>
@@ -150,6 +154,20 @@ export default function Ask() {
       </Box>
     </Stack>
   );
+}
+
+export async function getStaticProps() {
+  const courses = await prisma.course.findMany({
+    orderBy: {
+      courseName: "asc",
+    },
+  });
+
+  return {
+    props: {
+      courses,
+    },
+  };
 }
 
 Ask.auth = true;

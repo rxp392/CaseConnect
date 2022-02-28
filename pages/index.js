@@ -97,12 +97,3 @@ export default function Index() {
     </Stack>
   );
 }
-
-export async function getServerSideProps(ctx) {
-  const { req, res } = ctx;
-  if (req.cookies["case-id"]) {
-    res.setHeader("set-cookie", "case-id=; max-age=0");
-  }
-
-  return { props: {} };
-}
