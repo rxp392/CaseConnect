@@ -19,7 +19,8 @@ model History {
 
 model User {
   caseId         String     @id
-  userName       String
+  name           String
+  image          String?
   subscription   String     @default("Basic")
   isFirstLogin   Boolean    @default(true)
   canAnswer      Boolean    @default(true)
@@ -42,6 +43,7 @@ model Question {
   answers       Answer[]
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
+  publisherName String
   createdAt     DateTime  @default(now())
   views         History[]
 }
@@ -53,6 +55,7 @@ model Answer {
   question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
+  publisherName String
   numThumbsUp   Int
   numThumbsDown Int
   createdAt     DateTime  @default(now())
@@ -64,6 +67,7 @@ model Comment {
   id            Int      @id @default(autoincrement())
   comment       String
   userCaseId    String
+  publisherName String
   postedBy      User     @relation(fields: [userCaseId], references: [caseId])
   answerId      Int
   question      Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
