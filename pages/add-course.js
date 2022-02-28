@@ -5,15 +5,12 @@ import {
   Input,
   Stack,
   Button,
-  Select,
   FormErrorMessage,
   useToast,
-  Textarea,
-  Link,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import NextLink from "next/link";
-import { useSession } from "next-auth/react";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 export default function CreateCourse() {
   const {
@@ -21,8 +18,37 @@ export default function CreateCourse() {
     register,
     formState: { errors, isSubmitting },
   } = useForm({ mode: "onChange" });
+  const toast = useToast();
+  const router = useRouter();
 
-  const onSubmit = ({ courseNumber, courseTitle }) => {};
+  const onSubmit = async ({ courseNumber, courseTitle }) => {
+    try {
+      await axios.post("/api/protected/courses", {
+        courseName: `${courseNumber}. ${courseTitle}`,
+      });
+      router.push("/ask");
+      toast({
+        title: "Success",
+        description: "Your course has been created.",
+        status: "success",
+        position: "bottom-right",
+        variant: "left-accent",
+        duration: 9000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.log(err);
+      toast({
+        title: "An error occurred",
+        description: "Please try again",
+        status: "error",
+        position: "bottom-right",
+        variant: "left-accent",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
@@ -72,7 +98,7 @@ export default function CreateCourse() {
           <Stack spacing={10} pt={2}>
             <Button
               type="submit"
-              loadingText="Posting"
+              loadingText="Adding course"
               spinnerPlacement="end"
               isLoading={isSubmitting}
               size="lg"
@@ -83,7 +109,7 @@ export default function CreateCourse() {
                 transform: "scale(0.95)",
               }}
             >
-              Add Course
+              Add Your Course
             </Button>
           </Stack>
         </Stack>

@@ -15,6 +15,7 @@ import {
   TagCloseButton,
   Stack,
   useToast,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import useSWR from "swr";
 import axios from "axios";
@@ -33,6 +34,7 @@ export default function CoursesDrawer({
 }) {
   const toast = useToast();
   const { data } = useSWR("/api/protected/courses", fetcher);
+  const [isDesktop] = useMediaQuery("(min-width: 768px)");
 
   return (
     <Drawer
@@ -70,7 +72,7 @@ export default function CoursesDrawer({
                     title: "Select up to 10 courses for now",
                     description: `Click "Add Courses" to continue`,
                     variant: "left-accent",
-                    position: "top",
+                    position: isDesktop ? "bottom" : "top",
                     status: "info",
                     duration: 6000,
                     isClosable: true,
