@@ -34,7 +34,7 @@ function Auth({ children, auth }) {
   useEffect(() => {
     if (status === "loading") return;
     if (auth && !isUser) router.push("/");
-    else if (!auth && isUser) router.push("/home");
+    else if (!auth && isUser) router.push("/questions");
   }, [isUser, status, auth, router]);
 
   if (auth && isUser) {

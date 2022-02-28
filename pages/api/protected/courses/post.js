@@ -1,25 +1,16 @@
 import prisma from "lib/prisma";
 
 export default async function handler(req, res) {
-  const { courseIds, caseId } = req.body;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  await prisma.user.update({
-    where: { caseId },
+  const { courseName } = req.body;
+  await prisma.course.create({
     data: {
-      courses: {
-        connect: courseIds.map((courseId) => ({ id: courseId })),
-      },
-      isFirstLogin: false,
+      courseName,
     },
   });
 
-  const questions = await prisma.question.findMany({
-    where: {
-      courseId: {
-        in: courseIds,
-      },
-    },
-  });
-
-  return res.status(200).json({ questions });
+  return res.status(200).json({ success: true });
 }

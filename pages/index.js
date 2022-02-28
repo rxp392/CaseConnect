@@ -70,7 +70,7 @@ export default function Index() {
                 colorScheme="black"
                 onClick={() =>
                   signIn("google", {
-                    callbackUrl: `${process.env.NEXT_PUBLIC_URL}/home`,
+                    callbackUrl: `${process.env.NEXT_PUBLIC_URL}/questions`,
                   })
                 }
                 _active={{

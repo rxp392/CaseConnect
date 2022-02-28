@@ -20,19 +20,27 @@ import {
   Tag,
   Tooltip,
 } from "@chakra-ui/react";
-import { FiHome, FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
-import { MdOutlineQuestionAnswer } from "react-icons/md";
-import { IoSchoolOutline } from "react-icons/io5";
+import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
+import { MdOutlineQuestionAnswer, MdOutlineFeed } from "react-icons/md";
 import { BiBookAlt } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
+import { BsQuestionCircle } from "react-icons/bs";
 
 const LinkItems = [
-  { name: "Home", icon: FiHome, href: "/home" },
-  { name: "Ask a question", icon: MdOutlineQuestionAnswer, href: "/ask" },
-  { name: "Questions", icon: BiBookAlt, href: "/questions" },
-  { name: "Courses", icon: IoSchoolOutline, href: "/courses" },
+  { name: "Questions", icon: MdOutlineFeed, href: "/questions" },
+  {
+    name: "Ask a question",
+    icon: MdOutlineQuestionAnswer,
+    href: "/ask-a-question",
+  },
+  {
+    name: "My Questions",
+    icon: BsQuestionCircle,
+    href: "/my-questions",
+  },
+  { name: "My Courses", icon: BiBookAlt, href: "/my-courses" },
 ];
 
 export default function Sidebar({

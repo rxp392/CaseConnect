@@ -23,7 +23,7 @@ export default function CreateCourse() {
 
   const onSubmit = async ({ courseNumber, courseTitle }) => {
     try {
-      await axios.post("/api/protected/courses", {
+      await axios.post("/api/protected/courses/post", {
         courseName: `${courseNumber}. ${courseTitle}`,
       });
       router.push("/ask");
@@ -36,8 +36,7 @@ export default function CreateCourse() {
         duration: 9000,
         isClosable: true,
       });
-    } catch (err) {
-      console.log(err);
+    } catch {
       toast({
         title: "An error occurred",
         description: "Please try again",
@@ -109,7 +108,7 @@ export default function CreateCourse() {
                 transform: "scale(0.95)",
               }}
             >
-              Add Your Course
+              Add Course
             </Button>
           </Stack>
         </Stack>

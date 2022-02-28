@@ -46,7 +46,7 @@ export default function CoursesDrawer({
       <DrawerOverlay />
       <DrawerContent>
         <DrawerCloseButton />
-        <DrawerHeader>Hey there, {name}!</DrawerHeader>
+        <DrawerHeader>Hey, {name}!</DrawerHeader>
         <DrawerBody>
           <FormControl>
             <FormLabel htmlFor="courseName">
@@ -135,7 +135,7 @@ export default function CoursesDrawer({
               setIsSubmitted(true);
             }}
           >
-            Add Course{tags.length > 1 && "s"}
+            Continue
           </Button>
         </DrawerFooter>
       </DrawerContent>

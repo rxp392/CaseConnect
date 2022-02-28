@@ -9,15 +9,13 @@ import {
   FormErrorMessage,
   useToast,
   Textarea,
-  Link,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import NextLink from "next/link";
 import { useSession } from "next-auth/react";
 import prisma from "lib/prisma";
 import { useRouter } from "next/router";
 
-export default function Ask({ courses }) {
+export default function AskQuestion({ courses }) {
   const { data: session } = useSession();
   const toast = useToast();
   const router = useRouter();
@@ -45,7 +43,7 @@ export default function Ask({ courses }) {
         body: formData,
       });
 
-      router.push("/home");
+      router.push("/questions");
       toast({
         title: "Success",
         description: "Your question has been posted.",
@@ -71,9 +69,24 @@ export default function Ask({ courses }) {
   return (
     <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
       <Box pos="absolute" bottom="4" right="4">
-        <NextLink href="/add-course" color="cwru" passHref>
+        {/* <NextLink href="/add-course" color="cwru" passHref>
           <Link>Can&apos;t find your course?</Link>
-        </NextLink>
+        </NextLink> */}
+        <Button
+          type="submit"
+          size="sm"
+          bg="cwru"
+          color="white"
+          colorScheme="black"
+          px={3}
+          py={4}
+          _active={{
+            transform: "scale(0.95)",
+          }}
+          onClick={() => router.push("/add-a-course")}
+        >
+          Can&apos;t find your course?
+        </Button>
       </Box>
       <Box
         as="form"
@@ -170,4 +183,4 @@ export async function getStaticProps() {
   };
 }
 
-Ask.auth = true;
+AskQuestion.auth = true;
