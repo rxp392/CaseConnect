@@ -9,21 +9,24 @@ export default function Questions({ userQuestions }) {
 export async function getServerSideProps({ req }) {
   const session = await getSession({ req });
 
-  console.log(session);
+  console.log(session.user.caseId);
 
-  const { questions } = await prisma.user.findUnique({
+  const userQuestions = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       questions: true,
     },
   });
 
+  console.log(userQuestions);
+
   return {
     props: {
-      userQuestions: questions.map((question) => ({
-        ...question,
-        createdAt: question.createdAt.toISOString(),
-      })),
+      userQuestions:
+        userQuestions?.questions.map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
+        })) || [],
     },
   };
 }

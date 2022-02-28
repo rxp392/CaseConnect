@@ -19,6 +19,8 @@ model History {
 
 model User {
   caseId         String     @id
+  name           String
+  image          String?
   subscription   String     @default("Basic")
   isFirstLogin   Boolean    @default(true)
   canAnswer      Boolean    @default(true)
