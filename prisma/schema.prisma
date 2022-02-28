@@ -19,6 +19,7 @@ model History {
 
 model User {
   caseId         String     @id
+  userName       String
   subscription   String     @default("Basic")
   isFirstLogin   Boolean    @default(true)
   canAnswer      Boolean    @default(true)
@@ -70,9 +71,6 @@ model Comment {
   answerId      Int
   question      Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
-  nextId        Int?     @unique
-  previous      Comment? @relation("followUp")
-  next          Comment? @relation("followUp", fields: [nextId], references: [id])
   readOrNot     Boolean  @default(false)
 }
 
