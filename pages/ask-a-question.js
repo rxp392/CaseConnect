@@ -9,11 +9,14 @@ import {
   FormErrorMessage,
   useToast,
   Textarea,
+  Link,
+  SlideFade,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import prisma from "lib/prisma";
 import { useRouter } from "next/router";
+import NextLink from "next/link";
 
 export default function AskQuestion({ courses }) {
   const { data: session } = useSession();
@@ -67,105 +70,92 @@ export default function AskQuestion({ courses }) {
   };
 
   return (
-    <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-      <Box pos="absolute" bottom="4" right="4">
-        {/* <NextLink href="/add-course" color="cwru" passHref>
-          <Link>Can&apos;t find your course?</Link>
-        </NextLink> */}
-        <Button
-          type="submit"
-          size="sm"
-          bg="cwru"
-          color="white"
-          colorScheme="black"
-          px={3}
-          py={4}
-          _active={{
-            transform: "scale(0.95)",
-          }}
-          onClick={() => router.push("/add-a-course")}
+    <SlideFade offsetY="20px" in={true}>
+      <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
+        <Box pos="absolute" bottom="4" right="4">
+          <NextLink href="/add-a-course" color="cwru" passHref>
+            <Link>Can&apos;t find your course?</Link>
+          </NextLink>
+        </Box>
+        <Box
+          as="form"
+          onSubmit={handleSubmit(onSubmit)}
+          rounded={"lg"}
+          bg="white"
+          boxShadow={"lg"}
+          p={8}
         >
-          Can&apos;t find your course?
-        </Button>
-      </Box>
-      <Box
-        as="form"
-        onSubmit={handleSubmit(onSubmit)}
-        rounded={"lg"}
-        bg="white"
-        boxShadow={"lg"}
-        p={8}
-      >
-        <Stack spacing={4}>
-          <FormControl isInvalid={errors.question} isRequired>
-            <FormLabel htmlFor="question">Question</FormLabel>
-            <Textarea
-              id="question"
-              h="50px"
-              maxH="200px"
-              type="text"
-              {...register("question", {
-                required: "Enter a question",
-                maxLength: {
-                  value: 50,
-                  message: "Maximum length should be 50",
-                },
-              })}
-            />
-            <FormErrorMessage>
-              {errors.question && errors.question.message}
-            </FormErrorMessage>
-          </FormControl>
-          <FormControl isInvalid={errors.courseName} isRequired>
-            <FormLabel htmlFor="courseName">Course</FormLabel>
-            <Select
-              placeholder={"Select a course"}
-              id="courseName"
-              {...register("courseName", {
-                required: "Pick a course",
-                minLength: {
-                  value: 4,
-                  message: "Minimum length should be 4",
-                },
-              })}
-            >
-              {courses.map(({ id, courseName }) => (
-                <option key={id} value={`${courseName}|${id}`}>
-                  {courseName}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Attachment</FormLabel>
-            <Input
-              type="file"
-              id="attachment"
-              accept="image/*"
-              {...register("attachment")}
-              size="sm"
-            />
-          </FormControl>
-          <Stack spacing={10} pt={2}>
-            <Button
-              type="submit"
-              loadingText="Posting"
-              spinnerPlacement="end"
-              isLoading={isSubmitting}
-              size="lg"
-              bg="cwru"
-              color="white"
-              colorScheme="black"
-              _active={{
-                transform: "scale(0.95)",
-              }}
-            >
-              Post Question
-            </Button>
+          <Stack spacing={4}>
+            <FormControl isInvalid={errors.question} isRequired>
+              <FormLabel htmlFor="question">Question</FormLabel>
+              <Textarea
+                id="question"
+                h="50px"
+                maxH="200px"
+                type="text"
+                {...register("question", {
+                  required: "Enter a question",
+                  maxLength: {
+                    value: 50,
+                    message: "Maximum length should be 50",
+                  },
+                })}
+              />
+              <FormErrorMessage>
+                {errors.question && errors.question.message}
+              </FormErrorMessage>
+            </FormControl>
+            <FormControl isInvalid={errors.courseName} isRequired>
+              <FormLabel htmlFor="courseName">Course</FormLabel>
+              <Select
+                placeholder={"Select a course"}
+                id="courseName"
+                {...register("courseName", {
+                  required: "Pick a course",
+                  minLength: {
+                    value: 4,
+                    message: "Minimum length should be 4",
+                  },
+                })}
+              >
+                {courses.map(({ id, courseName }) => (
+                  <option key={id} value={`${courseName}|${id}`}>
+                    {courseName}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Attachment</FormLabel>
+              <Input
+                type="file"
+                id="attachment"
+                accept="image/*"
+                {...register("attachment")}
+                size="sm"
+              />
+            </FormControl>
+            <Stack spacing={10} pt={2}>
+              <Button
+                type="submit"
+                loadingText="Posting"
+                spinnerPlacement="end"
+                isLoading={isSubmitting}
+                size="lg"
+                bg="cwru"
+                color="white"
+                colorScheme="black"
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+              >
+                Post Question
+              </Button>
+            </Stack>
           </Stack>
-        </Stack>
-      </Box>
-    </Stack>
+        </Box>
+      </Stack>
+    </SlideFade>
   );
 }
 

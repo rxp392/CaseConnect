@@ -1,29 +1,31 @@
 import prisma from "lib/prisma";
 import { useSession, getSession } from "next-auth/react";
-import { Box, Text, Link, Button } from "@chakra-ui/react";
+import { Wrap, WrapItem, useMediaQuery, Button } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import CoursesDrawer from "components/CoursesDrawer";
 import axios from "axios";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
+import QuestionCard from "components/QuestionCard";
 import { BiBookAdd } from "react-icons/bi";
 
-export default function Questions({ questions }) {
+export default function Questions({ _questions }) {
   const router = useRouter();
   const { data: session } = useSession();
-  const [showDrawer, setShowDrawer] = useState(!questions.length);
+  const [showDrawer, setShowDrawer] = useState(!_questions.length);
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [tempQuestions, setTempQuestions] = useState([]);
+  const [isLarge] = useMediaQuery("(min-width: 1068px)");
+  const [questions, setQuestions] = useState(_questions);
 
   useEffect(() => {
     if (isSubmitted) {
       (async () => {
-        await axios.post("/api/protected/courses/post-many", {
+        const { data } = await axios.post("/api/protected/courses/post-many", {
           courseIds: tags.map((tag) => Number(tag.id)),
           caseId: session.user.caseId,
         });
+        setQuestions(data.questions);
         setIsLoading(false);
         setShowDrawer(false);
       })();
@@ -43,6 +45,31 @@ export default function Questions({ questions }) {
         name={session.user.name.split(" ")[0]}
       />
 
+      <Wrap
+        transform={isLarge ? "translateY(0rem)" : "translateY(10rem)"}
+        justify="center"
+        spacing="20px"
+      >
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+        <WrapItem>
+          <QuestionCard />
+        </WrapItem>
+      </Wrap>
+
       {!questions.length ? (
         !showDrawer && (
           <Button
@@ -61,7 +88,17 @@ export default function Questions({ questions }) {
           </Button>
         )
       ) : (
-        <Box></Box>
+        <Wrap
+          transform={isLarge ? "translateY(0rem)" : "translateY(10rem)"}
+          justify="center"
+          spacing="20px"
+        >
+          {questions.map((question) => (
+            <WrapItem key={question.id}>
+              <QuestionCard question={question} />
+            </WrapItem>
+          ))}
+        </Wrap>
       )}
     </>
   );
@@ -73,7 +110,7 @@ export async function getServerSideProps(ctx) {
     where: { caseId: session.user.caseId },
   });
 
-  const questions = await prisma.question.findMany({
+  const _questions = await prisma.question.findMany({
     where: {
       courseId: {
         in: user?.courses?.map((course) => course.id),
@@ -83,7 +120,7 @@ export async function getServerSideProps(ctx) {
 
   return {
     props: {
-      questions: questions.map((question) => ({
+      _questions: _questions.map((question) => ({
         ...question,
         createdAt: question.createdAt.toISOString(),
       })),

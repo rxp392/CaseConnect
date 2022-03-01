@@ -85,7 +85,8 @@ export default function Sidebar({
         justify="center"
         align="center"
         height="calc(100vh - 5rem)"
-        overflowX={"hidden"}
+        // overflow={["scroll", "hidden"]}
+        overflow="scroll"
       >
         {children}
       </Flex>
@@ -229,7 +230,13 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
               _focus={{ boxShadow: "none" }}
             >
               <HStack>
-                <Avatar size={"sm"} src={profileImage} />
+                <Avatar
+                  size={"sm"}
+                  src={profileImage}
+                  name={name}
+                  bg="cwru"
+                  color="white"
+                />
                 <VStack
                   display={{ base: "none", md: "flex" }}
                   alignItems="flex-start"
