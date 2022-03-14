@@ -3,13 +3,19 @@ import { getSession } from "next-auth/react";
 
 export default function MyQuestions({ userQuestions }) {
   console.log(userQuestions);
-  return <pre>{JSON.stringify(userQuestions, null, 2)}</pre>;
+  // return <pre>{JSON.stringify(userQuestions, null, 2)}</pre>;
+
+  if (!userQuestions.length) {
+    return <div>You haven&apos;t asked any questions yet.</div>;
+  }
+
+  return <></>;
 }
 
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, res }) {
   const session = await getSession({ req });
 
-  console.log(session.user.caseId);
+  if (!session) return { props: {} };
 
   const userQuestions = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
@@ -17,8 +23,6 @@ export async function getServerSideProps({ req }) {
       questions: true,
     },
   });
-
-  console.log(userQuestions);
 
   return {
     props: {
@@ -31,4 +35,4 @@ export async function getServerSideProps({ req }) {
   };
 }
 
-MyQuestions.auth = true;
+MyQuestions.isProtected = true;

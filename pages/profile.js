@@ -5,4 +5,4 @@ export default function Profile() {
   return <pre>{JSON.stringify(data, null, 2)}</pre>;
 }
 
-Profile.auth = true;
+Profile.isProtected = true;

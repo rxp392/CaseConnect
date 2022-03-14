@@ -1,10 +1,10 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import { SessionProvider, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 import Head from "next/head";
 import theme from "theme";
 import Sidebar from "components/Sidebar";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Loader from "components/Loader";
 import "@fontsource/saira-stencil-one";
 
@@ -13,11 +13,10 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
     <>
       <Head>
         <title>Case Connect</title>
-        {/* <link rel="icon" href="/favicon.ico" /> */}
       </Head>
       <SessionProvider session={session}>
         <ChakraProvider theme={theme}>
-          <Auth auth={Component.auth}>
+          <Auth isProtected={Boolean(Component.isProtected)}>
             <Component {...pageProps} />
           </Auth>
         </ChakraProvider>
@@ -26,18 +25,18 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
   );
 }
 
-function Auth({ children, auth }) {
-  const router = useRouter();
+function Auth({ isProtected, children }) {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const isUser = !!session?.user;
 
   useEffect(() => {
     if (status === "loading") return;
-    if (auth && !isUser) router.push("/");
-    else if (!auth && isUser) router.push("/questions");
-  }, [isUser, status, auth, router]);
+    if (isProtected && !isUser) router.push("/");
+    else if (!isProtected && isUser) router.push("/questions");
+  }, [isUser, status, isProtected, router]);
 
-  if (auth && isUser) {
+  if (isProtected && isUser) {
     return (
       <Sidebar
         profileImage={session.user.image}
@@ -48,7 +47,7 @@ function Auth({ children, auth }) {
         {children}
       </Sidebar>
     );
-  } else if (!auth && !isUser) return children;
+  } else if (!isProtected && !isUser) return children;
 
   return <Loader />;
 }

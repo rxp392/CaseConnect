@@ -22,7 +22,6 @@ model User {
   name           String
   image          String?
   subscription   String     @default("Basic")
-  isFirstLogin   Boolean    @default(true)
   canAnswer      Boolean    @default(true)
   browseLimit    Int        @default(10)
   postLimit      Int        @default(3)

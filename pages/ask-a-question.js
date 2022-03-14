@@ -9,14 +9,14 @@ import {
   FormErrorMessage,
   useToast,
   Textarea,
-  Link,
   SlideFade,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useSession } from "next-auth/react";
+import { useSession, getSession } from "next-auth/react";
 import prisma from "lib/prisma";
 import { useRouter } from "next/router";
-import NextLink from "next/link";
+import { BiBookAdd } from "react-icons/bi";
+import { useEffect } from "react";
 
 export default function AskQuestion({ courses }) {
   const { data: session } = useSession();
@@ -69,14 +69,17 @@ export default function AskQuestion({ courses }) {
     }
   };
 
+  useEffect(() => {
+    if (!courses.length) {
+      router.push("/my-courses");
+    }
+  }, []);
+
+  if (!courses.length) return null;
+
   return (
     <SlideFade offsetY="20px" in={true}>
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-        <Box pos="absolute" bottom="4" right="4">
-          <NextLink href="/add-a-course" color="cwru" passHref>
-            <Link>Can&apos;t find your course?</Link>
-          </NextLink>
-        </Box>
         <Box
           as="form"
           onSubmit={handleSubmit(onSubmit)}
@@ -159,8 +162,19 @@ export default function AskQuestion({ courses }) {
   );
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps({ req, res }) {
+  const session = await getSession({ req });
+
+  if (!session) return { props: {} };
+
   const courses = await prisma.course.findMany({
+    where: {
+      users: {
+        some: {
+          caseId: session.user.caseId,
+        },
+      },
+    },
     orderBy: {
       courseName: "asc",
     },
@@ -173,4 +187,4 @@ export async function getStaticProps() {
   };
 }
 
-AskQuestion.auth = true;
+AskQuestion.isProtected = true;

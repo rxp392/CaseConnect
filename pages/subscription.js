@@ -6,4 +6,4 @@ export default function Subscription() {
   return <div>{session.user.subscription} Plan</div>;
 }
 
-Subscription.auth = true;
+Subscription.isProtected = true;

@@ -44,11 +44,11 @@ const LinkItems = [
 ];
 
 export default function Sidebar({
-  children,
+  subscription,
   caseId,
   name,
-  subscription,
   profileImage,
+  children,
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -85,7 +85,6 @@ export default function Sidebar({
         justify="center"
         align="center"
         height="calc(100vh - 5rem)"
-        // overflow={["scroll", "hidden"]}
         overflow="scroll"
       >
         {children}
@@ -176,7 +175,6 @@ const NavItem = ({ icon, href, children, ...rest }) => {
 
 const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
   const router = useRouter();
-
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
