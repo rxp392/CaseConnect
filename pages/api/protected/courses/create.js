@@ -5,17 +5,13 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
-    const { courseIds, caseId } = req.body;
+    const { courseName } = req.body;
 
-    await prisma.user.update({
-      where: { caseId },
+    await prisma.course.create({
       data: {
-        courses: {
-          connect: courseIds,
-        },
+        courseName,
       },
     });
-
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ error });

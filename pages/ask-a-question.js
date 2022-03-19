@@ -41,6 +41,7 @@ export default function AskQuestion({ courses }) {
       formData.append("publisherName", session.user.name);
       formData.append("userImage", session.user.image);
       formData.append("attachment", attachment[0]);
+      formData.append("secret", process.env.NEXT_PUBLIC_SECRET);
 
       await fetch("/api/protected/questions/post", {
         method: "POST",
@@ -87,15 +88,12 @@ export default function AskQuestion({ courses }) {
               <FormLabel htmlFor="question">Question</FormLabel>
               <Textarea
                 id="question"
-                h="50px"
-                maxH="200px"
+                h="min-content"
                 type="text"
+                resize="none"
+                maxLength={171}
                 {...register("question", {
                   required: "Enter a question",
-                  maxLength: {
-                    value: 50,
-                    message: "Maximum length should be 50",
-                  },
                 })}
               />
               <FormErrorMessage>

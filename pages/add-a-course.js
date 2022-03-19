@@ -26,7 +26,7 @@ export default function AddCourse() {
 
   const onSubmit = async ({ courseId, courseTitle }) => {
     try {
-      await axios.post("/api/protected/courses/add", {
+      await axios.post("/api/protected/courses/create", {
         courseName: `${courseId
           .toUpperCase()
           .split(" ")

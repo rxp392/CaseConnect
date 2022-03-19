@@ -76,6 +76,9 @@ export default function Index() {
                 _active={{
                   transform: "scale(0.95)",
                 }}
+                _hover={{
+                  transform: "scale(1.02)",
+                }}
               >
                 <Center>
                   <Text>Continue with Google</Text>

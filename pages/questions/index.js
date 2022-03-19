@@ -10,19 +10,12 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import QuestionCard from "components/QuestionCard";
 
 export default function Questions({ _questions }) {
   const { data: session } = useSession();
   const [questions, setQuestions] = useState(_questions);
-  const [deletedQuestionIds, setDeletedQuestionIds] = useState([]);
-
-  useEffect(() => {
-    setQuestions(
-      _questions.filter((question) => !deletedQuestionIds.includes(question.id))
-    );
-  }, [deletedQuestionIds]);
 
   if (!questions.length) {
     return (
@@ -66,17 +59,24 @@ export default function Questions({ _questions }) {
       h="full"
       w="full"
       pt="2rem"
+      overflowY="hidden"
     >
       <SlideFade in={true} offsetY="20px">
         <Heading textAlign="center">Questions</Heading>
-        <Wrap justify="center" spacing="20px">
+        <Wrap
+          justify="center"
+          spacing="30px"
+          h="90%"
+          overflowY="scroll"
+          overflowX="hidden"
+        >
           {questions.map((question) => (
             <WrapItem key={question.id}>
               <QuestionCard
                 _question={question}
                 isUser={session?.user.caseId === question.userCaseId}
-                deletedQuestionIds={deletedQuestionIds}
-                setDeletedQuestionIds={setDeletedQuestionIds}
+                questions={questions}
+                setQuestions={setQuestions}
               />
             </WrapItem>
           ))}

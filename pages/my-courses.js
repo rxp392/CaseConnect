@@ -35,7 +35,7 @@ import axios from "axios";
 import useSwr from "swr";
 import { FiPlus } from "react-icons/fi";
 
-const fetcher = (url) => axios(url).then((res) => res.data);
+const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 export default function MyCourses({ userCourses }) {
   const { data } = useSwr("/api/protected/courses", fetcher);

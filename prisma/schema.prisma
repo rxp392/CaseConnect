@@ -10,7 +10,7 @@ datasource db {
 
 model History {
   id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
+  viewedAt   DateTime @default(now())
   questionId Int
   caseId     String
   belongsTo  User     @relation(fields: [caseId], references: [caseId], onDelete: Cascade)

@@ -1,13 +1,89 @@
-import React from "react";
-import { getSession } from "next-auth/react";
+import prisma from "lib/prisma";
+import { getSession, useSession } from "next-auth/react";
+import {
+  Wrap,
+  WrapItem,
+  SlideFade,
+  Text,
+  Flex,
+  Button,
+  Heading,
+} from "@chakra-ui/react";
+import NextLink from "next/link";
+import { useState } from "react";
+import QuestionCard from "components/QuestionCard";
 
-export default function MyHistory({ userHistory }) {
+export default function MyHistory({ _questions }) {
+  const { data: session } = useSession();
+  const [questions, setQuestions] = useState(_questions);
+
+  if (!questions.length) {
+    return (
+      <SlideFade in={true} offsetY="20px">
+        <Flex
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          gap={4}
+        >
+          <Text fontSize={["lg", "2xl", "3xl"]}>
+            You haven&apos;t viewed any questions yet
+          </Text>
+          <NextLink passHref href="/questions">
+            <Button
+              px={[2, 4, 6]}
+              py={[2, 4, 6]}
+              bg="cwru"
+              color="white"
+              colorScheme="black"
+              _active={{
+                transform: "scale(0.95)",
+              }}
+              _hover={{
+                transform: "scale(1.02)",
+              }}
+            >
+              View questions
+            </Button>
+          </NextLink>
+        </Flex>
+      </SlideFade>
+    );
+  }
+
   return (
-    <div>
-      {userHistory.map((History) => (
-        <li key={History.id}>{History.questionId}</li>
-      ))}
-    </div>
+    <Flex
+      justify="start"
+      align="center"
+      direction="column"
+      h="full"
+      w="full"
+      pt="2rem"
+      overflowY="hidden"
+    >
+      <SlideFade in={true} offsetY="20px">
+        <Heading textAlign="center">My History</Heading>
+        <Wrap
+          justify="center"
+          spacing="30px"
+          h="90%"
+          overflowY="scroll"
+          overflowX="hidden"
+          mt={2}
+        >
+          {questions.map((question) => (
+            <WrapItem key={question.id}>
+              <QuestionCard
+                _question={question}
+                isUser={session?.user.caseId === question.userCaseId}
+                questions={questions}
+                setQuestions={setQuestions}
+              />
+            </WrapItem>
+          ))}
+        </Wrap>
+      </SlideFade>
+    </Flex>
   );
 }
 
@@ -20,10 +96,15 @@ export const getServerSideProps = async ({ req, res }) => {
     return { props: {} };
   }
 
-  const { courses } = await prisma.user.findUnique({
+  const { courses, viewHistory } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
+      viewHistory: {
+        orderBy: {
+          viewedAt: "desc",
+        },
+      },
     },
   });
 
@@ -33,8 +114,24 @@ export const getServerSideProps = async ({ req, res }) => {
     return { props: {} };
   }
 
-  const userHistory = await prisma.history.findMany({
-    where: { caseId: session.user.caseId },
+  const questions = await prisma.question.findMany({
+    where: {
+      id: {
+        in: viewHistory.map((history) => Number(history.questionId)),
+      },
+    },
   });
-  return { props: { userHistory } };
+
+  const questionIds = viewHistory.map((history) => Number(history.questionId));
+
+  return {
+    props: {
+      _questions: questions
+        .sort((a, b) => questionIds.indexOf(a.id) - questionIds.indexOf(b.id))
+        .map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
+        })),
+    },
+  };
 };

@@ -28,10 +28,11 @@ export async function getServerSideProps({ params, req, res }) {
     return { props: {} };
   }
 
-  const { courses } = await prisma.user.findUnique({
+  const { courses, viewHistory } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
+      viewHistory: true,
     },
   });
 
@@ -52,6 +53,21 @@ export async function getServerSideProps({ params, req, res }) {
 
     const question = await prisma.question.findUnique({
       where: { id: Number(id) },
+    });
+
+    await prisma.history.upsert({
+      where: {
+        id:
+          viewHistory.find((history) => history.questionId === Number(id))
+            ?.id || -1,
+      },
+      update: {
+        viewedAt: new Date(),
+      },
+      create: {
+        questionId: Number(id),
+        caseId: session.user.caseId,
+      },
     });
 
     return {
