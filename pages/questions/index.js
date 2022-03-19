@@ -1,26 +1,88 @@
 import prisma from "lib/prisma";
-import { getSession } from "next-auth/react";
-import { Wrap, WrapItem, useMediaQuery } from "@chakra-ui/react";
-import { useState } from "react";
-import { useRouter } from "next/router";
+import { getSession, useSession } from "next-auth/react";
+import {
+  Wrap,
+  WrapItem,
+  SlideFade,
+  Text,
+  Flex,
+  Button,
+  Heading,
+} from "@chakra-ui/react";
+import NextLink from "next/link";
+import { useState, useEffect } from "react";
 import QuestionCard from "components/QuestionCard";
 
-export default function Questions({ questions }) {
-  const router = useRouter();
-  const [isLarge] = useMediaQuery("(min-width: 1068px)");
+export default function Questions({ _questions }) {
+  const { data: session } = useSession();
+  const [questions, setQuestions] = useState(_questions);
+  const [deletedQuestionIds, setDeletedQuestionIds] = useState([]);
+
+  useEffect(() => {
+    setQuestions(
+      _questions.filter((question) => !deletedQuestionIds.includes(question.id))
+    );
+  }, [deletedQuestionIds]);
+
+  if (!questions.length) {
+    return (
+      <SlideFade in={true} offsetY="20px">
+        <Flex
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          gap={4}
+        >
+          <Text fontSize={["lg", "2xl", "3xl"]}>
+            No questions have been posted yet 😥
+          </Text>
+          <NextLink passHref href="/ask-a-question">
+            <Button
+              px={[2, 4, 6]}
+              py={[2, 4, 6]}
+              bg="cwru"
+              color="white"
+              colorScheme="black"
+              _active={{
+                transform: "scale(0.95)",
+              }}
+              _hover={{
+                transform: "scale(1.02)",
+              }}
+            >
+              Ask a question
+            </Button>
+          </NextLink>
+        </Flex>
+      </SlideFade>
+    );
+  }
 
   return (
-    <Wrap
-      transform={isLarge ? "translateY(0rem)" : "translateY(10rem)"}
-      justify="center"
-      spacing="20px"
+    <Flex
+      justify="start"
+      align="center"
+      direction="column"
+      h="full"
+      w="full"
+      pt="2rem"
     >
-      {questions.map((question) => (
-        <WrapItem key={question.id}>
-          <QuestionCard question={question} />
-        </WrapItem>
-      ))}
-    </Wrap>
+      <SlideFade in={true} offsetY="20px">
+        <Heading textAlign="center">Questions</Heading>
+        <Wrap justify="center" spacing="20px">
+          {questions.map((question) => (
+            <WrapItem key={question.id}>
+              <QuestionCard
+                _question={question}
+                isUser={session?.user.caseId === question.userCaseId}
+                deletedQuestionIds={deletedQuestionIds}
+                setDeletedQuestionIds={setDeletedQuestionIds}
+              />
+            </WrapItem>
+          ))}
+        </Wrap>
+      </SlideFade>
+    </Flex>
   );
 }
 
@@ -33,10 +95,11 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const { courses } = await prisma.user.findUnique({
+  const { courses, questions } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
+      questions: true,
     },
   });
 
@@ -46,7 +109,7 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const questions = await prisma.question.findMany({
+  const allQuestions = await prisma.question.findMany({
     where: {
       courseId: {
         in: courses.map((course) => course.id),
@@ -56,10 +119,16 @@ export async function getServerSideProps({ req, res }) {
 
   return {
     props: {
-      questions: questions?.map((question) => ({
-        ...question,
-        createdAt: question.createdAt.toISOString(),
-      })),
+      _questions: [...allQuestions, ...questions]
+        .filter(
+          (value, index, self) =>
+            index === self.findIndex((t) => t.id === value.id)
+        )
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
+        })),
     },
   };
 }

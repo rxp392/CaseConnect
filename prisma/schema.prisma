@@ -38,11 +38,13 @@ model Question {
   question      String
   attachment    String?
   courseId      Int
+  courseName    String
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   answers       Answer[]
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
+  userImage     String?
   createdAt     DateTime  @default(now())
   views         History[]
 }

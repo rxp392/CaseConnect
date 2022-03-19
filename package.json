@@ -8,11 +8,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ajna/pagination": "^1.4.13",
     "@chakra-ui/react": "^1.8.3",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
-    "@fontsource/saira-stencil-one": "^4.5.2",
+    "@fontsource/ibm-plex-sans": "^4.5.5",
     "@prisma/client": "^3.10.0",
     "@stripe/stripe-js": "^1.23.0",
     "axios": "^0.26.0",

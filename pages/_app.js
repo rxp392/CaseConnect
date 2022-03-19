@@ -5,7 +5,7 @@ import Head from "next/head";
 import theme from "theme";
 import Sidebar from "components/Sidebar";
 import Loader from "components/Loader";
-import "@fontsource/saira-stencil-one";
+import "@fontsource/ibm-plex-sans";
 
 function App({ Component, pageProps: { session, ...pageProps } }) {
   return (

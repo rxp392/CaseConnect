@@ -25,6 +25,8 @@ import {
   Wrap,
   WrapItem,
   Link,
+  SlideFade,
+  IconButton,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { getSession, useSession } from "next-auth/react";
@@ -106,7 +108,7 @@ export default function MyCourses({ userCourses }) {
         <DrawerContent>
           {courses.length > 0 && <DrawerCloseButton />}
           <DrawerHeader>
-            Choose your courses {!courses.length && "to get started"}
+            Select your courses {!courses.length && "to get started"}
           </DrawerHeader>
           <DrawerBody>
             <FormControl>
@@ -162,9 +164,9 @@ export default function MyCourses({ userCourses }) {
             </Stack>
           </DrawerBody>
           <DrawerFooter>
-            <Flex justify="space-between" items="center" w="full">
+            <Flex justifyContent="space-between" alignItems="center" w="full">
               <NextLink passHref href="/add-a-course">
-                <Link mt={2}>Can&apos;t find your course?</Link>
+                <Link>Can&apos;t find your course?</Link>
               </NextLink>
 
               <Button
@@ -176,9 +178,16 @@ export default function MyCourses({ userCourses }) {
                 bg="cwru"
                 color="white"
                 colorScheme="black"
-                _active={{
-                  transform: "scale(0.95)",
-                }}
+                _active={
+                  !selectedCourses.length == 0 && {
+                    transform: "scale(0.95)",
+                  }
+                }
+                _hover={
+                  !selectedCourses.length == 0 && {
+                    transform: "scale(1.02)",
+                  }
+                }
                 isDisabled={selectedCourses.length == 0}
                 onClick={submitCourses}
               >
@@ -198,59 +207,61 @@ export default function MyCourses({ userCourses }) {
         w="full"
         pt="2rem"
       >
-        {courses.length > 0 && (
-          <Heading>
-            Courses&nbsp;
-            <Button
-              size="md"
-              fontSize="xl"
-              p={3}
-              bg="cwru"
-              color="white"
-              colorScheme="black"
-              _active={{
-                transform: "scale(0.95)",
-              }}
-              m={1}
-              onClick={() => setDrawerOpen(true)}
-            >
-              <FiPlus />
-            </Button>
-          </Heading>
-        )}
+        <SlideFade in={true} offsetY="20px">
+          {courses.length > 0 && (
+            <Flex justifyContent="center" alignItems="center">
+              <Heading>My Courses&nbsp;</Heading>
+              <IconButton
+                size="md"
+                fontSize="1.25rem"
+                bg="cwru"
+                color="white"
+                colorScheme="black"
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+                _hover={{
+                  transform: "scale(1.02)",
+                }}
+                onClick={() => setDrawerOpen(true)}
+                icon={<FiPlus />}
+              />
+            </Flex>
+          )}
 
-        <Wrap
-          spacing="30px"
-          align="center"
-          justify="center"
-          mt={9}
-          h="90%"
-          overflowY="scroll"
-          overflowX="hidden"
-        >
-          {courses.map(({ courseName, id }) => (
-            <WrapItem key={id} w={["85vw", "fit-content"]}>
-              <Tag bg="cwru" color="white" w="fit-content" p={2}>
-                <TagLabel>{courseName}</TagLabel>
-                <TagCloseButton
-                  color="white"
-                  transform="scale(1.1)"
-                  id={id}
-                  onClick={(e) => {
-                    let _id;
-                    if (e.target.parentElement.id) {
-                      _id = e.target.parentElement.id;
-                    } else {
-                      _id = e.target.parentElement.parentElement.id;
-                    }
-                    setSelectedId(Number(_id));
-                    setConfirmOpen(true);
-                  }}
-                />
-              </Tag>
-            </WrapItem>
-          ))}
-        </Wrap>
+          <Wrap
+            spacing="30px"
+            align="center"
+            justify="center"
+            mt={9}
+            h="90%"
+            overflowY="scroll"
+            overflowX="hidden"
+          >
+            {courses.map(({ courseName, id }) => (
+              <WrapItem key={id} w={["85vw", "fit-content"]}>
+                <Tag bg="cwru" color="white" w="fit-content" p={2}>
+                  <TagLabel>{courseName}</TagLabel>
+                  <TagCloseButton
+                    color="white"
+                    transform="scale(1.1)"
+                    id={id}
+                    onClick={(e) => {
+                      let _id;
+                      if (e.target.parentElement.id) {
+                        _id = e.target.parentElement.id;
+                      } else {
+                        _id = e.target.parentElement.parentElement.id;
+                      }
+                      setSelectedId(Number(_id));
+                      setConfirmOpen(true);
+                    }}
+                  />
+                </Tag>
+              </WrapItem>
+            ))}
+          </Wrap>
+        </SlideFade>
       </Flex>
 
       {/* Confirmation alert */}

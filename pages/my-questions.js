@@ -1,11 +1,89 @@
-import { getSession } from "next-auth/react";
-// import prisma from "lib/prisma";
-import { useEffect } from "react";
-import { useRouter } from "next/router";
+import prisma from "lib/prisma";
+import { getSession, useSession } from "next-auth/react";
+import {
+  Wrap,
+  WrapItem,
+  SlideFade,
+  Text,
+  Flex,
+  Heading,
+  Button,
+} from "@chakra-ui/react";
+import NextLink from "next/link";
+import { useState, useEffect } from "react";
+import QuestionCard from "components/QuestionCard";
 
-export default function MyQuestions({ questions, courses }) {
-  const router = useRouter();
-  return <div>my questions</div>;
+export default function MyQuestions({ _questions }) {
+  const { data: session } = useSession();
+  const [questions, setQuestions] = useState(_questions);
+  const [deletedQuestionIds, setDeletedQuestionIds] = useState([]);
+
+  useEffect(() => {
+    setQuestions(
+      _questions.filter((question) => !deletedQuestionIds.includes(question.id))
+    );
+  }, [deletedQuestionIds]);
+
+  if (!questions.length) {
+    return (
+      <SlideFade in={true} offsetY="20px">
+        <Flex
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          gap={4}
+        >
+          <Text fontSize={["lg", "2xl", "3xl"]}>
+            You haven&apos;t asked any questions yet
+          </Text>
+          <NextLink passHref href="/ask-a-question">
+            <Button
+              px={[2, 4, 6]}
+              py={[2, 4, 6]}
+              bg="cwru"
+              color="white"
+              colorScheme="black"
+              _active={{
+                transform: "scale(0.95)",
+              }}
+              _hover={{
+                transform: "scale(1.02)",
+              }}
+            >
+              Ask a question
+            </Button>
+          </NextLink>
+        </Flex>
+      </SlideFade>
+    );
+  }
+
+  return (
+    <Flex
+      justify="start"
+      align="center"
+      direction="column"
+      h="full"
+      w="full"
+      pt="2rem"
+    >
+      <SlideFade in={true} offsetY="20px">
+        <Heading textAlign="center">My Questions</Heading>
+        <Wrap justify="center" spacing="20px">
+          {questions.map((question) => (
+            <WrapItem key={question.id}>
+              <QuestionCard
+                _question={question}
+                isUser={session?.user.caseId === question.userCaseId}
+                deletedQuestionIds={deletedQuestionIds}
+                setDeletedQuestionIds={setDeletedQuestionIds}
+              />
+            </WrapItem>
+          ))}
+        </Wrap>
+      </SlideFade>
+    </Flex>
+  );
 }
 
 export async function getServerSideProps({ req, res }) {
@@ -33,11 +111,12 @@ export async function getServerSideProps({ req, res }) {
 
   return {
     props: {
-      courses,
-      questions: questions.map((question) => ({
-        ...question,
-        createdAt: question.createdAt.toISOString(),
-      })),
+      _questions: questions
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
+        })),
     },
   };
 }

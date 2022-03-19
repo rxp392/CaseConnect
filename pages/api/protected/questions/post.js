@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   let questionData = {};
 
   await new Promise((resolve, _) => {
-    form.parse(req, async (_, fields, files) => {
+    form.parse(req, async (__, fields, files) => {
       questionData = { ...fields };
 
       const filepath = files.attachment?.filepath;
@@ -32,17 +32,17 @@ export default async function handler(req, res) {
     });
   });
 
-  const createdQuestion = await prisma.question.create({
+  await prisma.question.create({
     data: {
       question: questionData.question,
       attachment: questionData.attachment,
       courseId: Number(questionData.courseId),
+      courseName: questionData.courseName,
       userCaseId: questionData.caseId,
       publisherName: questionData.publisherName,
+      userImage: questionData.userImage,
     },
   });
 
-  return res.status(200).json({
-    createdQuestion,
-  });
+  return res.status(200).json();
 }

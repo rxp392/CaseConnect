@@ -26,21 +26,35 @@ import { BiBookAlt } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
-import { BsQuestionCircle } from "react-icons/bs";
+import { AiOutlineHistory } from "react-icons/ai";
+import { BsQuestionLg } from "react-icons/bs";
 
 const LinkItems = [
-  { name: "Questions", icon: MdOutlineFeed, href: "/questions" },
+  {
+    name: "Questions",
+    icon: MdOutlineFeed,
+    href: "/questions",
+  },
   {
     name: "Ask a question",
-    icon: MdOutlineQuestionAnswer,
+    icon: BsQuestionLg,
     href: "/ask-a-question",
   },
   {
     name: "My Questions",
-    icon: BsQuestionCircle,
+    icon: MdOutlineQuestionAnswer,
     href: "/my-questions",
   },
-  { name: "My Courses", icon: BiBookAlt, href: "/my-courses" },
+  {
+    name: "My Courses",
+    icon: BiBookAlt,
+    href: "/my-courses",
+  },
+  {
+    name: "My History",
+    icon: AiOutlineHistory,
+    href: "/my-history",
+  },
 ];
 
 export default function Sidebar({
