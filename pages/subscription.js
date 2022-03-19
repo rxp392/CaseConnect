@@ -1,9 +1,44 @@
-import { useSession } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
-export default function Subscription() {
-  const { data: session } = useSession();
-
-  return <div>{session.user.subscription} Plan</div>;
+export default function Subscription({ user }) {
+  return <pre>{JSON.stringify(user.subscription, null, 2)}</pre>;
 }
 
-Subscription.isProtected = true;
+export async function getServerSideProps({ req, res }) {
+  const session = await getSession({ req });
+
+  if (!session) {
+    res.writeHead(302, { Location: "/" });
+    res.end();
+    return { props: {} };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { caseId: session.user.caseId },
+    select: {
+      caseId: true,
+      name: true,
+      image: true,
+      subscription: true,
+      canAnswer: true,
+      browseLimit: true,
+      accountCreated: true,
+      courses: true,
+    },
+  });
+
+  if (!user.courses.length) {
+    res.writeHead(302, { Location: "/my-courses" });
+    res.end();
+    return { props: {} };
+  }
+
+  return {
+    props: {
+      user: {
+        ...user,
+        accountCreated: user.accountCreated.toISOString(),
+      },
+    },
+  };
+}

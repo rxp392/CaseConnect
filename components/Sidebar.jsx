@@ -72,7 +72,6 @@ export default function Sidebar({
           <SidebarContent onClose={onClose} subscription={subscription} />
         </DrawerContent>
       </Drawer>
-      {/* mobilenav */}
       <MobileNav
         onOpen={onOpen}
         caseId={caseId}
@@ -106,8 +105,8 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Text fontSize="2xl" fontWeight="bold">
-          Logo
+        <Text fontSize="xl" fontWeight="bold">
+          📖&nbsp;&nbsp;Case Connect
         </Text>
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
@@ -128,7 +127,7 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
           cursor="pointer"
           mx="8"
           size="lg"
-          borderRadius="full"
+          borderRadius="lg"
           variant="solid"
           bg="cwru"
         >
@@ -197,11 +196,11 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
 
       <Text
         display={{ base: "flex", md: "none" }}
-        fontSize="2xl"
+        fontSize="xl"
         fontFamily="monospace"
         fontWeight="bold"
       >
-        Logo
+        📖&nbsp;Case Connect
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>

@@ -7,25 +7,42 @@ import { useEffect } from "react";
 export default function Question({ question }) {
   const router = useRouter();
 
-  useEffect(() => {
-    if (!question) router.push("/questions"); 
-  }, []);
-
-  if (!question) return null;
-
   return <div>Question Detail</div>;
 }
 
-export async function getServerSideProps({ params, req }) {
+export async function getServerSideProps({ params, req, res }) {
   const session = await getSession({ req });
 
-  if (!session) return { props: {} };
+  if (!session) {
+    res.writeHead(302, { Location: "/" });
+    res.end();
+    return { props: {} };
+  }
+
+  const { courses } = await prisma.user.findUnique({
+    where: { caseId: session.user.caseId },
+    select: {
+      courses: true,
+    },
+  });
+
+  if (!courses.length) {
+    res.writeHead(302, { Location: "/my-courses" });
+    res.end();
+    return { props: {} };
+  }
+
+  const { questionId } = params;
+
+  if (!courses.some((course) => course.id === questionId)) {
+    res.writeHead(302, { Location: "/questions" });
+    res.end();
+    return { props: {} };
+  }
 
   const question = await prisma.question.findUnique({
-    where: { id: Number(params.questionId) },
+    where: { id: Number(questionId) },
   });
 
   return { props: { question } };
 }
-
-Question.isProtected = true;

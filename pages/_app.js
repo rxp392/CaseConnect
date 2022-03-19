@@ -1,7 +1,6 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import { SessionProvider, useSession } from "next-auth/react";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+
 import Head from "next/head";
 import theme from "theme";
 import Sidebar from "components/Sidebar";
@@ -16,7 +15,7 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
       </Head>
       <SessionProvider session={session}>
         <ChakraProvider theme={theme}>
-          <Auth isProtected={Boolean(Component.isProtected)}>
+          <Auth>
             <Component {...pageProps} />
           </Auth>
         </ChakraProvider>
@@ -25,31 +24,23 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
   );
 }
 
-function Auth({ isProtected, children }) {
+function Auth({ children }) {
   const { data: session, status } = useSession();
-  const router = useRouter();
-  const isUser = !!session?.user;
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (isProtected && !isUser) router.push("/");
-    else if (!isProtected && isUser) router.push("/questions");
-  }, [isUser, status, isProtected, router]);
+  if (status === "loading") return <Loader />;
 
-  if (isProtected && isUser) {
-    return (
-      <Sidebar
-        profileImage={session.user.image}
-        caseId={session.user.caseId}
-        name={session.user.name}
-        subscription={session.user.subscription}
-      >
-        {children}
-      </Sidebar>
-    );
-  } else if (!isProtected && !isUser) return children;
-
-  return <Loader />;
+  return status === "authenticated" ? (
+    <Sidebar
+      profileImage={session.user.image}
+      caseId={session.user.caseId}
+      name={session.user.name}
+      subscription={session.user.subscription}
+    >
+      {children}
+    </Sidebar>
+  ) : (
+    children
+  );
 }
 
 export default App;

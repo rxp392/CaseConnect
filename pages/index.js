@@ -10,7 +10,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useEffect } from "react";
 
 export default function Index() {
@@ -96,4 +96,17 @@ export default function Index() {
       </Flex>
     </Stack>
   );
+}
+
+export async function getServerSideProps({ req, res }) {
+  const session = await getSession({ req });
+
+  if (session) {
+    res.writeHead(302, { Location: "/questions" });
+    res.end();
+  }
+
+  return {
+    props: {},
+  };
 }

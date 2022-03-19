@@ -1,12 +1,11 @@
-import { useSession, getSession } from "next-auth/react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
   Button,
   Stack,
   TagLabel,
@@ -14,134 +13,339 @@ import {
   TagCloseButton,
   Select,
   FormControl,
-  FormLabel,
   Flex,
+  useToast,
+  Heading,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Wrap,
+  WrapItem,
+  Link,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import NextLink from "next/link";
+import { getSession, useSession } from "next-auth/react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { BiBookAlt } from "react-icons/bi";
+import useSwr from "swr";
+import { FiPlus } from "react-icons/fi";
 
-export default function MyCourses({ allCourses, userCourses }) {
+const fetcher = (url) => axios(url).then((res) => res.data);
+
+export default function MyCourses({ userCourses }) {
+  const { data } = useSwr("/api/protected/courses", fetcher);
   const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(userCourses.length === 0);
-  const [tags, setTags] = useState([]);
-  const onClose = () => setIsOpen(false);
+  const toast = useToast();
+  const cancelRef = useRef();
+  const [drawerOpen, setDrawerOpen] = useState(userCourses.length == 0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [courses, setCourses] = useState(userCourses);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+
+  useEffect(() => {
+    setDrawerOpen(courses.length == 0);
+  }, [courses]);
+
+  const submitCourses = async () => {
+    setIsLoading(true);
+    try {
+      await axios.post("/api/protected/courses/post", {
+        courseIds: selectedCourses.map((course) => ({
+          id: Number(course.id),
+        })),
+        caseId: session.user.caseId,
+      });
+      setCourses(
+        [...new Set([...selectedCourses, ...courses])].sort((a, b) =>
+          a.courseName.localeCompare(b.courseName)
+        )
+      );
+      setSelectedCourses([]);
+      toast({
+        title: `Courses ${!courses.length ? "added" : "updated"}`,
+        description: `Your courses have been ${
+          !courses.length ? "added" : "updated"
+        }`,
+        status: "info",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+      setDrawerOpen(false);
+    } catch {
+      toast({
+        title: "An Error Ocurred",
+        description: "Please try again",
+        status: "error",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Hey, {session.user.name.split(" ")[0]}!</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>Please choose your courses</ModalBody>
-          <ModalFooter>
+      {/* Drawer */}
+      <Drawer
+        isOpen={drawerOpen}
+        size="md"
+        closeOnOverlayClick={courses.length != 0}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          {courses.length > 0 && <DrawerCloseButton />}
+          <DrawerHeader>
+            Choose your courses {!courses.length && "to get started"}
+          </DrawerHeader>
+          <DrawerBody>
+            <FormControl>
+              <Select
+                placeholder={"CWRU courses"}
+                id="courseName"
+                onChange={(e) => {
+                  const [courseName, id] = e.target.value.split("|");
+                  if (
+                    !courses.some(
+                      (course) => Number(course.id) === Number(id)
+                    ) &&
+                    courseName
+                  ) {
+                    setSelectedCourses([
+                      { courseName, id },
+                      ...selectedCourses,
+                    ]);
+                  }
+                }}
+              >
+                {data?.allCourses.map(({ id, courseName }) => (
+                  <option key={id} value={`${courseName}|${id}`}>
+                    {courseName}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack spacing={5} mt={6} h="90%" overflowY="scroll">
+              {selectedCourses.map(({ courseName, id }) => (
+                <Tag key={id} bg="cwru" color="white" w="fit-content" p={2}>
+                  <TagLabel>{courseName}</TagLabel>
+                  <TagCloseButton
+                    color="white"
+                    transform="scale(1.1)"
+                    id={id}
+                    onClick={(e) => {
+                      let _id;
+                      if (e.target.parentElement.id) {
+                        _id = e.target.parentElement.id;
+                      } else {
+                        _id = e.target.parentElement.parentElement.id;
+                      }
+                      setSelectedCourses(
+                        selectedCourses.filter(
+                          (selectedCourse) => selectedCourse.id !== _id
+                        )
+                      );
+                    }}
+                  />
+                </Tag>
+              ))}
+            </Stack>
+          </DrawerBody>
+          <DrawerFooter>
+            <Flex justify="space-between" items="center" w="full">
+              <NextLink passHref href="/add-a-course">
+                <Link mt={2}>Can&apos;t find your course?</Link>
+              </NextLink>
+
+              <Button
+                isLoading={isLoading}
+                type="submit"
+                loadingText={"Adding"}
+                spinnerPlacement="end"
+                size="md"
+                bg="cwru"
+                color="white"
+                colorScheme="black"
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+                isDisabled={selectedCourses.length == 0}
+                onClick={submitCourses}
+              >
+                Continue
+              </Button>
+            </Flex>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Main Content */}
+      <Flex
+        justify="start"
+        align="center"
+        direction="column"
+        h="full"
+        w="full"
+        pt="2rem"
+      >
+        {courses.length > 0 && (
+          <Heading>
+            Courses&nbsp;
             <Button
+              size="md"
+              fontSize="xl"
+              p={3}
               bg="cwru"
               color="white"
               colorScheme="black"
               _active={{
                 transform: "scale(0.95)",
               }}
-              mr={3}
-              onClick={onClose}
+              m={1}
+              onClick={() => setDrawerOpen(true)}
             >
-              Ok
+              <FiPlus />
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Flex justify="start" align="start" direction="column" h="full" pt="2rem">
-        <FormControl>
-          <FormLabel htmlFor="courseName">Choose your courses</FormLabel>
-          <Select
-            w="50%"
-            borderColor="cwru"
-            placeholder={"CWRU courses"}
-            id="courseName"
-            onChange={(e) => {
-              const [courseName, id] = e.target.value.split("|");
-              if (!tags.some((tag) => tag.id === id)) {
-                setTags([{ courseName, id }, ...tags]);
-              }
-            }}
-          >
-            {allCourses.map(({ id, courseName }) => (
-              <option key={id} value={`${courseName}|${id}`}>
-                {courseName}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Stack spacing={5} mt={6} overflow="scroll" maxH="25rem" w="50%">
-          {tags.map(({ courseName, id }) => (
-            <Tag key={id} bg="cwru" color="white" w="fit-content" py="1" px="2">
-              <TagLabel>{courseName}</TagLabel>
-              <TagCloseButton
-                color="white"
-                transform="scale(1.1)"
-                id={id}
-                onClick={(e) => {
-                  let _id;
-                  if (e.target.parentElement.id) {
-                    _id = e.target.parentElement.id;
-                  } else {
-                    _id = e.target.parentElement.parentElement.id;
-                  }
-                  setTags(tags.filter((tag) => tag.id !== _id));
-                }}
-              />
-            </Tag>
-          ))}
-        </Stack>
-        {tags.length > 0 && (
-          <Button
-            bg="cwru"
-            color="white"
-            colorScheme="black"
-            _active={{
-              transform: "scale(0.95)",
-            }}
-            mt={6}
-            onClick={() => {}}
-          >
-            <BiBookAlt />
-            <span>Add</span>
-          </Button>
+          </Heading>
         )}
+
+        <Wrap
+          spacing="30px"
+          align="center"
+          justify="center"
+          mt={9}
+          h="90%"
+          overflowY="scroll"
+          overflowX="hidden"
+        >
+          {courses.map(({ courseName, id }) => (
+            <WrapItem key={id} w={["85vw", "fit-content"]}>
+              <Tag bg="cwru" color="white" w="fit-content" p={2}>
+                <TagLabel>{courseName}</TagLabel>
+                <TagCloseButton
+                  color="white"
+                  transform="scale(1.1)"
+                  id={id}
+                  onClick={(e) => {
+                    let _id;
+                    if (e.target.parentElement.id) {
+                      _id = e.target.parentElement.id;
+                    } else {
+                      _id = e.target.parentElement.parentElement.id;
+                    }
+                    setSelectedId(Number(_id));
+                    setConfirmOpen(true);
+                  }}
+                />
+              </Tag>
+            </WrapItem>
+          ))}
+        </Wrap>
       </Flex>
+
+      {/* Confirmation alert */}
+      <AlertDialog
+        isOpen={confirmOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setConfirmOpen(false)}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Course
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this course?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                loadingText="Deleting"
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    const filteredCourses = courses.filter(
+                      (course) => Number(course.id) !== Number(selectedId)
+                    );
+                    await axios.post("/api/protected/courses/remove", {
+                      courseId: Number(selectedId),
+                      caseId: session.user.caseId,
+                    });
+                    toast({
+                      title: "Course Deleted",
+                      description: "Course has been deleted",
+                      status: "info",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    setCourses(filteredCourses);
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setConfirmOpen(false);
+                    setSelectedId("");
+                  }
+                }}
+                ml={3}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 }
 
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, res }) {
   const session = await getSession({ req });
 
-  if (!session) return { props: {} };
+  if (!session) {
+    res.writeHead(302, { Location: "/" });
+    res.end();
+    return { props: {} };
+  }
 
-  const allCourses = await prisma.course.findMany({
-    orderBy: {
-      courseName: "asc",
+  const { courses } = await prisma.user.findUnique({
+    where: { caseId: session.user.caseId },
+    select: {
+      courses: true,
     },
   });
 
-  const userCourses = await prisma.course.findMany({
-    where: {
-      users: {
-        some: {
-          caseId: session.user.caseId,
-        },
-      },
-    },
-    orderBy: {
-      courseName: "asc",
-    },
-  });
   return {
-    props: { allCourses, userCourses },
+    props: {
+      userCourses: courses.sort((a, b) =>
+        a.courseName.localeCompare(b.courseName)
+      ),
+    },
   };
 }
-
-MyCourses.isProtected = true;

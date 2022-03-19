@@ -70,7 +70,7 @@ export default function QuestionCard({ question }) {
               _hover={{
                 transform: "scale(1.02)",
               }}
-              onClick={() => router.push("/question/2")}
+              onClick={() => router.push("/questions/2")}
             >
               View Question
             </Button>
