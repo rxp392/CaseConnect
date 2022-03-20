@@ -25,6 +25,10 @@ import {
   FormControl,
   FormErrorMessage,
   Tooltip,
+  Badge,
+  Wrap,
+  WrapItem,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -48,6 +52,8 @@ export default function QuestionCard({
     userImage,
     id,
     answers,
+    userCaseId,
+    views,
   } = _question;
 
   const answersLength = answers.length;
@@ -55,6 +61,7 @@ export default function QuestionCard({
     (acc, curr) => acc + curr.comments.length,
     0
   );
+  const viewedDate = views.find((view) => view.caseId === userCaseId);
 
   const router = useRouter();
   const toast = useToast();
@@ -63,14 +70,10 @@ export default function QuestionCard({
   const [editAlertOpen, setEditAlertOpen] = useState(false);
   const [questionTitle, setQuestionTitle] = useState(question);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLarge] = useMediaQuery("(min-width: 480px)");
 
-  const formatAnswersAndComments = (_answers, _comments) => {
-    if (_answers == 0 && _comments == 0) return "no answers or comments";
-    return `${_answers === 0 ? "no" : _answers} answer${
-      _answers > 1 || _answers === 0 ? "s" : ""
-    }, ${_comments === 0 ? "no" : _comments} comment${
-      _comments > 1 || _comments === 0 ? "s" : ""
-    }`;
+  const formatBadge = (number, type) => {
+    return `${number} ${type}${number > 1 ? "s" : ""}`;
   };
 
   useEffect(() => {
@@ -107,7 +110,7 @@ export default function QuestionCard({
                 color="black"
                 fontSize={"2xl"}
                 fontWeight="semibold"
-                isTruncated
+                isTruncated={isLarge}
               >
                 {question}
               </Heading>
@@ -120,14 +123,34 @@ export default function QuestionCard({
             >
               {courseName}
             </Text>
-            <Text
-              color="gray.900"
-              fontSize={"sm"}
-              transform={"translateY(-.25rem)"}
-              fontWeight="normal"
-            >
-              {formatAnswersAndComments(answersLength, commentsLength)}
-            </Text>
+            <Wrap pt={1}>
+              {answersLength > 0 && (
+                <WrapItem>
+                  <Badge colorScheme="green">
+                    {formatBadge(answersLength, "answer")}
+                  </Badge>
+                </WrapItem>
+              )}
+              {commentsLength > 0 && (
+                <WrapItem>
+                  <Badge colorScheme="blue">
+                    {formatBadge(commentsLength, "comment")}
+                  </Badge>
+                </WrapItem>
+              )}
+              {viewedDate && (
+                <WrapItem>
+                  <Badge colorScheme="purple">
+                    Viewed{" "}
+                    {new Date(viewedDate.viewedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </Badge>
+                </WrapItem>
+              )}
+            </Wrap>
           </Stack>
           <Stack
             textAlign="left"

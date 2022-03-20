@@ -14,7 +14,6 @@ import { useState } from "react";
 import QuestionCard from "components/QuestionCard";
 
 export default function MyAnswers({ _questions }) {
-  console.log(_questions);
   const { data: session } = useSession();
   const [questions, setQuestions] = useState(_questions);
 
@@ -131,6 +130,12 @@ export async function getServerSideProps({ req, res }) {
           },
         },
       },
+      views: {
+        select: {
+          viewedAt: true,
+          caseId: true,
+        },
+      },
       userCaseId: true,
       publisherName: true,
       createdAt: true,
@@ -145,6 +150,10 @@ export async function getServerSideProps({ req, res }) {
       _questions: questions.map((question) => ({
         ...question,
         createdAt: question.createdAt.toISOString(),
+        views: question.views.map((view) => ({
+          ...view,
+          viewedAt: view.viewedAt.toISOString(),
+        })),
       })),
     },
   };

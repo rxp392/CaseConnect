@@ -131,6 +131,12 @@ export async function getServerSideProps({ req, res }) {
           },
         },
       },
+      views: {
+        select: {
+          viewedAt: true,
+          caseId: true,
+        },
+      },
       userCaseId: true,
       publisherName: true,
       createdAt: true,
@@ -139,7 +145,7 @@ export async function getServerSideProps({ req, res }) {
 
   return {
     props: {
-      _questions: [...allQuestions, ...questions]
+      _questions: allQuestions
         .filter(
           (value, index, self) =>
             index === self.findIndex((t) => t.id === value.id)
@@ -148,6 +154,10 @@ export async function getServerSideProps({ req, res }) {
         .map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
+          views: question.views.map((view) => ({
+            ...view,
+            viewedAt: view.viewedAt.toISOString(),
+          })),
         })),
     },
   };

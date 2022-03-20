@@ -136,6 +136,12 @@ export const getServerSideProps = async ({ req, res }) => {
           },
         },
       },
+      views: {
+        select: {
+          viewedAt: true,
+          caseId: true,
+        },
+      },
       userCaseId: true,
       publisherName: true,
       createdAt: true,
@@ -151,6 +157,10 @@ export const getServerSideProps = async ({ req, res }) => {
         .map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
+          views: question.views.map((view) => ({
+            ...view,
+            viewedAt: view.viewedAt.toISOString(),
+          })),
         })),
     },
   };
