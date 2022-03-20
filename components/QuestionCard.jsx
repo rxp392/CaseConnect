@@ -22,12 +22,14 @@ import {
   PopoverBody,
   PopoverArrow,
   Portal,
+  FormControl,
+  FormErrorMessage,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { BsFillTrashFill } from "react-icons/bs";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-
 import { BiEditAlt } from "react-icons/bi";
 import { FiEdit } from "react-icons/fi";
 
@@ -44,9 +46,15 @@ export default function QuestionCard({
     publisherName,
     question,
     userImage,
-    userCaseId,
     id,
+    answers,
   } = _question;
+
+  const answersLength = answers.length;
+  const commentsLength = answers.reduce(
+    (acc, curr) => acc + curr.comments.length,
+    0
+  );
 
   const router = useRouter();
   const toast = useToast();
@@ -56,36 +64,86 @@ export default function QuestionCard({
   const [questionTitle, setQuestionTitle] = useState(question);
   const [isLoading, setIsLoading] = useState(false);
 
+  const formatAnswersAndComments = (_answers, _comments) => {
+    if (_answers == 0 && _comments == 0) return "no answers or comments";
+    return `${_answers === 0 ? "no" : _answers} answer${
+      _answers > 1 || _answers === 0 ? "s" : ""
+    }, ${_comments === 0 ? "no" : _comments} comment${
+      _comments > 1 || _comments === 0 ? "s" : ""
+    }`;
+  };
+
+  useEffect(() => {
+    setQuestionTitle(question);
+  }, [editAlertOpen]);
+
   return (
     <>
       <Center py={6}>
         <Box
-          maxW={"445px"}
+          maxW={["85vw", "445px"]}
+          minW={["85vw", "445px"]}
           w={"full"}
           bg="white"
           boxShadow={"xl"}
-          rounded={"md"}
-          p={5}
+          rounded={"lg"}
+          p={4}
           pos="relative"
         >
           <Stack spacing={2}>
-            <Heading color="gray.700" fontSize={"xl"}>
-              {question}
-            </Heading>
-            <Text color="gray.600" fontSize={"md"}>
+            <Tooltip
+              isDisabled={question.length < 35}
+              hasArrow
+              label={question}
+              arrowSize={7}
+              bg="cwru"
+              color="white"
+              boxShadow={"xl"}
+              rounded="lg"
+              p={2}
+              fontSize={"md"}
+            >
+              <Heading
+                color="black"
+                fontSize={"2xl"}
+                fontWeight="semibold"
+                isTruncated
+              >
+                {question}
+              </Heading>
+            </Tooltip>
+            <Text
+              color="gray.900"
+              fontSize={"md"}
+              fontWeight="normal"
+              isTruncated
+            >
               {courseName}
+            </Text>
+            <Text
+              color="gray.900"
+              fontSize={"sm"}
+              transform={"translateY(-.25rem)"}
+              fontWeight="normal"
+            >
+              {formatAnswersAndComments(answersLength, commentsLength)}
             </Text>
           </Stack>
           <Stack
-            mt={8}
-            direction={"row"}
+            textAlign="left"
+            mt={[5, 7]}
+            direction={["column", "row"]}
             display={"flex"}
             w={"full"}
-            justifyContent={"space-between"}
-            spacing={10}
-            align={"center"}
+            justifyContent={["center", "space-between"]}
+            spacing={[6, 10]}
+            align={["start", "center"]}
           >
-            <Flex gap={3} justifyContent={"center"} align="center">
+            <Flex
+              gap={3}
+              justifyContent={["start", "center"]}
+              align={["start", "center"]}
+            >
               <Avatar
                 src={userImage}
                 name={publisherName}
@@ -107,13 +165,15 @@ export default function QuestionCard({
                 </Text>
               </Stack>
             </Flex>
-            <Flex gap={1}>
+            <Flex gap={1} direction={["row-reverse", "row"]}>
               {isUser && (
                 <Popover>
                   <PopoverTrigger>
                     <IconButton
                       icon={<FiEdit />}
-                      size="md"
+                      size={["sm", "md"]}
+                      fontSize={["sm", "md"]}
+                      p={2.5}
                       bg="cwru"
                       color="white"
                       colorScheme="black"
@@ -121,12 +181,12 @@ export default function QuestionCard({
                         transform: "scale(0.95)",
                       }}
                       _hover={{
-                        transform: "scale(1.02)",
+                        backgroundColor: "rgba(10, 48, 78, 0.85)",
                       }}
                     />
                   </PopoverTrigger>
                   <Portal>
-                    <PopoverContent>
+                    <PopoverContent w="fit-content">
                       <PopoverArrow />
                       <PopoverBody>
                         <Flex
@@ -136,34 +196,26 @@ export default function QuestionCard({
                           alignItems="center"
                         >
                           <Button
+                            px={5}
                             w="full"
-                            bg="cwru"
-                            color="white"
-                            colorScheme="black"
+                            colorScheme="blue"
+                            leftIcon={<BiEditAlt />}
+                            onClick={() => setEditAlertOpen(true)}
                             _active={{
                               transform: "scale(0.95)",
                             }}
-                            _hover={{
-                              transform: "scale(1.02)",
-                            }}
-                            leftIcon={<BiEditAlt />}
-                            onClick={() => setEditAlertOpen(true)}
                           >
                             Edit
                           </Button>
                           <Button
+                            px={5}
                             w="full"
-                            bg="cwru"
-                            color="white"
-                            colorScheme="black"
+                            colorScheme="red"
+                            leftIcon={<BsFillTrashFill />}
+                            onClick={() => setDeleteAlertOpen(true)}
                             _active={{
                               transform: "scale(0.95)",
                             }}
-                            _hover={{
-                              transform: "scale(1.02)",
-                            }}
-                            leftIcon={<BsFillTrashFill />}
-                            onClick={() => setDeleteAlertOpen(true)}
                           >
                             Delete
                           </Button>
@@ -177,7 +229,9 @@ export default function QuestionCard({
                 type="submit"
                 loadingText="Posting"
                 spinnerPlacement="end"
-                size="md"
+                p={2.5}
+                size={["sm", "md"]}
+                fontSize={["sm", "md"]}
                 bg="cwru"
                 color="white"
                 colorScheme="black"
@@ -185,7 +239,7 @@ export default function QuestionCard({
                   transform: "scale(0.95)",
                 }}
                 _hover={{
-                  transform: "scale(1.02)",
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
                 onClick={() => router.push(`/questions/${id}-${courseId}`)}
               >
@@ -240,6 +294,7 @@ function EditAlert({
   questions,
   setQuestions,
 }) {
+  const [errorMessage, setErrorMessage] = useState("");
   return (
     <AlertDialog
       isOpen={editAlertOpen}
@@ -253,22 +308,49 @@ function EditAlert({
             Edit Question
           </AlertDialogHeader>
           <AlertDialogBody>
-            <Textarea
-              h="min-content"
-              type="text"
-              resize="none"
-              maxLength={171}
-              placeholder={questionTitle}
-              value={questionTitle}
-              onChange={(e) => setQuestionTitle(e.target.value)}
-            />
+            <FormControl isInvalid={errorMessage}>
+              <Textarea
+                placeholder={questionTitle}
+                value={questionTitle}
+                h="min-content"
+                type="text"
+                resize="none"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setQuestionTitle(value);
+                  if (value.length == 0) {
+                    setErrorMessage("Question cannot be empty");
+                  } else if (value.length < 10) {
+                    setErrorMessage("Question must be at least 10 characters");
+                  } else if (value.length > 250) {
+                    setErrorMessage(
+                      "Question must be less than 250 characters"
+                    );
+                  } else {
+                    setErrorMessage("");
+                  }
+                }}
+              />
+              <FormErrorMessage>{errorMessage}</FormErrorMessage>
+            </FormControl>
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
+            <Button
+              ref={cancelRef}
+              onClick={() => setEditAlertOpen(false)}
+              _active={{
+                transform: "scale(0.95)",
+              }}
+            >
               Cancel
             </Button>
             <Button
-              isDisabled={questionTitle === question}
+              _active={
+                !(questionTitle === question || errorMessage) && {
+                  transform: "scale(0.95)",
+                }
+              }
+              isDisabled={questionTitle === question || errorMessage}
               colorScheme="blue"
               loadingText="Updating"
               spinnerPlacement="end"
@@ -283,7 +365,7 @@ function EditAlert({
                   toast({
                     title: "Question Updated",
                     description: "Your question has been updated",
-                    status: "info",
+                    status: "success",
                     variant: "left-accent",
                     position: "bottom-left",
                     duration: 5000,
@@ -352,10 +434,19 @@ function DeleteAlert({
             Are you sure you want to delete your question?
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
+            <Button
+              ref={cancelRef}
+              onClick={() => setDeleteAlertOpen(false)}
+              _active={{
+                transform: "scale(0.95)",
+              }}
+            >
               Cancel
             </Button>
             <Button
+              _active={{
+                transform: "scale(0.95)",
+              }}
               colorScheme="red"
               loadingText="Deleting"
               spinnerPlacement="end"
@@ -371,7 +462,7 @@ function DeleteAlert({
                   toast({
                     title: "Question Deleted",
                     description: "Your question has been deleted",
-                    status: "info",
+                    status: "success",
                     variant: "left-accent",
                     position: "bottom-left",
                     duration: 5000,

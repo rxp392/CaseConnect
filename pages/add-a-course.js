@@ -44,7 +44,7 @@ export default function AddCourse() {
       toast({
         title: "Success",
         description: "Your course has been created",
-        status: "info",
+        status: "success",
         position: "bottom-left",
         variant: "left-accent",
         duration: 5000,
@@ -116,7 +116,7 @@ export default function AddCourse() {
                 }
                 _hover={
                   isValid && {
-                    transform: "scale(1.02)",
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
                   }
                 }
               >

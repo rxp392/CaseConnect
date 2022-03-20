@@ -33,8 +33,11 @@ export default function AskQuestion({ courses }) {
     try {
       const [_courseName, courseId] = courseName.split("|");
 
+      const capitalizedQuestion =
+        question.charAt(0).toUpperCase() + question.slice(1);
+
       const formData = new FormData();
-      formData.append("question", question.trim());
+      formData.append("question", capitalizedQuestion.trim());
       formData.append("courseName", _courseName);
       formData.append("courseId", courseId);
       formData.append("caseId", session.user.caseId);
@@ -52,7 +55,7 @@ export default function AskQuestion({ courses }) {
       toast({
         title: "Success",
         description: "Your question has been posted.",
-        status: "info",
+        status: "success",
         position: "bottom-left",
         variant: "left-accent",
         duration: 5000,
@@ -91,9 +94,16 @@ export default function AskQuestion({ courses }) {
                 h="min-content"
                 type="text"
                 resize="none"
-                maxLength={171}
                 {...register("question", {
                   required: "Enter a question",
+                  minLength: {
+                    value: 10,
+                    message: "Question must be at least 10 characters",
+                  },
+                  maxLength: {
+                    value: 250,
+                    message: "Question must be less than 250 characters",
+                  },
                 })}
               />
               <FormErrorMessage>
@@ -148,7 +158,7 @@ export default function AskQuestion({ courses }) {
                 }
                 _hover={
                   isValid && {
-                    transform: "scale(1.02)",
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
                   }
                 }
               >

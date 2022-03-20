@@ -73,7 +73,7 @@ export default function MyCourses({ userCourses }) {
         description: `Your courses have been ${
           !courses.length ? "added" : "updated"
         }`,
-        status: "info",
+        status: "success",
         variant: "left-accent",
         position: "bottom-left",
         duration: 5000,
@@ -185,7 +185,7 @@ export default function MyCourses({ userCourses }) {
                 }
                 _hover={
                   !selectedCourses.length == 0 && {
-                    transform: "scale(1.02)",
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
                   }
                 }
                 isDisabled={selectedCourses.length == 0}
@@ -204,7 +204,6 @@ export default function MyCourses({ userCourses }) {
         align="center"
         direction="column"
         h="full"
-        w="full"
         pt="2rem"
       >
         <SlideFade in={true} offsetY="20px">
@@ -221,7 +220,7 @@ export default function MyCourses({ userCourses }) {
                   transform: "scale(0.95)",
                 }}
                 _hover={{
-                  transform: "scale(1.02)",
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
                 onClick={() => setDrawerOpen(true)}
                 icon={<FiPlus />}
@@ -234,7 +233,7 @@ export default function MyCourses({ userCourses }) {
             align="center"
             justify="center"
             mt={9}
-            h="90%"
+            h="full"
             overflowY="scroll"
             overflowX="hidden"
           >
@@ -301,7 +300,7 @@ export default function MyCourses({ userCourses }) {
                     toast({
                       title: "Course Deleted",
                       description: "Course has been deleted",
-                      status: "info",
+                      status: "success",
                       variant: "left-accent",
                       position: "bottom-left",
                       duration: 5000,

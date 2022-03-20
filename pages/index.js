@@ -77,7 +77,7 @@ export default function Index() {
                   transform: "scale(0.95)",
                 }}
                 _hover={{
-                  transform: "scale(1.02)",
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
               >
                 <Center>

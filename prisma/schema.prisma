@@ -18,19 +18,20 @@ model History {
 }
 
 model User {
-  caseId         String     @id
+  caseId         String         @id
   name           String
   image          String?
-  subscription   String     @default("Basic")
-  canAnswer      Boolean    @default(true)
-  browseLimit    Int        @default(10)
-  postLimit      Int        @default(3)
-  accountCreated DateTime   @default(now())
+  subscription   String         @default("Basic")
+  canAnswer      Boolean        @default(true)
+  browseLimit    Int            @default(10)
+  postLimit      Int            @default(3)
+  accountCreated DateTime       @default(now())
   questions      Question[]
   answers        Answer[]
   courses        Course[]
   comments       Comment[]
   viewHistory    History[]
+  notifications  Notification[]
 }
 
 model Question {
@@ -81,4 +82,14 @@ model Course {
   courseName String
   questions  Question[]
   users      User[]
+}
+
+model Notification {
+  id             Int      @id @default(autoincrement())
+  type           String
+  notifierName   String
+  notifierCaseId String
+  userCaseId     String
+  belongsTo      User     @relation(fields: [userCaseId], references: [caseId])
+  createdAt      DateTime @default(now())
 }

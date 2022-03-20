@@ -21,23 +21,24 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
-import { MdOutlineQuestionAnswer, MdOutlineFeed } from "react-icons/md";
-import { BiBookAlt } from "react-icons/bi";
+import { MdOutlineQuestionAnswer } from "react-icons/md";
+import { BiBookAlt, BiQuestionMark } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
 import { AiOutlineHistory } from "react-icons/ai";
-import { BsQuestionLg } from "react-icons/bs";
+import { IoCheckmarkSharp } from "react-icons/io5";
+import { BsCardText } from "react-icons/bs";
 
 const LinkItems = [
   {
     name: "Questions",
-    icon: MdOutlineFeed,
+    icon: BsCardText,
     href: "/questions",
   },
   {
     name: "Ask a question",
-    icon: BsQuestionLg,
+    icon: BiQuestionMark,
     href: "/ask-a-question",
   },
   {
@@ -51,9 +52,14 @@ const LinkItems = [
     href: "/my-courses",
   },
   {
-    name: "My History",
+    name: "My Answers",
+    icon: IoCheckmarkSharp,
+    href: "/my-answers",
+  },
+  {
+    name: "View History",
     icon: AiOutlineHistory,
-    href: "/my-history",
+    href: "/view-history",
   },
 ];
 

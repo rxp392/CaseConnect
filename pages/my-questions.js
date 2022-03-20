@@ -27,7 +27,7 @@ export default function MyQuestions({ _questions }) {
           gap={4}
         >
           <Text fontSize={["lg", "2xl", "3xl"]}>
-            You haven&apos;t asked any questions yet
+            You haven&apos;t asked any questions
           </Text>
           <NextLink passHref href="/ask-a-question">
             <Button
@@ -40,7 +40,7 @@ export default function MyQuestions({ _questions }) {
                 transform: "scale(0.95)",
               }}
               _hover={{
-                transform: "scale(1.02)",
+                backgroundColor: "rgba(10, 48, 78, 0.85)",
               }}
             >
               Ask a question
@@ -100,7 +100,28 @@ export async function getServerSideProps({ req, res }) {
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
-      questions: true,
+      questions: {
+        select: {
+          id: true,
+          question: true,
+          attachment: true,
+          courseId: true,
+          courseName: true,
+          course: true,
+          answers: {
+            select: {
+              comments: {
+                select: {
+                  userCaseId: true,
+                },
+              },
+            },
+          },
+          userCaseId: true,
+          publisherName: true,
+          createdAt: true,
+        },
+      },
     },
   });
 

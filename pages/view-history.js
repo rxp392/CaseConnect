@@ -13,7 +13,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import QuestionCard from "components/QuestionCard";
 
-export default function Questions({ _questions }) {
+export default function MyHistory({ _questions }) {
   const { data: session } = useSession();
   const [questions, setQuestions] = useState(_questions);
 
@@ -27,9 +27,9 @@ export default function Questions({ _questions }) {
           gap={4}
         >
           <Text fontSize={["lg", "2xl", "3xl"]}>
-            No questions have been posted 😥
+            You haven&apos;t viewed any questions
           </Text>
-          <NextLink passHref href="/ask-a-question">
+          <NextLink passHref href="/questions">
             <Button
               px={[2, 4, 6]}
               py={[2, 4, 6]}
@@ -43,7 +43,7 @@ export default function Questions({ _questions }) {
                 backgroundColor: "rgba(10, 48, 78, 0.85)",
               }}
             >
-              Ask a question
+              View questions
             </Button>
           </NextLink>
         </Flex>
@@ -62,13 +62,14 @@ export default function Questions({ _questions }) {
       overflowY="hidden"
     >
       <SlideFade in={true} offsetY="20px">
-        <Heading textAlign="center">Questions</Heading>
+        <Heading textAlign="center">View History</Heading>
         <Wrap
           justify="center"
           spacing="30px"
           h="90%"
           overflowY="scroll"
           overflowX="hidden"
+          mt={2}
         >
           {questions.map((question) => (
             <WrapItem key={question.id}>
@@ -86,7 +87,7 @@ export default function Questions({ _questions }) {
   );
 }
 
-export async function getServerSideProps({ req, res }) {
+export const getServerSideProps = async ({ req, res }) => {
   const session = await getSession({ req });
 
   if (!session) {
@@ -95,11 +96,15 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const { courses, questions } = await prisma.user.findUnique({
+  const { courses, viewHistory } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
-      questions: true,
+      viewHistory: {
+        orderBy: {
+          viewedAt: "desc",
+        },
+      },
     },
   });
 
@@ -109,10 +114,10 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const allQuestions = await prisma.question.findMany({
+  const questions = await prisma.question.findMany({
     where: {
-      courseId: {
-        in: courses.map((course) => course.id),
+      id: {
+        in: viewHistory.map((history) => Number(history.questionId)),
       },
     },
     select: {
@@ -137,18 +142,16 @@ export async function getServerSideProps({ req, res }) {
     },
   });
 
+  const questionIds = viewHistory.map((history) => Number(history.questionId));
+
   return {
     props: {
-      _questions: [...allQuestions, ...questions]
-        .filter(
-          (value, index, self) =>
-            index === self.findIndex((t) => t.id === value.id)
-        )
-        .sort((a, b) => b.createdAt - a.createdAt)
+      _questions: questions
+        .sort((a, b) => questionIds.indexOf(a.id) - questionIds.indexOf(b.id))
         .map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
         })),
     },
   };
-}
+};
