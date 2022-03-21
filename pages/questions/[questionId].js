@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Loader from "components/Loader";
 import { useSession, getSession } from "next-auth/react";
 import { useEffect } from "react";
+import { Image, Box } from "@chakra-ui/react";
 
 export default function Question({ _question }) {
   const {
@@ -13,10 +14,18 @@ export default function Question({ _question }) {
     courseName,
     userCaseId,
     publisherName,
-    userImage,
     createdAt,
   } = _question;
-  return <pre>{JSON.stringify(_question, null, 2)}</pre>;
+  return (
+    <>
+      {attachment && (
+        <Box boxSize="sm">
+          <Image src={`/question-attachments/${attachment}.jpg`} />
+        </Box>
+      )}
+      <pre>{JSON.stringify(_question, null, 2)}</pre>
+    </>
+  );
 }
 
 export async function getServerSideProps({ params, req, res }) {

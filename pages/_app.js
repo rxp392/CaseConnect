@@ -31,7 +31,6 @@ function Auth({ children }) {
 
   return status === "authenticated" ? (
     <Sidebar
-      profileImage={session.user.image}
       caseId={session.user.caseId}
       name={session.user.name}
       subscription={session.user.subscription}

@@ -49,11 +49,11 @@ export default function QuestionCard({
     createdAt,
     publisherName,
     question,
-    userImage,
     id,
     answers,
     userCaseId,
     views,
+    attachment,
   } = _question;
 
   const answersLength = answers.length;
@@ -70,9 +70,11 @@ export default function QuestionCard({
   const [editAlertOpen, setEditAlertOpen] = useState(false);
   const [questionTitle, setQuestionTitle] = useState(question);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [isLarge] = useMediaQuery("(min-width: 480px)");
 
   const formatBadge = (number, type) => {
+    if (number === 0) return `no ${type}s`;
     return `${number} ${type}${number > 1 ? "s" : ""}`;
   };
 
@@ -95,7 +97,7 @@ export default function QuestionCard({
         >
           <Stack spacing={2}>
             <Tooltip
-              isDisabled={question.length < 35}
+              isDisabled={question.length < 35 || !isLarge}
               hasArrow
               label={question}
               arrowSize={7}
@@ -124,61 +126,60 @@ export default function QuestionCard({
               {courseName}
             </Text>
             <Wrap pt={1}>
-              {answersLength > 0 && (
-                <WrapItem>
-                  <Badge colorScheme="green">
-                    {formatBadge(answersLength, "answer")}
-                  </Badge>
-                </WrapItem>
-              )}
-              {commentsLength > 0 && (
-                <WrapItem>
-                  <Badge colorScheme="blue">
-                    {formatBadge(commentsLength, "comment")}
-                  </Badge>
-                </WrapItem>
-              )}
-              {viewedDate && (
-                <WrapItem>
-                  <Badge colorScheme="purple">
-                    Viewed{" "}
-                    {new Date(viewedDate.viewedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </Badge>
-                </WrapItem>
-              )}
+              <WrapItem>
+                <Badge colorScheme="green">
+                  {formatBadge(answersLength, "answer")}
+                </Badge>
+              </WrapItem>
+
+              <WrapItem>
+                <Badge colorScheme="blue">
+                  {formatBadge(commentsLength, "comment")}
+                </Badge>
+              </WrapItem>
+
+              <WrapItem>
+                <Badge colorScheme="purple">
+                  {viewedDate ? (
+                    <>
+                      Viewed{" "}
+                      {new Date(viewedDate.viewedAt).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </>
+                  ) : (
+                    "Not Viewed"
+                  )}
+                </Badge>
+              </WrapItem>
             </Wrap>
           </Stack>
           <Stack
             textAlign="left"
-            mt={[5, 7]}
-            direction={["column", "row"]}
+            mt={8}
+            direction={"row"}
             display={"flex"}
             w={"full"}
-            justifyContent={["center", "space-between"]}
-            spacing={[6, 10]}
-            align={["start", "center"]}
+            justifyContent={"space-between"}
+            spacing={10}
+            align={"center"}
           >
-            <Flex
-              gap={3}
-              justifyContent={["start", "center"]}
-              align={["start", "center"]}
-            >
+            <Flex gap={3} justifyContent={"center"} align={"center"}>
               <Avatar
-                src={userImage}
+                src={`/profile-pics/${userCaseId}.jpg`}
                 name={publisherName}
                 size="sm"
                 bg="cwru"
                 color="white"
+                display={["none", "inline"]}
               />
               <Stack direction={"column"} spacing={0} fontSize={"xs"}>
-                <Text fontWeight={600}>
-                  {publisherName}
-                  {isUser && " (you)"}
-                </Text>
+                <Text fontWeight={600}>{publisherName}</Text>
                 <Text color={"gray.500"}>
                   {new Date(createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -188,11 +189,12 @@ export default function QuestionCard({
                 </Text>
               </Stack>
             </Flex>
-            <Flex gap={1} direction={["row-reverse", "row"]}>
+            <Flex gap={1}>
               {isUser && (
                 <Popover>
                   <PopoverTrigger>
                     <IconButton
+                      isDisabled={isPageLoading}
                       icon={<FiEdit />}
                       size={["sm", "md"]}
                       fontSize={["sm", "md"]}
@@ -250,7 +252,8 @@ export default function QuestionCard({
               )}
               <Button
                 type="submit"
-                loadingText="Posting"
+                loadingText="Loading..."
+                isLoading={isPageLoading}
                 spinnerPlacement="end"
                 p={2.5}
                 size={["sm", "md"]}
@@ -264,7 +267,10 @@ export default function QuestionCard({
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
-                onClick={() => router.push(`/questions/${id}-${courseId}`)}
+                onClick={() => {
+                  setIsPageLoading(true);
+                  router.push(`/questions/${id}-${courseId}`);
+                }}
               >
                 View Question
               </Button>
@@ -298,6 +304,7 @@ export default function QuestionCard({
         id={id}
         questions={questions}
         setQuestions={setQuestions}
+        attachment={attachment}
       />
     </>
   );
@@ -375,7 +382,7 @@ function EditAlert({
               }
               isDisabled={questionTitle === question || errorMessage}
               colorScheme="blue"
-              loadingText="Updating"
+              loadingText="Updating..."
               spinnerPlacement="end"
               isLoading={isLoading}
               onClick={async () => {
@@ -384,15 +391,6 @@ function EditAlert({
                   await axios.post("/api/protected/questions/update", {
                     id,
                     question: questionTitle,
-                  });
-                  toast({
-                    title: "Question Updated",
-                    description: "Your question has been updated",
-                    status: "success",
-                    variant: "left-accent",
-                    position: "bottom-left",
-                    duration: 5000,
-                    isClosable: true,
                   });
                   setQuestions(
                     questions.map((_question) =>
@@ -404,6 +402,15 @@ function EditAlert({
                         : _question
                     )
                   );
+                  toast({
+                    title: "Question Updated",
+                    description: "Your question has been updated",
+                    status: "success",
+                    variant: "left-accent",
+                    position: "bottom-left",
+                    duration: 5000,
+                    isClosable: true,
+                  });
                 } catch {
                   toast({
                     title: "An Error Ocurred",
@@ -440,6 +447,7 @@ function DeleteAlert({
   toast,
   isLoading,
   setIsLoading,
+  attachment,
 }) {
   return (
     <AlertDialog
@@ -471,7 +479,7 @@ function DeleteAlert({
                 transform: "scale(0.95)",
               }}
               colorScheme="red"
-              loadingText="Deleting"
+              loadingText="Deleting..."
               spinnerPlacement="end"
               isLoading={isLoading}
               onClick={async () => {
@@ -480,8 +488,12 @@ function DeleteAlert({
                   await axios.delete("/api/protected/questions/delete", {
                     data: {
                       id,
+                      attachment,
                     },
                   });
+                  setQuestions(
+                    questions.filter((question) => question.id !== id)
+                  );
                   toast({
                     title: "Question Deleted",
                     description: "Your question has been deleted",
@@ -491,9 +503,6 @@ function DeleteAlert({
                     duration: 5000,
                     isClosable: true,
                   });
-                  setQuestions(
-                    questions.filter((question) => question.id !== id)
-                  );
                 } catch {
                   toast({
                     title: "An Error Ocurred",

@@ -95,11 +95,10 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const { courses, questions } = await prisma.user.findUnique({
+  const { courses } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
-      questions: true,
     },
   });
 

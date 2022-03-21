@@ -20,7 +20,6 @@ model History {
 model User {
   caseId         String         @id
   name           String
-  image          String?
   subscription   String         @default("Basic")
   canAnswer      Boolean        @default(true)
   browseLimit    Int            @default(10)
@@ -45,7 +44,6 @@ model Question {
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
-  userImage     String?
   createdAt     DateTime  @default(now())
   views         History[]
 }

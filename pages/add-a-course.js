@@ -102,7 +102,7 @@ export default function AddCourse() {
               <Button
                 isDisabled={!isValid}
                 type="submit"
-                loadingText="Adding"
+                loadingText="Adding..."
                 spinnerPlacement="end"
                 isLoading={isSubmitting}
                 size="lg"

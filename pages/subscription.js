@@ -290,7 +290,6 @@ export async function getServerSideProps({ req, res }) {
     select: {
       caseId: true,
       name: true,
-      image: true,
       subscription: true,
       canAnswer: true,
       browseLimit: true,

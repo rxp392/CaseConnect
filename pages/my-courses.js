@@ -68,18 +68,18 @@ export default function MyCourses({ userCourses }) {
         )
       );
       setSelectedCourses([]);
+      setDrawerOpen(false);
       toast({
-        title: `Courses ${!courses.length ? "added" : "updated"}`,
-        description: `Your courses have been ${
-          !courses.length ? "added" : "updated"
-        }`,
+        title: `Course${selectedCourses.length > 1 ? "s" : ""} added`,
+        description: `Your course${selectedCourses.length > 1 ? "s" : ""} ${
+          selectedCourses.length > 1 ? "have" : "has"
+        } been added`,
         status: "success",
         variant: "left-accent",
         position: "bottom-left",
         duration: 5000,
         isClosable: true,
       });
-      setDrawerOpen(false);
     } catch {
       toast({
         title: "An Error Ocurred",
@@ -172,7 +172,7 @@ export default function MyCourses({ userCourses }) {
               <Button
                 isLoading={isLoading}
                 type="submit"
-                loadingText={"Adding"}
+                loadingText={"Adding..."}
                 spinnerPlacement="end"
                 size="md"
                 bg="cwru"
@@ -284,7 +284,7 @@ export default function MyCourses({ userCourses }) {
               </Button>
               <Button
                 colorScheme="red"
-                loadingText="Deleting"
+                loadingText="Deleting..."
                 spinnerPlacement="end"
                 isLoading={isLoading}
                 onClick={async () => {
@@ -297,6 +297,7 @@ export default function MyCourses({ userCourses }) {
                       courseId: Number(selectedId),
                       caseId: session.user.caseId,
                     });
+                    setCourses(filteredCourses);
                     toast({
                       title: "Course Deleted",
                       description: "Course has been deleted",
@@ -306,7 +307,6 @@ export default function MyCourses({ userCourses }) {
                       duration: 5000,
                       isClosable: true,
                     });
-                    setCourses(filteredCourses);
                   } catch {
                     toast({
                       title: "An Error Ocurred",

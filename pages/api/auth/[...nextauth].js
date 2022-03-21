@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "lib/prisma";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
 
 export default NextAuth({
   session: {
@@ -16,26 +19,35 @@ export default NextAuth({
 
         const caseId = profile.email.split("@")[0];
 
-        const { name, image, subscription, canAnswer, accountCreated } =
+        const { name, subscription, canAnswer, accountCreated } =
           await prisma.user.upsert({
             where: { caseId },
             update: {},
             create: {
               caseId,
               name: profile.name,
-              image: profile.picture,
             },
           });
 
         user.caseId = caseId;
         user.name = name;
-        user.image = image;
         user.subscription = subscription;
         user.canAnswer = canAnswer;
         user.accountCreated = accountCreated;
 
         delete user.id;
 
+        const filePath = path.join(
+          __dirname,
+          "../../../../../public/profile-pics",
+          `${caseId}.jpg`
+        );
+        if (!fs.existsSync(filePath)) {
+          const { data } = await axios.get(profile.picture, {
+            responseType: "arraybuffer",
+          });
+          fs.writeFileSync(filePath, Buffer.from(data, "base64"));
+        }
         return true;
       }
       return false;

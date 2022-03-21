@@ -1,6 +1,7 @@
 import prisma from "lib/prisma";
 import { IncomingForm } from "formidable";
-import cloudinary from "cloudinary";
+import fs from "fs";
+import path from "path";
 
 export const config = {
   api: {
@@ -21,17 +22,24 @@ export default async function handler(req, res) {
       form.parse(req, async (__, fields, files) => {
         questionData = { ...fields };
 
-        const filepath = files.attachment?.filepath;
+        const attachment = files.attachment;
 
-        if (filepath) {
-          const { secure_url } = await cloudinary.v2.uploader.upload(filepath, {
-            type: "private",
-            folder: "question-attachments",
-            public_id: files.attachment.originalFilename,
-            invalidate: true,
-          });
-          questionData.attachment = secure_url;
+        const timeStamp = Math.round(Date.now() + Math.random(), 2).toString();
+
+        const filePath = attachment?.originalFilename
+          ? path.join(
+              __dirname,
+              "../../../../../../public/question-attachments",
+              `${timeStamp}.jpg`
+            )
+          : null;
+
+        if (attachment && !fs.existsSync(filePath)) {
+          fs.writeFileSync(filePath, fs.readFileSync(attachment.filepath));
         }
+
+        questionData.attachment = timeStamp;
+
         resolve();
       });
     });
@@ -44,7 +52,6 @@ export default async function handler(req, res) {
         courseName: questionData.courseName,
         userCaseId: questionData.caseId,
         publisherName: questionData.publisherName,
-        userImage: questionData.userImage,
       },
     });
 

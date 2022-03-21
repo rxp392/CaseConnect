@@ -11,6 +11,7 @@ import {
   Textarea,
   SlideFade,
   Heading,
+  FormHelperText,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { getSession, useSession } from "next-auth/react";
@@ -44,13 +45,10 @@ export default function AskQuestion({ courses }) {
       formData.append("publisherName", session.user.name);
       formData.append("userImage", session.user.image);
       formData.append("attachment", attachment[0]);
-      formData.append("secret", process.env.NEXT_PUBLIC_SECRET);
-
       await fetch("/api/protected/questions/post", {
         method: "POST",
         body: formData,
       });
-
       router.push("/questions");
       toast({
         title: "Success",
@@ -135,16 +133,19 @@ export default function AskQuestion({ courses }) {
               <Input
                 type="file"
                 id="attachment"
-                accept="image/*"
+                accept="image/jpg, image/jpeg"
                 {...register("attachment")}
                 size="sm"
               />
+              <FormHelperText>
+                Only .jpg and .jpeg files are allowed
+              </FormHelperText>
             </FormControl>
             <Stack spacing={10} pt={2}>
               <Button
                 isDisabled={!isValid}
                 type="submit"
-                loadingText="Posting"
+                loadingText="Posting..."
                 spinnerPlacement="end"
                 isLoading={isSubmitting}
                 size="lg"
