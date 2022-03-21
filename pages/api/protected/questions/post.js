@@ -36,9 +36,10 @@ export default async function handler(req, res) {
 
         if (attachment && !fs.existsSync(filePath)) {
           fs.writeFileSync(filePath, fs.readFileSync(attachment.filepath));
+          questionData.attachment = timeStamp;
+        } else {
+          questionData.attachment = null;
         }
-
-        questionData.attachment = timeStamp;
 
         resolve();
       });
