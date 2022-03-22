@@ -7,6 +7,9 @@ import {
   Text,
   Center,
   SlideFade,
+  Wrap,
+  WrapItem,
+  Badge,
 } from "@chakra-ui/react";
 import { getSession } from "next-auth/react";
 import prisma from "lib/prisma";
@@ -14,99 +17,86 @@ import prisma from "lib/prisma";
 export default function Profile({ user }) {
   return (
     <SlideFade in={true} offsetY="20px">
-      <Center py={6}>
-        <Box
-          w={"400px"}
-          bg={"white"}
-          boxShadow={"2xl"}
-          rounded={"lg"}
-          overflow={"hidden"}
-        >
-          <Image
-            h={"120px"}
-            w={"full"}
-            src={"/profile-bg.jpg"}
-            alt={"Profile Background"}
-            objectFit={"cover"}
+      <Box
+        w={["85vw", "400px"]}
+        bg={"white"}
+        boxShadow={"2xl"}
+        rounded={"lg"}
+        overflow={"hidden"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        d="flex"
+        flexDirection="column"
+        pb={2}
+      >
+        <Image
+          h={"120px"}
+          w={"full"}
+          src={"/profile-bg.jpg"}
+          alt={"Profile Background"}
+          objectFit={"cover"}
+        />
+        <Flex justify={"center"} mt={-12}>
+          <Avatar
+            size={"xl"}
+            src={`/profile-pics/${user.caseId}.jpg`}
+            name={user.name}
+            css={{
+              border: "2px solid white",
+            }}
+            bg="cwru"
+            color="white"
           />
-          <Flex justify={"center"} mt={-12}>
-            <Avatar
-              size={"xl"}
-              src={`/profile-pics/${user.caseId}.jpg`}
-              name={user.name}
-              css={{
-                border: "2px solid white",
-              }}
-              bg="cwru"
-              color="white"
-            />
-          </Flex>
+        </Flex>
 
-          <Box p={6}>
-            <Stack spacing={0} align={"center"} mb={5}>
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Name
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.name}
-                </Text>
-              </Center>
+        <Flex
+          justify={"center"}
+          align="center"
+          gap={4}
+          p={5}
+          w="full"
+          flexWrap={"wrap"}
+          mt={2}
+        >
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.name}
+          </Badge>
 
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Case Id
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.caseId}
-                </Text>
-              </Center>
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.caseId}
+          </Badge>
 
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Email
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.caseId}@case.edu
-                </Text>
-              </Center>
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.caseId}@case.edu
+          </Badge>
 
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Subscription Plan
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.subscription} Plan
-                </Text>
-              </Center>
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            Created {new Date(user.accountCreated).toLocaleDateString("en-us")}
+          </Badge>
 
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Questions Asked
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.questions.length}
-                </Text>
-              </Center>
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.subscription} Plan
+          </Badge>
 
-              <Center>
-                <Text color={"black.500"} fontWeight={300} fontSize="sm">
-                  Questions Answered
-                </Text>
-                &nbsp;-&nbsp;
-                <Text color={"black.500"} fontWeight={900} fontSize="lg">
-                  {user.answers.length}
-                </Text>
-              </Center>
-            </Stack>
-          </Box>
-        </Box>
-      </Center>
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.courses.length} course{user.courses.length === 1 ? "" : "s"}
+          </Badge>
+
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.questions.length} question
+            {user.questions.length === 1 ? "" : "s"}
+          </Badge>
+
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.answers.length} answer{user.answers.length === 1 ? "" : "s"}
+          </Badge>
+
+          <Badge colorScheme="blue" fontSize="xs" py={0.5} px={1}>
+            {user.comments.length} comment
+            {user.comments.length === 1 ? "" : "s"}
+          </Badge>
+        </Flex>
+      </Box>
     </SlideFade>
   );
 }
@@ -132,6 +122,7 @@ export async function getServerSideProps({ req, res }) {
       courses: true,
       questions: true,
       answers: true,
+      comments: true,
     },
   });
 
@@ -152,6 +143,10 @@ export async function getServerSideProps({ req, res }) {
         questions: user.questions.map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
+        })),
+        comments: user.comments.map((comment) => ({
+          ...comment,
+          createdAt: comment.createdAt.toISOString(),
         })),
         accountCreated: user.accountCreated.toISOString(),
       },
