@@ -260,7 +260,7 @@ const MobileNav = ({ onOpen, caseId, name, ...rest }) => {
               </HStack>
             </MenuButton>
             <MenuList bg={"white"} borderColor={"gray.200"}>
-              <MenuItem onClick={() => router.push("/profile")}>
+              <MenuItem onClick={() => router.push("/my-profile")}>
                 Profile
               </MenuItem>
               <MenuItem onClick={() => router.push("/subscription")}>

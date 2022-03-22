@@ -92,7 +92,9 @@ export default function QuestionCard({
           bg="white"
           boxShadow={"xl"}
           rounded={"lg"}
-          p={4}
+          px={3}
+          pt={4}
+          pb={3}
           pos="relative"
         >
           <Stack spacing={2}>
@@ -169,26 +171,41 @@ export default function QuestionCard({
             spacing={10}
             align={"center"}
           >
-            <Flex gap={3} justifyContent={"center"} align={"center"}>
-              <Avatar
-                src={`/profile-pics/${userCaseId}.jpg`}
-                name={publisherName}
-                size="sm"
-                bg="cwru"
-                color="white"
-                display={["none", "inline"]}
-              />
-              <Stack direction={"column"} spacing={0} fontSize={"xs"}>
-                <Text fontWeight={600}>{publisherName}</Text>
-                <Text color={"gray.500"}>
-                  {new Date(createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </Text>
-              </Stack>
-            </Flex>
+            {" "}
+            <Button
+              variant="ghost"
+              w="min-content"
+              px={1}
+              py={2}
+              onClick={() =>
+                router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
+              }
+              _active={{
+                transform: "scale(0.95)",
+              }}
+              rounded={"lg"}
+            >
+              <Flex gap={3} justifyContent={"center"} align={"center"}>
+                <Avatar
+                  src={`/profile-pics/${userCaseId}.jpg`}
+                  name={publisherName}
+                  size="sm"
+                  bg="cwru"
+                  color="white"
+                  display={["none", "inline"]}
+                />
+                <Stack direction={"column"} spacing={0} fontSize={"xs"}>
+                  <Text fontWeight={600}>{publisherName}</Text>
+                  <Text color={"gray.500"}>
+                    {new Date(createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </Text>
+                </Stack>
+              </Flex>
+            </Button>
             <Flex gap={1}>
               {isUser && (
                 <Popover>
