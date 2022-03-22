@@ -109,11 +109,6 @@ export default function AddCourse() {
                 bg="cwru"
                 color="white"
                 colorScheme="black"
-                _active={
-                  isValid && {
-                    transform: "scale(0.95)",
-                  }
-                }
                 _hover={
                   isValid && {
                     backgroundColor: "rgba(10, 48, 78, 0.85)",

@@ -1,20 +1,11 @@
 import prisma from "lib/prisma";
-import { getSession, useSession } from "next-auth/react";
-import {
-  Wrap,
-  WrapItem,
-  SlideFade,
-  Text,
-  Flex,
-  Button,
-  Heading,
-} from "@chakra-ui/react";
+import { getSession } from "next-auth/react";
+import { SlideFade, Text, Flex, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState } from "react";
-import QuestionCard from "components/QuestionCard";
+import CardPage from "components/CardPage";
 
 export default function Questions({ _questions }) {
-  const { data: session } = useSession();
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -36,9 +27,6 @@ export default function Questions({ _questions }) {
               bg="cwru"
               color="white"
               colorScheme="black"
-              _active={{
-                transform: "scale(0.95)",
-              }}
               _hover={{
                 backgroundColor: "rgba(10, 48, 78, 0.85)",
               }}
@@ -52,37 +40,11 @@ export default function Questions({ _questions }) {
   }
 
   return (
-    <Flex
-      justify="start"
-      align="center"
-      direction="column"
-      h="full"
-      w="full"
-      pt="2rem"
-      overflowY="hidden"
-    >
-      <SlideFade in={true} offsetY="20px">
-        <Heading textAlign="center">Questions</Heading>
-        <Wrap
-          justify="center"
-          spacing="30px"
-          h="90%"
-          overflowY="scroll"
-          overflowX="hidden"
-        >
-          {questions.map((question) => (
-            <WrapItem key={question.id}>
-              <QuestionCard
-                _question={question}
-                isUser={session?.user.caseId === question.userCaseId}
-                questions={questions}
-                setQuestions={setQuestions}
-              />
-            </WrapItem>
-          ))}
-        </Wrap>
-      </SlideFade>
-    </Flex>
+    <CardPage
+      questions={questions}
+      setQuestions={setQuestions}
+      title={"Questions"}
+    />
   );
 }
 

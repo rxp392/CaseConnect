@@ -178,11 +178,6 @@ export default function MyCourses({ userCourses }) {
                 bg="cwru"
                 color="white"
                 colorScheme="black"
-                _active={
-                  !selectedCourses.length == 0 && {
-                    transform: "scale(0.95)",
-                  }
-                }
                 _hover={
                   !selectedCourses.length == 0 && {
                     backgroundColor: "rgba(10, 48, 78, 0.85)",
@@ -216,9 +211,6 @@ export default function MyCourses({ userCourses }) {
                 bg="cwru"
                 color="white"
                 colorScheme="black"
-                _active={{
-                  transform: "scale(0.95)",
-                }}
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}

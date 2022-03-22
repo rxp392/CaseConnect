@@ -73,9 +73,6 @@ export default function Index() {
                     callbackUrl: `${process.env.NEXT_PUBLIC_URL}/questions`,
                   });
                 }}
-                _active={{
-                  transform: "scale(0.95)",
-                }}
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}

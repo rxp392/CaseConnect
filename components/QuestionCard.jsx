@@ -180,9 +180,6 @@ export default function QuestionCard({
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
               }
-              _active={{
-                transform: "scale(0.95)",
-              }}
               rounded={"lg"}
             >
               <Flex gap={3} justifyContent={"center"} align={"center"}>
@@ -219,9 +216,6 @@ export default function QuestionCard({
                       bg="cwru"
                       color="white"
                       colorScheme="black"
-                      _active={{
-                        transform: "scale(0.95)",
-                      }}
                       _hover={{
                         backgroundColor: "rgba(10, 48, 78, 0.85)",
                       }}
@@ -243,9 +237,6 @@ export default function QuestionCard({
                             colorScheme="blue"
                             leftIcon={<BiEditAlt />}
                             onClick={() => setEditAlertOpen(true)}
-                            _active={{
-                              transform: "scale(0.95)",
-                            }}
                           >
                             Edit
                           </Button>
@@ -255,9 +246,6 @@ export default function QuestionCard({
                             colorScheme="red"
                             leftIcon={<BsFillTrashFill />}
                             onClick={() => setDeleteAlertOpen(true)}
-                            _active={{
-                              transform: "scale(0.95)",
-                            }}
                           >
                             Delete
                           </Button>
@@ -278,9 +266,6 @@ export default function QuestionCard({
                 bg="cwru"
                 color="white"
                 colorScheme="black"
-                _active={{
-                  transform: "scale(0.95)",
-                }}
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
@@ -382,21 +367,10 @@ function EditAlert({
             </FormControl>
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button
-              ref={cancelRef}
-              onClick={() => setEditAlertOpen(false)}
-              _active={{
-                transform: "scale(0.95)",
-              }}
-            >
+            <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
               Cancel
             </Button>
             <Button
-              _active={
-                !(questionTitle === question || errorMessage) && {
-                  transform: "scale(0.95)",
-                }
-              }
               isDisabled={questionTitle === question || errorMessage}
               colorScheme="blue"
               loadingText="Updating..."
@@ -482,19 +456,10 @@ function DeleteAlert({
             Are you sure you want to delete your question?
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button
-              ref={cancelRef}
-              onClick={() => setDeleteAlertOpen(false)}
-              _active={{
-                transform: "scale(0.95)",
-              }}
-            >
+            <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
               Cancel
             </Button>
             <Button
-              _active={{
-                transform: "scale(0.95)",
-              }}
               colorScheme="red"
               loadingText="Deleting..."
               spinnerPlacement="end"
