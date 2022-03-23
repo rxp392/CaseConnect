@@ -175,7 +175,7 @@ export default function QuestionCard({
             <Button
               variant="ghost"
               w="min-content"
-              px={1}
+              px={1.5}
               py={2}
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
@@ -333,6 +333,7 @@ function EditAlert({
       leastDestructiveRef={cancelRef}
       onClose={() => setEditAlertOpen(false)}
       isCentered
+      trapFocus={false}
     >
       <AlertDialogOverlay>
         <AlertDialogContent>
@@ -446,6 +447,7 @@ function DeleteAlert({
       leastDestructiveRef={cancelRef}
       onClose={() => setDeleteAlertOpen(false)}
       isCentered
+      trapFocus={false}
     >
       <AlertDialogOverlay>
         <AlertDialogContent>

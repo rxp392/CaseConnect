@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import CardPage from "components/CardPage";
 
-export default function MyHistory({ _questions }) {
+export default function MyHistory({ _questions, courses }) {
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -43,7 +43,9 @@ export default function MyHistory({ _questions }) {
     <CardPage
       questions={questions}
       setQuestions={setQuestions}
+      allQuestions={_questions}
       title={"View History"}
+      courses={courses}
     />
   );
 }
@@ -90,6 +92,7 @@ export const getServerSideProps = async ({ req, res }) => {
       course: true,
       answers: {
         select: {
+          userCaseId: true,
           comments: {
             select: {
               userCaseId: true,
@@ -123,6 +126,7 @@ export const getServerSideProps = async ({ req, res }) => {
             viewedAt: view.viewedAt.toISOString(),
           })),
         })),
+      courses,
     },
   };
 };

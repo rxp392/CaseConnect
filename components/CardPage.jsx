@@ -6,30 +6,49 @@ import {
   Heading,
   IconButton,
   Button,
-  ButtonGroup,
-  Tooltip,
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  useMediaQuery,
+  Box,
+  Checkbox,
+  FormLabel,
+  FormControl,
+  useToast,
+  Select,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import QuestionCard from "components/QuestionCard";
 import { usePagination } from "react-use-pagination";
-import { AiOutlineArrowRight, AiOutlineArrowLeft } from "react-icons/ai";
-import { BsFilter } from "react-icons/bs";
-import { useRef, useState } from "react";
+import { BsChevronLeft, BsChevronRight } from "react-icons/bs";
+import { VscDebugRestart } from "react-icons/vsc";
+import { IoFilterSharp } from "react-icons/io5";
+import { useRef, useState, useEffect } from "react";
 
-export default function CardPage({ questions, setQuestions, title }) {
+export default function CardPage({
+  questions,
+  setQuestions,
+  allQuestions,
+  title,
+  courses,
+  includeAnsweredFilter = true,
+}) {
   const { data: session } = useSession();
   const cancelRef = useRef();
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [isLarge] = useMediaQuery("(min-width: 480px)");
+  const isCurrent = (number) => number === currentPage;
+  const toast = useToast();
+  const isFiltered =
+    Object.keys(allQuestions).length === Object.keys(questions).length &&
+    Object.keys(allQuestions).every((p) => allQuestions[p] === questions[p]);
 
   const {
-    currentPage,
     totalPages,
+    currentPage,
     setNextPage,
     setPreviousPage,
     nextEnabled,
@@ -48,6 +67,12 @@ export default function CardPage({ questions, setQuestions, title }) {
         isFilterDialogOpen={isFilterDialogOpen}
         setIsFilterDialogOpen={setIsFilterDialogOpen}
         cancelRef={cancelRef}
+        setQuestions={setQuestions}
+        allQuestions={allQuestions}
+        courses={courses}
+        caseId={session.user.caseId}
+        toast={toast}
+        includeAnsweredFilter={includeAnsweredFilter}
       />
 
       <Flex
@@ -60,9 +85,17 @@ export default function CardPage({ questions, setQuestions, title }) {
         overflowX="hidden"
         overflowY={"scroll"}
         pos="relative"
+        gap={4}
       >
         <SlideFade in={true} offsetY="20px">
-          <Heading textAlign="center">{title}</Heading>
+          <Heading
+            transform={
+              !isFiltered && !isLarge ? "translateX(-1rem)" : "translateX(0)"
+            }
+            textAlign="center"
+          >
+            {title}
+          </Heading>
         </SlideFade>
         <SlideFade in={true} offsetY="20px">
           <Wrap justify="center" spacing="30px">
@@ -80,77 +113,195 @@ export default function CardPage({ questions, setQuestions, title }) {
         </SlideFade>
 
         <SlideFade in={true} offsetY="20px">
-          <Flex justify="center" align="center" gap={2}>
-            <IconButton
+          <Flex justify="center" align="center" gap={0.5}>
+            <ArrowButton
+              disabled={previousEnabled}
               onClick={setPreviousPage}
-              isDisabled={!previousEnabled}
-              icon={<AiOutlineArrowLeft />}
-              variant="outline"
-              color="cwru"
-              borderColor="cwru"
-              bg="gray.100"
-              _hover={
-                previousEnabled && {
-                  bg: "gray.200",
-                }
-              }
+              Icon={<BsChevronLeft />}
             />
-            <ButtonGroup isAttached variant="outline">
-              {[...Array(totalPages).keys()].map((i) => (
-                <Button
-                  key={i + 1}
-                  isDisabled={i === currentPage}
-                  color="cwru"
-                  borderColor="cwru"
-                  bg="gray.100"
-                  _hover={
-                    i !== currentPage && {
-                      bg: "gray.200",
-                    }
-                  }
-                  onClick={() => setPage(i)}
-                >
-                  {i + 1}
-                </Button>
+
+            {totalPages <= 5 &&
+              [...Array(totalPages).keys()].map((i) => (
+                <PageButton
+                  key={i}
+                  number={i}
+                  isCurrent={isCurrent}
+                  setPage={setPage}
+                />
               ))}
-            </ButtonGroup>
-            <IconButton
-              variant="outline"
-              color="cwru"
-              borderColor="cwru"
-              bg="gray.100"
-              _hover={
-                nextEnabled && {
-                  bg: "gray.200",
-                }
-              }
+
+            {totalPages > 5 && currentPage < 3 && (
+              <>
+                {[...Array(3).keys()].map((i) => (
+                  <PageButton
+                    key={i}
+                    number={i}
+                    isCurrent={isCurrent}
+                    setPage={setPage}
+                  />
+                ))}
+                <Box mx={2.5}>...</Box>
+                <PageButton
+                  number={totalPages - 1}
+                  isCurrent={isCurrent}
+                  setPage={setPage}
+                />
+              </>
+            )}
+
+            {totalPages > 5 &&
+              currentPage >= 3 &&
+              currentPage < totalPages - 3 && (
+                <>
+                  <PageButton
+                    number={0}
+                    isCurrent={isCurrent}
+                    setPage={setPage}
+                  />
+                  <Box mx={2.5}>...</Box>
+                  {isLarge && (
+                    <PageButton
+                      number={currentPage - 1}
+                      isCurrent={isCurrent}
+                      setPage={setPage}
+                    />
+                  )}
+                  <PageButton
+                    number={currentPage}
+                    isCurrent={isCurrent}
+                    setPage={setPage}
+                  />
+                  {isLarge && (
+                    <PageButton
+                      number={currentPage + 1}
+                      isCurrent={isCurrent}
+                      setPage={setPage}
+                    />
+                  )}
+                  <Box mx={2.5}>...</Box>
+                  <PageButton
+                    number={totalPages - 1}
+                    isCurrent={isCurrent}
+                    setPage={setPage}
+                  />
+                </>
+              )}
+
+            {totalPages > 5 && currentPage >= totalPages - 3 && (
+              <>
+                <PageButton
+                  number={0}
+                  isCurrent={isCurrent}
+                  setPage={setPage}
+                />
+                <Box mx={2.5}>...</Box>
+                {[...Array(3).keys()].reverse().map((i) => (
+                  <PageButton
+                    key={i}
+                    number={totalPages - i - 1}
+                    isCurrent={isCurrent}
+                    setPage={setPage}
+                  />
+                ))}
+              </>
+            )}
+
+            <ArrowButton
+              disabled={nextEnabled}
               onClick={setNextPage}
-              isDisabled={!nextEnabled}
-              icon={<AiOutlineArrowRight />}
+              Icon={<BsChevronRight />}
             />
           </Flex>
         </SlideFade>
 
-        <Tooltip label="Filter results" placement="left">
-          <IconButton
-            icon={<BsFilter />}
-            pos="absolute"
-            top="0"
-            right="0"
-            m={2}
-            size="md"
-            variant="outline"
-            color="cwru"
-            borderColor="cwru"
-            bg="gray.100"
-            _hover={{
-              bg: "gray.200",
-            }}
-            onClick={() => setIsFilterDialogOpen(true)}
-          />
-        </Tooltip>
+        <Flex pos="absolute" top="0" right="0" m={2} gap={2}>
+          {!isFiltered && (
+            <SlideFade in={true} offsetY="20px">
+              <IconButton
+                icon={<VscDebugRestart />}
+                size="md"
+                color="gray.100"
+                bg="cwru"
+                _active={{}}
+                _hover={{
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
+                }}
+                onClick={() => setQuestions(allQuestions)}
+              />
+            </SlideFade>
+          )}
+          <SlideFade in={true} offsetY="20px">
+            <IconButton
+              icon={<IoFilterSharp />}
+              size="md"
+              color="gray.100"
+              bg="cwru"
+              _active={{}}
+              _hover={{
+                backgroundColor: "rgba(10, 48, 78, 0.85)",
+              }}
+              onClick={() => setIsFilterDialogOpen(true)}
+            />
+          </SlideFade>
+        </Flex>
       </Flex>
     </>
+  );
+}
+
+function PageButton({ number, isCurrent, setPage }) {
+  return (
+    <Button
+      fontSize={["sm", "md"]}
+      variant="ghost"
+      color={isCurrent(number) ? "gray.100" : "cwru"}
+      bg={isCurrent(number) ? "cwru" : "gray.100"}
+      _active={
+        isCurrent(number) && {
+          bg: "cwru",
+        }
+      }
+      _hover={
+        !isCurrent(number) && {
+          bg: "gray.200",
+        }
+      }
+      _focus={{}}
+      style={{
+        cursor: !isCurrent(number) ? "pointer" : "default",
+      }}
+      onClick={() => setPage(number)}
+    >
+      {number + 1}
+    </Button>
+  );
+}
+
+function ArrowButton({ disabled, onClick, Icon }) {
+  return (
+    <IconButton
+      fontSize={["sm", "md"]}
+      variant="ghost"
+      color="cwru"
+      bg="gray.100"
+      _hover={
+        disabled && {
+          bg: "gray.200",
+        }
+      }
+      _active={
+        !disabled && {
+          bg: "gray.100",
+        }
+      }
+      _focus={{}}
+      onClick={onClick}
+      isDisabled={!disabled}
+      icon={Icon}
+      style={{
+        cursor: disabled ? "pointer" : "default",
+      }}
+    />
   );
 }
 
@@ -158,22 +309,98 @@ function FilterDialog({
   isFilterDialogOpen,
   setIsFilterDialogOpen,
   cancelRef,
+  setQuestions,
+  allQuestions,
+  courses,
+  caseId,
+  toast,
+  includeAnsweredFilter,
 }) {
+  const [newest, setNewest] = useState(true);
+  const [answered, setAnswered] = useState(false);
+  const [viewed, setViewed] = useState(false);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+
+  useEffect(() => {
+    setNewest(true);
+    setAnswered(false);
+    setViewed(false);
+    setSelectedCourses([]);
+  }, [isFilterDialogOpen]);
+
   return (
     <AlertDialog
       isOpen={isFilterDialogOpen}
       leastDestructiveRef={cancelRef}
       onClose={() => setIsFilterDialogOpen(false)}
       isCentered
-      returnFocusOnClose={false}
+      trapFocus={false}
     >
       <AlertDialogOverlay>
         <AlertDialogContent>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Delete Question
+            Filter Results By
           </AlertDialogHeader>
           <AlertDialogBody>
-            Are you sure you want to delete your question?
+            <Flex
+              w="full"
+              justify="space-evenly"
+              align="center"
+              direction="column"
+              gap={5}
+            >
+              <Flex
+                w="full"
+                justify={["start", "space-evenly"]}
+                align={["start", "center"]}
+                direction={["column", "row"]}
+                gap={2}
+              >
+                <Checkbox
+                  value={newest}
+                  onChange={() => setNewest(!newest)}
+                  defaultChecked
+                >
+                  Newest
+                </Checkbox>
+                {includeAnsweredFilter && (
+                  <Checkbox
+                    value={answered}
+                    onChange={() => setAnswered(!answered)}
+                  >
+                    Answered
+                  </Checkbox>
+                )}
+                <Checkbox value={viewed} onChange={() => setViewed(!viewed)}>
+                  Viewed
+                </Checkbox>
+              </Flex>
+
+              <FormControl>
+                <FormLabel htmlFor="courses">Course(s)</FormLabel>
+                <Select
+                  id="courses"
+                  multiple
+                  w="fit-content"
+                  h="fit-content"
+                  iconSize={"0"}
+                  value={selectedCourses}
+                  onChange={(e) =>
+                    setSelectedCourses(
+                      [...e.target.options]
+                        .filter((option) => option.selected)
+                        .map((option) => option.value)
+                    )
+                  }
+                >
+                  {courses.map(({ id, courseName }) => (
+                    <option key={id} value={id}>
+                      {courseName}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            </Flex>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button
@@ -183,14 +410,49 @@ function FilterDialog({
               Cancel
             </Button>
             <Button
-              colorScheme="red"
-              loadingText="Deleting..."
-              spinnerPlacement="end"
-              // isLoading={isLoading}
-              onClick={() => {}}
+              colorScheme="blue"
+              onClick={() => {
+                const filteredQuestions = allQuestions
+                  .filter(({ answers }) =>
+                    answered && includeAnsweredFilter
+                      ? Boolean(answers.length)
+                      : true
+                  )
+                  .filter(({ views }) =>
+                    viewed
+                      ? views?.some((view) => view.caseId === caseId)
+                      : true
+                  )
+                  .filter(({ courseId }) =>
+                    selectedCourses.length
+                      ? selectedCourses.some(
+                          (value) => Number(value) === Number(courseId)
+                        )
+                      : true
+                  )
+                  .sort((a, b) =>
+                    newest
+                      ? new Date(b.createdAt) - new Date(a.createdAt)
+                      : new Date(a.createdAt) - new Date(b.createdAt)
+                  );
+
+                if (!filteredQuestions.length) {
+                  return toast({
+                    title: "Filter unsuccessful",
+                    description: "No questions were found for that filter",
+                    status: "info",
+                    position: "bottom-left",
+                    variant: "left-accent",
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                }
+                setQuestions(filteredQuestions);
+                setIsFilterDialogOpen(false);
+              }}
               ml={3}
             >
-              Ok
+              Continue
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
