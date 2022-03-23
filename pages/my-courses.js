@@ -195,15 +195,16 @@ export default function MyCourses({ userCourses }) {
 
       {/* Main Content */}
       <Flex
-        justify="start"
+        justify="space-between"
         align="center"
         direction="column"
         h="full"
         pt="2rem"
+        overflowX="hidden"
       >
         <SlideFade in={true} offsetY="20px">
           {courses.length > 0 && (
-            <Flex justifyContent="center" alignItems="center">
+            <Flex justifyContent="center" alignItems="center" gap={2}>
               <Heading>My Courses&nbsp;</Heading>
               <IconButton
                 size="md"
@@ -224,10 +225,11 @@ export default function MyCourses({ userCourses }) {
             spacing="30px"
             align="center"
             justify="center"
-            mt={9}
             h="full"
             overflowY="scroll"
             overflowX="hidden"
+            transform="translateY(3rem)"
+            px={[0, 15]}
           >
             {courses.map(({ courseName, id }) => (
               <WrapItem key={id} w={["85vw", "fit-content"]}>
@@ -261,6 +263,7 @@ export default function MyCourses({ userCourses }) {
         leastDestructiveRef={cancelRef}
         onClose={() => setConfirmOpen(false)}
         isCentered
+        trapFocus={false}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -277,6 +280,7 @@ export default function MyCourses({ userCourses }) {
               <Button
                 colorScheme="red"
                 loadingText="Deleting..."
+                x
                 spinnerPlacement="end"
                 isLoading={isLoading}
                 onClick={async () => {

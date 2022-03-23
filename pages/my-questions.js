@@ -46,7 +46,7 @@ export default function MyQuestions({ _questions, courses }) {
       allQuestions={_questions}
       title={"My Questions"}
       courses={courses}
-      includeAnsweredFilter={false}
+      includeUserFilter={false}
     />
   );
 }

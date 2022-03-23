@@ -46,6 +46,7 @@ export default function MyHistory({ _questions, courses }) {
       allQuestions={_questions}
       title={"View History"}
       courses={courses}
+      includeViewedFilter={false}
     />
   );
 }

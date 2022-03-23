@@ -74,7 +74,7 @@ export default function AskQuestion({ courses }) {
 
   return (
     <SlideFade in={true} offsetY="20px">
-      <Heading textAlign={"center"}>Ask your question</Heading>
+      <Heading textAlign={"center"}>Ask a question</Heading>
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
         <Box
           as="form"

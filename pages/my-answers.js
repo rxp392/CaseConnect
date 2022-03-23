@@ -46,6 +46,7 @@ export default function MyAnswers({ _questions, courses }) {
       allQuestions={_questions}
       title={"My Answers"}
       courses={courses}
+      includeAnsweredFilter={false}
     />
   );
 }

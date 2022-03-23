@@ -8,6 +8,21 @@ const theme = extendTheme({
   colors: {
     cwru: "#0a304e",
   },
+  components: {
+    Checkbox: {
+      baseStyle: {
+        control: {
+          _checked: {
+            bg: "cwru",
+            borderColor: "cwru",
+            _hover: {
+              bg: "rgba(10, 48, 78, 0.85)",
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 export default theme;

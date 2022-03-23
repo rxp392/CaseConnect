@@ -65,7 +65,7 @@ export default function AddCourse() {
 
   return (
     <SlideFade in={true} offsetY="20px">
-      <Heading textAlign={"center"}>Add your Course</Heading>
+      <Heading textAlign={"center"}>Add a Course</Heading>
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
         <Box
           as="form"

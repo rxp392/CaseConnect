@@ -21,38 +21,37 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
-import { MdOutlineQuestionAnswer } from "react-icons/md";
 import { BiBookAlt, BiQuestionMark } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
-import { AiOutlineHistory } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
 import { IoCheckmarkSharp } from "react-icons/io5";
 import { BsCardText } from "react-icons/bs";
 
 const LinkItems = [
   {
-    name: "Questions",
-    icon: BsCardText,
+    name: "Home",
+    icon: AiOutlineHome,
     href: "/questions",
   },
   {
-    name: "Ask a question",
+    name: "Ask",
     icon: BiQuestionMark,
     href: "/ask-a-question",
   },
   {
-    name: "My Questions",
-    icon: MdOutlineQuestionAnswer,
+    name: "Questions",
+    icon: BsCardText,
     href: "/my-questions",
   },
   {
-    name: "My Courses",
+    name: "Courses",
     icon: BiBookAlt,
     href: "/my-courses",
   },
   {
-    name: "My Answers",
+    name: "Answers",
     icon: IoCheckmarkSharp,
     href: "/my-answers",
   },
@@ -215,9 +214,9 @@ const MobileNav = ({ onOpen, caseId, name, ...rest }) => {
       <HStack spacing={{ base: "0", md: "6" }}>
         <Tooltip
           hasArrow
-          label="No new notifications"
+          label="No notifications"
           color="white"
-          bg="black"
+          bg="cwru"
           placement="bottom"
         >
           <IconButton

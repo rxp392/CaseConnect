@@ -77,7 +77,14 @@ export default function Subscription({ user }) {
   }, [makeShot]);
 
   useEffect(() => {
-    !isBasic && fire();
+    let intervalId;
+    if (!isBasic) {
+      fire()
+      intervalId = setInterval(() => {
+        fire();
+      }, 1500);
+    }
+    return () => clearInterval(intervalId);
   }, []);
 
   if (!isBasic) {
@@ -85,29 +92,9 @@ export default function Subscription({ user }) {
       <>
         <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
         <SlideFade in={true} offsetY="20px">
-          <Flex
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-            gap={4}
-          >
-            <Text fontSize={["lg", "2xl", "3xl"]} textAlign="center">
-              Congratulations! You are a Premium user.
-            </Text>
-            <Button
-              onClick={fire}
-              px={[2, 4, 6]}
-              py={[2, 4, 6]}
-              bg="cwru"
-              color="white"
-              colorScheme="black"
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-            >
-              Fire Confetti
-            </Button>
-          </Flex>
+          <Text fontSize={["lg", "2xl", "3xl"]} textAlign="center">
+            Congratulations! You are a Premium user.
+          </Text>
         </SlideFade>
       </>
     );

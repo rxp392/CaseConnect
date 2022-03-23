@@ -15,10 +15,13 @@ import {
   useMediaQuery,
   Box,
   Checkbox,
-  FormLabel,
-  FormControl,
   useToast,
-  Select,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuOptionGroup,
+  MenuItemOption,
+  Stack,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import QuestionCard from "components/QuestionCard";
@@ -27,6 +30,8 @@ import { BsChevronLeft, BsChevronRight } from "react-icons/bs";
 import { VscDebugRestart } from "react-icons/vsc";
 import { IoFilterSharp } from "react-icons/io5";
 import { useRef, useState, useEffect } from "react";
+import { BiBookAlt } from "react-icons/bi";
+import { CgProfile } from "react-icons/cg";
 
 export default function CardPage({
   questions,
@@ -35,16 +40,26 @@ export default function CardPage({
   title,
   courses,
   includeAnsweredFilter = true,
+  includeViewedFilter = true,
+  includeUserFilter = true,
 }) {
   const { data: session } = useSession();
   const cancelRef = useRef();
+  const [isFiltered, setIsFiltered] = useState(false);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [disabledReset, setDisabledReset] = useState(false);
+  const [isQuestionAltered, setIsQuestionAltered] = useState(false);
   const [isLarge] = useMediaQuery("(min-width: 480px)");
   const isCurrent = (number) => number === currentPage;
   const toast = useToast();
-  const isFiltered =
-    Object.keys(allQuestions).length === Object.keys(questions).length &&
-    Object.keys(allQuestions).every((p) => allQuestions[p] === questions[p]);
+
+  useEffect(() => {
+    setIsFiltered(
+      Object.keys(allQuestions).length === Object.keys(questions).length &&
+        Object.keys(allQuestions).every((p) => allQuestions[p] === questions[p])
+    );
+    setIsQuestionAltered(false);
+  }, [questions]);
 
   const {
     totalPages,
@@ -73,6 +88,11 @@ export default function CardPage({
         caseId={session.user.caseId}
         toast={toast}
         includeAnsweredFilter={includeAnsweredFilter}
+        includeViewedFilter={includeViewedFilter}
+        includeUserFilter={includeUserFilter}
+        isFiltered={isFiltered}
+        disabledReset={disabledReset}
+        setDisabledReset={setDisabledReset}
       />
 
       <Flex
@@ -106,6 +126,7 @@ export default function CardPage({
                   isUser={session?.user.caseId === question.userCaseId}
                   questions={questions}
                   setQuestions={setQuestions}
+                  setIsQuestionAltered={setIsQuestionAltered}
                 />
               </WrapItem>
             ))}
@@ -214,11 +235,29 @@ export default function CardPage({
           </Flex>
         </SlideFade>
 
-        <Flex pos="absolute" top="0" right="0" m={2} gap={2}>
-          {!isFiltered && (
+        {allQuestions.length > 4 && (
+          <Flex pos="absolute" top="0" right="0" m={2} gap={2}>
+            {!isQuestionAltered && !isFiltered && (
+              <SlideFade in={true} offsetY="20px">
+                <IconButton
+                  icon={<VscDebugRestart />}
+                  size="md"
+                  color="gray.100"
+                  bg="cwru"
+                  _active={{}}
+                  _hover={{
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+                  }}
+                  onClick={() => {
+                    setQuestions(allQuestions);
+                    setDisabledReset(true);
+                  }}
+                />
+              </SlideFade>
+            )}
             <SlideFade in={true} offsetY="20px">
               <IconButton
-                icon={<VscDebugRestart />}
+                icon={<IoFilterSharp />}
                 size="md"
                 color="gray.100"
                 bg="cwru"
@@ -226,24 +265,11 @@ export default function CardPage({
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
-                onClick={() => setQuestions(allQuestions)}
+                onClick={() => setIsFilterDialogOpen(true)}
               />
             </SlideFade>
-          )}
-          <SlideFade in={true} offsetY="20px">
-            <IconButton
-              icon={<IoFilterSharp />}
-              size="md"
-              color="gray.100"
-              bg="cwru"
-              _active={{}}
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-              onClick={() => setIsFilterDialogOpen(true)}
-            />
-          </SlideFade>
-        </Flex>
+          </Flex>
+        )}
       </Flex>
     </>
   );
@@ -315,18 +341,44 @@ function FilterDialog({
   caseId,
   toast,
   includeAnsweredFilter,
+  includeViewedFilter,
+  includeUserFilter,
+  isFiltered,
+  disabledReset,
+  setDisabledReset,
 }) {
-  const [newest, setNewest] = useState(true);
+  const [oldest, setOldest] = useState(false);
+  const oldestRef = useRef();
   const [answered, setAnswered] = useState(false);
+  const answeredRef = useRef();
   const [viewed, setViewed] = useState(false);
+  const viewedRef = useRef();
+  const [commented, setCommented] = useState(false);
+  const commentedRef = useRef();
   const [selectedCourses, setSelectedCourses] = useState([]);
+  const [selectedNames, setSelectedNames] = useState([]);
 
   useEffect(() => {
-    setNewest(true);
-    setAnswered(false);
-    setViewed(false);
-    setSelectedCourses([]);
-  }, [isFilterDialogOpen]);
+    if (isFiltered) {
+      setOldest(false);
+      setAnswered(false);
+      setViewed(false);
+      setCommented(false);
+      setSelectedCourses([]);
+      setSelectedNames([]);
+    }
+  }, [isFiltered]);
+
+  useEffect(() => {
+    setDisabledReset(
+      !oldest &&
+        !answered &&
+        !viewed &&
+        !commented &&
+        !selectedCourses.length &&
+        !selectedNames.length
+    );
+  }, [oldest, answered, viewed, commented, selectedCourses, selectedNames]);
 
   return (
     <AlertDialog
@@ -342,74 +394,157 @@ function FilterDialog({
             Filter Results By
           </AlertDialogHeader>
           <AlertDialogBody>
-            <Flex
-              w="full"
-              justify="space-evenly"
-              align="center"
-              direction="column"
-              gap={5}
-            >
+            <IconButton
+              icon={<VscDebugRestart />}
+              size="sm"
+              color="gray.100"
+              bg="cwru"
+              _active={{}}
+              _hover={{
+                backgroundColor: "rgba(10, 48, 78, 0.85)",
+              }}
+              pos="absolute"
+              top="0"
+              right="0"
+              m={3}
+              isDisabled={disabledReset}
+              onClick={() => {
+                if (oldest) {
+                  setOldest(true);
+                  oldestRef.current.click();
+                }
+                if (answered) {
+                  setAnswered(true);
+                  answeredRef.current.click();
+                }
+                if (viewed) {
+                  setViewed(true);
+                  viewedRef.current.click();
+                }
+                if (commented) {
+                  setCommented(true);
+                  commentedRef.current.click();
+                }
+                setSelectedCourses([]);
+                setSelectedNames([]);
+                setQuestions(allQuestions);
+              }}
+            />
+
+            <Flex w="full" justify="space-between" align="start" py={2}>
               <Flex
                 w="full"
-                justify={["start", "space-evenly"]}
-                align={["start", "center"]}
-                direction={["column", "row"]}
-                gap={2}
+                justify={"start"}
+                align={"start"}
+                flexDirection="column"
+                gap={2.5}
+                transform="translateX(1rem)"
               >
                 <Checkbox
-                  value={newest}
-                  onChange={() => setNewest(!newest)}
-                  defaultChecked
+                  ref={oldestRef}
+                  value={oldest}
+                  defaultChecked={oldest}
+                  onChange={() => setOldest(!oldest)}
                 >
-                  Newest
+                  Oldest
                 </Checkbox>
                 {includeAnsweredFilter && (
                   <Checkbox
+                    ref={answeredRef}
                     value={answered}
+                    defaultChecked={answered}
                     onChange={() => setAnswered(!answered)}
                   >
                     Answered
                   </Checkbox>
                 )}
-                <Checkbox value={viewed} onChange={() => setViewed(!viewed)}>
-                  Viewed
+                {includeViewedFilter && (
+                  <Checkbox
+                    ref={viewedRef}
+                    value={viewed}
+                    defaultChecked={viewed}
+                    onChange={() => setViewed(!viewed)}
+                  >
+                    Viewed
+                  </Checkbox>
+                )}
+                <Checkbox
+                  ref={commentedRef}
+                  value={commented}
+                  defaultChecked={commented}
+                  onChange={() => setCommented(!commented)}
+                >
+                  Commented
                 </Checkbox>
               </Flex>
 
-              <FormControl>
-                <FormLabel htmlFor="courses">Course(s)</FormLabel>
-                <Select
-                  id="courses"
-                  multiple
-                  w="fit-content"
-                  h="fit-content"
-                  iconSize={"0"}
-                  value={selectedCourses}
-                  onChange={(e) =>
-                    setSelectedCourses(
-                      [...e.target.options]
-                        .filter((option) => option.selected)
-                        .map((option) => option.value)
-                    )
-                  }
-                >
-                  {courses.map(({ id, courseName }) => (
-                    <option key={id} value={id}>
-                      {courseName}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+              <Stack>
+                <Menu closeOnSelect={false} preventOverflow={false}>
+                  <MenuButton
+                    as={Button}
+                    variant={selectedCourses.length ? "outline" : "ghost"}
+                    leftIcon={<BiBookAlt />}
+                  >
+                    Course
+                  </MenuButton>
+                  <MenuList maxH="120px" overflowY="scroll">
+                    <MenuOptionGroup
+                      defaultValue={selectedCourses}
+                      value={selectedCourses}
+                      type="checkbox"
+                      onChange={(values) => setSelectedCourses(values)}
+                    >
+                      {courses.map(({ id, courseName }) => (
+                        <MenuItemOption key={id} value={id}>
+                          {courseName.split(".")[0]}
+                        </MenuItemOption>
+                      ))}
+                    </MenuOptionGroup>
+                  </MenuList>
+                </Menu>
+
+                {includeUserFilter && (
+                  <Menu closeOnSelect={false} preventOverflow={false}>
+                    <MenuButton
+                      as={Button}
+                      variant={selectedNames.length ? "outline" : "ghost"}
+                      leftIcon={<CgProfile />}
+                    >
+                      Name
+                    </MenuButton>
+                    <MenuList maxH="120px" overflowY="scroll">
+                      <MenuOptionGroup
+                        defaultValue={selectedNames}
+                        value={selectedNames}
+                        type="checkbox"
+                        onChange={(values) => setSelectedNames(values)}
+                      >
+                        {[
+                          ...new Set(
+                            allQuestions.map(
+                              ({ publisherName }) => publisherName
+                            )
+                          ),
+                        ]
+                          .sort()
+                          .map((publisherName) => (
+                            <MenuItemOption
+                              key={publisherName}
+                              value={publisherName}
+                            >
+                              {publisherName}
+                            </MenuItemOption>
+                          ))}
+                      </MenuOptionGroup>
+                    </MenuList>
+                  </Menu>
+                )}
+              </Stack>
             </Flex>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button
-              ref={cancelRef}
-              onClick={() => setIsFilterDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
+              isFullWidth
               colorScheme="blue"
               onClick={() => {
                 const filteredQuestions = allQuestions
@@ -419,26 +554,35 @@ function FilterDialog({
                       : true
                   )
                   .filter(({ views }) =>
-                    viewed
-                      ? views?.some((view) => view.caseId === caseId)
+                    viewed && includeViewedFilter
+                      ? views.some((view) => view.caseId === caseId)
+                      : true
+                  )
+                  .filter(({ answers }) =>
+                    commented
+                      ? answers.some((answer) => answer.comments.length)
                       : true
                   )
                   .filter(({ courseId }) =>
                     selectedCourses.length
                       ? selectedCourses.some(
-                          (value) => Number(value) === Number(courseId)
+                          (_courseId) => _courseId === courseId
                         )
                       : true
                   )
+                  .filter(({ publisherName }) =>
+                    selectedNames.length && includeUserFilter
+                      ? selectedNames.some((name) => name === publisherName)
+                      : true
+                  )
                   .sort((a, b) =>
-                    newest
-                      ? new Date(b.createdAt) - new Date(a.createdAt)
-                      : new Date(a.createdAt) - new Date(b.createdAt)
+                    oldest
+                      ? new Date(a.createdAt) - new Date(b.createdAt)
+                      : new Date(b.createdAt) - new Date(a.createdAt)
                   );
 
                 if (!filteredQuestions.length) {
                   return toast({
-                    title: "Filter unsuccessful",
                     description: "No questions were found for that filter",
                     status: "info",
                     position: "bottom-left",

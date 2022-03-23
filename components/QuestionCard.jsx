@@ -16,12 +16,6 @@ import {
   AlertDialogOverlay,
   useToast,
   Textarea,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-  PopoverArrow,
-  Portal,
   FormControl,
   FormErrorMessage,
   Tooltip,
@@ -29,19 +23,23 @@ import {
   Wrap,
   WrapItem,
   useMediaQuery,
+  ButtonGroup,
+  Divider,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { BsFillTrashFill } from "react-icons/bs";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { BiEditAlt } from "react-icons/bi";
 import { FiEdit } from "react-icons/fi";
+import { AiOutlineEye } from "react-icons/ai";
+import { useSession } from "next-auth/react";
 
 export default function QuestionCard({
   _question,
   isUser,
   questions,
   setQuestions,
+  setIsQuestionAltered,
 }) {
   const {
     courseId,
@@ -56,12 +54,13 @@ export default function QuestionCard({
     attachment,
   } = _question;
 
+  const { data: session } = useSession();
   const answersLength = answers.length;
   const commentsLength = answers.reduce(
     (acc, curr) => acc + curr.comments.length,
     0
   );
-  const viewedDate = views.find((view) => view.caseId === userCaseId);
+  const viewedDate = views.find((view) => view.caseId === session.user.caseId);
 
   const router = useRouter();
   const toast = useToast();
@@ -168,28 +167,25 @@ export default function QuestionCard({
             display={"flex"}
             w={"full"}
             justifyContent={"space-between"}
-            spacing={10}
+            spacing={[5, 10]}
             align={"center"}
           >
             {" "}
             <Button
               variant="ghost"
-              w="min-content"
-              px={1.5}
-              py={2}
+              p={2}
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
               }
               rounded={"lg"}
             >
-              <Flex gap={3} justifyContent={"center"} align={"center"}>
+              <Flex gap={[2, 3]} justifyContent={"center"} align={"center"}>
                 <Avatar
                   src={`/profile-pics/${userCaseId}.jpg`}
                   name={publisherName}
                   size="sm"
                   bg="cwru"
                   color="white"
-                  display={["none", "inline"]}
                 />
                 <Stack direction={"column"} spacing={0} fontSize={"xs"}>
                   <Text fontWeight={600}>{publisherName}</Text>
@@ -203,59 +199,43 @@ export default function QuestionCard({
                 </Stack>
               </Flex>
             </Button>
-            <Flex gap={1}>
+            <Flex gap={1.5}>
               {isUser && (
-                <Popover>
-                  <PopoverTrigger>
-                    <IconButton
-                      isDisabled={isPageLoading}
-                      icon={<FiEdit />}
-                      size={["sm", "md"]}
-                      fontSize={["sm", "md"]}
-                      p={2.5}
-                      bg="cwru"
-                      color="white"
-                      colorScheme="black"
-                      _hover={{
-                        backgroundColor: "rgba(10, 48, 78, 0.85)",
-                      }}
-                    />
-                  </PopoverTrigger>
-                  <Portal>
-                    <PopoverContent w="fit-content">
-                      <PopoverArrow />
-                      <PopoverBody>
-                        <Flex
-                          gap={1.5}
-                          direction="column"
-                          justifyContent="center"
-                          alignItems="center"
-                        >
-                          <Button
-                            px={5}
-                            w="full"
-                            colorScheme="blue"
-                            leftIcon={<BiEditAlt />}
-                            onClick={() => setEditAlertOpen(true)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            px={5}
-                            w="full"
-                            colorScheme="red"
-                            leftIcon={<BsFillTrashFill />}
-                            onClick={() => setDeleteAlertOpen(true)}
-                          >
-                            Delete
-                          </Button>
-                        </Flex>
-                      </PopoverBody>
-                    </PopoverContent>
-                  </Portal>
-                </Popover>
+                <ButtonGroup isAttached>
+                  <IconButton
+                    p={2.5}
+                    size={["sm", "md"]}
+                    fontSize={["sm", "md"]}
+                    bg="cwru"
+                    color="white"
+                    colorScheme="black"
+                    _hover={{
+                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    }}
+                    icon={<BsFillTrashFill />}
+                    onClick={() => setDeleteAlertOpen(true)}
+                    isDisabled={isPageLoading}
+                  />
+                  <Divider orientation="vertical" colorScheme="gray" />
+                  <IconButton
+                    p={2.5}
+                    size={["sm", "md"]}
+                    fontSize={["sm", "md"]}
+                    bg="cwru"
+                    color="white"
+                    colorScheme="black"
+                    _hover={{
+                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    }}
+                    icon={<FiEdit />}
+                    onClick={() => setEditAlertOpen(true)}
+                    isDisabled={isPageLoading}
+                  />
+                </ButtonGroup>
               )}
+
               <Button
+                leftIcon={<AiOutlineEye />}
                 type="submit"
                 loadingText="Loading..."
                 isLoading={isPageLoading}
@@ -274,7 +254,7 @@ export default function QuestionCard({
                   router.push(`/questions/${id}-${courseId}`);
                 }}
               >
-                View Question
+                View
               </Button>
             </Flex>
           </Stack>
@@ -294,6 +274,7 @@ export default function QuestionCard({
         setQuestionTitle={setQuestionTitle}
         questions={questions}
         setQuestions={setQuestions}
+        setIsQuestionAltered={setIsQuestionAltered}
       />
 
       <DeleteAlert
@@ -307,6 +288,7 @@ export default function QuestionCard({
         questions={questions}
         setQuestions={setQuestions}
         attachment={attachment}
+        setIsQuestionAltered={setIsQuestionAltered}
       />
     </>
   );
@@ -325,6 +307,7 @@ function EditAlert({
   setQuestionTitle,
   questions,
   setQuestions,
+  setIsQuestionAltered,
 }) {
   const [errorMessage, setErrorMessage] = useState("");
   return (
@@ -403,6 +386,7 @@ function EditAlert({
                     duration: 5000,
                     isClosable: true,
                   });
+                  setIsQuestionAltered(true);
                 } catch {
                   toast({
                     title: "An Error Ocurred",
@@ -440,6 +424,7 @@ function DeleteAlert({
   isLoading,
   setIsLoading,
   attachment,
+  setIsQuestionAltered,
 }) {
   return (
     <AlertDialog
@@ -455,7 +440,7 @@ function DeleteAlert({
             Delete Question
           </AlertDialogHeader>
           <AlertDialogBody>
-            Are you sure you want to delete your question?
+            Are you sure you want to delete this question?
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
@@ -487,6 +472,7 @@ function DeleteAlert({
                     duration: 5000,
                     isClosable: true,
                   });
+                  setIsQuestionAltered(true);
                 } catch {
                   toast({
                     title: "An Error Ocurred",
