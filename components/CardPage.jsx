@@ -22,6 +22,8 @@ import {
   MenuOptionGroup,
   MenuItemOption,
   Stack,
+  Text,
+  Center,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import QuestionCard from "components/QuestionCard";
@@ -49,6 +51,8 @@ export default function CardPage({
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [disabledReset, setDisabledReset] = useState(false);
   const [isQuestionAltered, setIsQuestionAltered] = useState(false);
+  const topRef = useRef();
+  const [mounted, setMounted] = useState(false);
   const [isLarge] = useMediaQuery("(min-width: 480px)");
   const isCurrent = (number) => number === currentPage;
   const toast = useToast();
@@ -75,6 +79,16 @@ export default function CardPage({
     totalItems: questions.length,
     initialPageSize: 4,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    mounted &&
+      questions.length &&
+      topRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [currentPage, questions]);
 
   return (
     <>
@@ -109,6 +123,7 @@ export default function CardPage({
       >
         <SlideFade in={true} offsetY="20px">
           <Heading
+            ref={topRef}
             transform={
               !isFiltered && !isLarge ? "translateX(-1rem)" : "translateX(0)"
             }
@@ -389,49 +404,124 @@ function FilterDialog({
       trapFocus={false}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Filter Results By
+        <AlertDialogContent w="250px">
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+            <Flex w="full" justify="space-between" align="center" gap={8}>
+              <Text>Filter Results By</Text>
+              <IconButton
+                icon={<VscDebugRestart />}
+                size="sm"
+                color="gray.100"
+                bg="cwru"
+                _active={{}}
+                _hover={
+                  !disabledReset && {
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+                  }
+                }
+                isDisabled={disabledReset}
+                onClick={() => {
+                  if (oldest) {
+                    setOldest(true);
+                    oldestRef.current.click();
+                  }
+                  if (answered) {
+                    setAnswered(true);
+                    answeredRef.current.click();
+                  }
+                  if (viewed) {
+                    setViewed(true);
+                    viewedRef.current.click();
+                  }
+                  if (commented) {
+                    setCommented(true);
+                    commentedRef.current.click();
+                  }
+                  setSelectedCourses([]);
+                  setSelectedNames([]);
+                  setQuestions(allQuestions);
+                }}
+              />
+            </Flex>
           </AlertDialogHeader>
           <AlertDialogBody>
-            <IconButton
-              icon={<VscDebugRestart />}
-              size="sm"
-              color="gray.100"
-              bg="cwru"
-              _active={{}}
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-              pos="absolute"
-              top="0"
-              right="0"
-              m={3}
-              isDisabled={disabledReset}
-              onClick={() => {
-                if (oldest) {
-                  setOldest(true);
-                  oldestRef.current.click();
-                }
-                if (answered) {
-                  setAnswered(true);
-                  answeredRef.current.click();
-                }
-                if (viewed) {
-                  setViewed(true);
-                  viewedRef.current.click();
-                }
-                if (commented) {
-                  setCommented(true);
-                  commentedRef.current.click();
-                }
-                setSelectedCourses([]);
-                setSelectedNames([]);
-                setQuestions(allQuestions);
-              }}
-            />
+            <Flex
+              w="full"
+              justify="space-between"
+              align="center"
+              py={1}
+              gap={4}
+              direction="column"
+            >
+              <Stack align="center" mt={-1.5} w="full">
+                <Menu closeOnSelect={false} preventOverflow={false}>
+                  <MenuButton
+                    isFullWidth
+                    as={Button}
+                    variant={selectedCourses.length ? "solid" : "outline"}
+                  >
+                    <Center>
+                      <BiBookAlt />
+                      &nbsp; Course
+                    </Center>
+                  </MenuButton>
+                  <MenuList maxH="120px" overflowY="scroll">
+                    <MenuOptionGroup
+                      defaultValue={selectedCourses}
+                      value={selectedCourses}
+                      type="checkbox"
+                      onChange={(values) => setSelectedCourses(values)}
+                    >
+                      {courses.map(({ id, courseName }) => (
+                        <MenuItemOption key={id} value={id}>
+                          {courseName.split(".")[0]}
+                        </MenuItemOption>
+                      ))}
+                    </MenuOptionGroup>
+                  </MenuList>
+                </Menu>
 
-            <Flex w="full" justify="space-between" align="start" py={2}>
+                {includeUserFilter && (
+                  <Menu closeOnSelect={false} preventOverflow={false}>
+                    <MenuButton
+                      isFullWidth
+                      as={Button}
+                      variant={selectedNames.length ? "solid" : "outline"}
+                    >
+                      <Center>
+                        <CgProfile />
+                        &nbsp;&nbsp; Name
+                      </Center>
+                    </MenuButton>
+                    <MenuList maxH="120px" overflowY="scroll">
+                      <MenuOptionGroup
+                        defaultValue={selectedNames}
+                        value={selectedNames}
+                        type="checkbox"
+                        onChange={(values) => setSelectedNames(values)}
+                      >
+                        {[
+                          ...new Set(
+                            allQuestions.map(
+                              ({ publisherName }) => publisherName
+                            )
+                          ),
+                        ]
+                          .sort()
+                          .map((publisherName) => (
+                            <MenuItemOption
+                              key={publisherName}
+                              value={publisherName}
+                            >
+                              {publisherName}
+                            </MenuItemOption>
+                          ))}
+                      </MenuOptionGroup>
+                    </MenuList>
+                  </Menu>
+                )}
+              </Stack>
+
               <Flex
                 w="full"
                 justify={"start"}
@@ -477,73 +567,11 @@ function FilterDialog({
                   Commented
                 </Checkbox>
               </Flex>
-
-              <Stack>
-                <Menu closeOnSelect={false} preventOverflow={false}>
-                  <MenuButton
-                    as={Button}
-                    variant={selectedCourses.length ? "outline" : "ghost"}
-                    leftIcon={<BiBookAlt />}
-                  >
-                    Course
-                  </MenuButton>
-                  <MenuList maxH="120px" overflowY="scroll">
-                    <MenuOptionGroup
-                      defaultValue={selectedCourses}
-                      value={selectedCourses}
-                      type="checkbox"
-                      onChange={(values) => setSelectedCourses(values)}
-                    >
-                      {courses.map(({ id, courseName }) => (
-                        <MenuItemOption key={id} value={id}>
-                          {courseName.split(".")[0]}
-                        </MenuItemOption>
-                      ))}
-                    </MenuOptionGroup>
-                  </MenuList>
-                </Menu>
-
-                {includeUserFilter && (
-                  <Menu closeOnSelect={false} preventOverflow={false}>
-                    <MenuButton
-                      as={Button}
-                      variant={selectedNames.length ? "outline" : "ghost"}
-                      leftIcon={<CgProfile />}
-                    >
-                      Name
-                    </MenuButton>
-                    <MenuList maxH="120px" overflowY="scroll">
-                      <MenuOptionGroup
-                        defaultValue={selectedNames}
-                        value={selectedNames}
-                        type="checkbox"
-                        onChange={(values) => setSelectedNames(values)}
-                      >
-                        {[
-                          ...new Set(
-                            allQuestions.map(
-                              ({ publisherName }) => publisherName
-                            )
-                          ),
-                        ]
-                          .sort()
-                          .map((publisherName) => (
-                            <MenuItemOption
-                              key={publisherName}
-                              value={publisherName}
-                            >
-                              {publisherName}
-                            </MenuItemOption>
-                          ))}
-                      </MenuOptionGroup>
-                    </MenuList>
-                  </Menu>
-                )}
-              </Stack>
             </Flex>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button
+              mt={-2}
               isFullWidth
               colorScheme="blue"
               onClick={() => {
@@ -594,7 +622,6 @@ function FilterDialog({
                 setQuestions(filteredQuestions);
                 setIsFilterDialogOpen(false);
               }}
-              ml={3}
             >
               Continue
             </Button>

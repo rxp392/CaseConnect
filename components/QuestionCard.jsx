@@ -179,7 +179,7 @@ export default function QuestionCard({
               }
               rounded={"lg"}
             >
-              <Flex gap={[2, 3]} justifyContent={"center"} align={"center"}>
+              <Flex gap={2} justifyContent={"center"} align={"center"}>
                 <Avatar
                   src={`/profile-pics/${userCaseId}.jpg`}
                   name={publisherName}
