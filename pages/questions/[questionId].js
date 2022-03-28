@@ -1,30 +1,104 @@
 import prisma from "lib/prisma";
-import { useRouter } from "next/router";
-import Loader from "components/Loader";
-import { useSession, getSession } from "next-auth/react";
-import { useEffect } from "react";
-import { Image, Box } from "@chakra-ui/react";
+import { getSession } from "next-auth/react";
+import {
+  Image,
+  Link,
+  Heading,
+  Text,
+  Flex,
+  IconButton,
+  Tooltip,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+} from "@chakra-ui/react";
+import NextLink from "next/link";
+import { useState } from "react";
+import { GrAttachment } from "react-icons/gr";
 
-export default function Question({ _question }) {
+export default function Question({ _question, caseId }) {
   const {
     id,
-    question,
-    attachment,
     courseId,
-    courseName,
     userCaseId,
+    question,
+    courseName,
+    attachment,
     publisherName,
     createdAt,
   } = _question;
+
+  const isUser = caseId === userCaseId;
+
+  const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+
   return (
     <>
-      {attachment && (
-        <Box boxSize="sm">
-          <Image src={`/question-attachments/${attachment}.jpg`} />
-        </Box>
-      )}
-      <pre>{JSON.stringify(_question, null, 2)}</pre>
+      <AttachmentModal
+        isOpen={attachmentModalOpen}
+        onClose={() => setAttachmentModalOpen(false)}
+        attachment={attachment}
+      />
+
+      <Flex h="full" w="full" justify="center" mt={6} pos="relative">
+        {attachment && (
+          <Tooltip label="View attachment" placement="left">
+            <IconButton
+              icon={<GrAttachment />}
+              pos="absolute"
+              top="-3"
+              right="1"
+              onClick={() => setAttachmentModalOpen(true)}
+            />
+          </Tooltip>
+        )}
+        <Flex
+          h="min-content"
+          w="full"
+          justify="center"
+          align="center"
+          direction="column"
+        >
+          <Heading>{question}</Heading>
+          <Text fontSize="lg">{courseName}</Text>
+          <Text fontSize="md">
+            Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+            <NextLink
+              href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+              passHref
+            >
+              <Link color="cwru">{publisherName}</Link>
+            </NextLink>
+          </Text>
+        </Flex>
+      </Flex>
     </>
+  );
+}
+
+function AttachmentModal({ isOpen, onClose, attachment }) {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <ModalOverlay />
+      <ModalContent w="fit-content" h="fit-content">
+        <ModalCloseButton />
+        <ModalHeader>Attachment</ModalHeader>
+        <ModalBody>
+          <Image
+            src={`/question-attachments/${attachment}.jpg`}
+            alt="attachment"
+            maxW="full"
+            maxH="full"
+            objectFit="cover"
+          />
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -37,11 +111,12 @@ export async function getServerSideProps({ params, req, res }) {
     return { props: {} };
   }
 
-  const { courses, viewHistory } = await prisma.user.findUnique({
+  const { courses, viewHistory, caseId } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
       viewHistory: true,
+      caseId: true,
     },
   });
 
@@ -85,6 +160,7 @@ export async function getServerSideProps({ params, req, res }) {
           ...question,
           createdAt: question.createdAt.toISOString(),
         },
+        caseId,
       },
     };
   } catch {
