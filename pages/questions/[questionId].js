@@ -63,6 +63,7 @@ export default function Question({ _question, caseId }) {
           justify="center"
           align="center"
           direction="column"
+          gap={1}
         >
           <Heading>{question}</Heading>
           <Text fontSize="lg">{courseName}</Text>
@@ -72,7 +73,7 @@ export default function Question({ _question, caseId }) {
               href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
               passHref
             >
-              <Link color="cwru">{publisherName}</Link>
+              <Link>{publisherName}</Link>
             </NextLink>
           </Text>
         </Flex>

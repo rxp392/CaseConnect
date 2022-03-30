@@ -17,7 +17,7 @@ import {
   MenuDivider,
   MenuItem,
   MenuList,
-  Tag,
+  Badge,
   Tooltip,
 } from "@chakra-ui/react";
 import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
@@ -129,18 +129,21 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
         </NavItem>
       ))}
       <NextLink href="/subscription" passHref>
-        <Tag
+        <Badge
           pos="absolute"
           bottom="4%"
           cursor="pointer"
-          mx="8"
-          size="lg"
-          borderRadius="lg"
           variant="solid"
+          mx="8"
+          px={2}
+          py={1}
           bg="cwru"
+          color="white"
+          fontWeight={"400"}
+          fontSize="sm"
         >
           {subscription} Plan
-        </Tag>
+        </Badge>
       </NextLink>
     </Box>
   );

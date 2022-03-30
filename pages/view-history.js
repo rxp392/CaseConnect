@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import CardPage from "components/CardPage";
 
-export default function MyHistory({ _questions, courses }) {
+export default function MyHistory({ _questions }) {
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -45,7 +45,6 @@ export default function MyHistory({ _questions, courses }) {
       setQuestions={setQuestions}
       allQuestions={_questions}
       title={"View History"}
-      courses={courses}
       includeViewedFilter={false}
     />
   );
@@ -127,7 +126,6 @@ export const getServerSideProps = async ({ req, res }) => {
             viewedAt: view.viewedAt.toISOString(),
           })),
         })),
-      courses,
     },
   };
 };

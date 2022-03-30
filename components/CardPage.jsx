@@ -16,14 +16,7 @@ import {
   Box,
   Checkbox,
   useToast,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuOptionGroup,
-  MenuItemOption,
-  Stack,
   Text,
-  Center,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import QuestionCard from "components/QuestionCard";
@@ -32,18 +25,14 @@ import { BsChevronLeft, BsChevronRight } from "react-icons/bs";
 import { VscDebugRestart } from "react-icons/vsc";
 import { IoFilterSharp } from "react-icons/io5";
 import { useRef, useState, useEffect } from "react";
-import { BiBookAlt } from "react-icons/bi";
-import { CgProfile } from "react-icons/cg";
 
 export default function CardPage({
   questions,
   setQuestions,
   allQuestions,
   title,
-  courses,
   includeAnsweredFilter = true,
   includeViewedFilter = true,
-  includeUserFilter = true,
 }) {
   const { data: session } = useSession();
   const cancelRef = useRef();
@@ -81,14 +70,14 @@ export default function CardPage({
   });
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     mounted &&
       questions.length &&
       topRef.current.scrollIntoView({ behavior: "smooth" });
   }, [currentPage, questions]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
@@ -98,12 +87,10 @@ export default function CardPage({
         cancelRef={cancelRef}
         setQuestions={setQuestions}
         allQuestions={allQuestions}
-        courses={courses}
         caseId={session.user.caseId}
         toast={toast}
         includeAnsweredFilter={includeAnsweredFilter}
         includeViewedFilter={includeViewedFilter}
-        includeUserFilter={includeUserFilter}
         isFiltered={isFiltered}
         disabledReset={disabledReset}
         setDisabledReset={setDisabledReset}
@@ -352,12 +339,10 @@ function FilterDialog({
   cancelRef,
   setQuestions,
   allQuestions,
-  courses,
   caseId,
   toast,
   includeAnsweredFilter,
   includeViewedFilter,
-  includeUserFilter,
   isFiltered,
   disabledReset,
   setDisabledReset,
@@ -368,32 +353,18 @@ function FilterDialog({
   const answeredRef = useRef();
   const [viewed, setViewed] = useState(false);
   const viewedRef = useRef();
-  const [commented, setCommented] = useState(false);
-  const commentedRef = useRef();
-  const [selectedCourses, setSelectedCourses] = useState([]);
-  const [selectedNames, setSelectedNames] = useState([]);
 
   useEffect(() => {
     if (isFiltered) {
       setOldest(false);
       setAnswered(false);
       setViewed(false);
-      setCommented(false);
-      setSelectedCourses([]);
-      setSelectedNames([]);
     }
   }, [isFiltered]);
 
   useEffect(() => {
-    setDisabledReset(
-      !oldest &&
-        !answered &&
-        !viewed &&
-        !commented &&
-        !selectedCourses.length &&
-        !selectedNames.length
-    );
-  }, [oldest, answered, viewed, commented, selectedCourses, selectedNames]);
+    setDisabledReset(!oldest && !answered && !viewed);
+  }, [oldest, answered, viewed]);
 
   return (
     <AlertDialog
@@ -406,7 +377,7 @@ function FilterDialog({
       <AlertDialogOverlay>
         <AlertDialogContent w="250px">
           <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
-            <Flex w="full" justify="space-between" align="center" gap={8}>
+            <Flex w="full" justify="space-between" align="center">
               <Text>Filter Results By</Text>
               <IconButton
                 icon={<VscDebugRestart />}
@@ -433,147 +404,59 @@ function FilterDialog({
                     setViewed(true);
                     viewedRef.current.click();
                   }
-                  if (commented) {
-                    setCommented(true);
-                    commentedRef.current.click();
-                  }
-                  setSelectedCourses([]);
-                  setSelectedNames([]);
                   setQuestions(allQuestions);
                 }}
               />
             </Flex>
           </AlertDialogHeader>
-          <AlertDialogBody>
+          <AlertDialogBody mt={-1}>
             <Flex
               w="full"
-              justify="space-between"
-              align="center"
-              py={1}
-              gap={4}
-              direction="column"
+              justify={"start"}
+              align={"start"}
+              flexDirection="column"
+              gap={2.5}
+              transform="translateX(0.75rem)"
             >
-              <Stack align="center" mt={-1.5} w="full">
-                <Menu closeOnSelect={false} preventOverflow={false}>
-                  <MenuButton
-                    isFullWidth
-                    as={Button}
-                    variant={selectedCourses.length ? "solid" : "outline"}
-                  >
-                    <Center>
-                      <BiBookAlt />
-                      &nbsp; Course
-                    </Center>
-                  </MenuButton>
-                  <MenuList maxH="120px" overflowY="scroll">
-                    <MenuOptionGroup
-                      defaultValue={selectedCourses}
-                      value={selectedCourses}
-                      type="checkbox"
-                      onChange={(values) => setSelectedCourses(values)}
-                    >
-                      {courses.map(({ id, courseName }) => (
-                        <MenuItemOption key={id} value={id}>
-                          {courseName.split(".")[0]}
-                        </MenuItemOption>
-                      ))}
-                    </MenuOptionGroup>
-                  </MenuList>
-                </Menu>
-
-                {includeUserFilter && (
-                  <Menu closeOnSelect={false} preventOverflow={false}>
-                    <MenuButton
-                      isFullWidth
-                      as={Button}
-                      variant={selectedNames.length ? "solid" : "outline"}
-                    >
-                      <Center>
-                        <CgProfile />
-                        &nbsp;&nbsp; Name
-                      </Center>
-                    </MenuButton>
-                    <MenuList maxH="120px" overflowY="scroll">
-                      <MenuOptionGroup
-                        defaultValue={selectedNames}
-                        value={selectedNames}
-                        type="checkbox"
-                        onChange={(values) => setSelectedNames(values)}
-                      >
-                        {[
-                          ...new Set(
-                            allQuestions.map(
-                              ({ publisherName }) => publisherName
-                            )
-                          ),
-                        ]
-                          .sort()
-                          .map((publisherName) => (
-                            <MenuItemOption
-                              key={publisherName}
-                              value={publisherName}
-                            >
-                              {publisherName}
-                            </MenuItemOption>
-                          ))}
-                      </MenuOptionGroup>
-                    </MenuList>
-                  </Menu>
-                )}
-              </Stack>
-
-              <Flex
-                w="full"
-                justify={"start"}
-                align={"start"}
-                flexDirection="column"
-                gap={2.5}
-                transform="translateX(1rem)"
+              <Checkbox
+                ref={oldestRef}
+                value={oldest}
+                defaultChecked={oldest}
+                onChange={() => setOldest(!oldest)}
               >
+                Oldest
+              </Checkbox>
+              {includeAnsweredFilter && (
                 <Checkbox
-                  ref={oldestRef}
-                  value={oldest}
-                  defaultChecked={oldest}
-                  onChange={() => setOldest(!oldest)}
+                  ref={answeredRef}
+                  value={answered}
+                  defaultChecked={answered}
+                  onChange={() => setAnswered(!answered)}
                 >
-                  Oldest
+                  Answered
                 </Checkbox>
-                {includeAnsweredFilter && (
-                  <Checkbox
-                    ref={answeredRef}
-                    value={answered}
-                    defaultChecked={answered}
-                    onChange={() => setAnswered(!answered)}
-                  >
-                    Answered
-                  </Checkbox>
-                )}
-                {includeViewedFilter && (
-                  <Checkbox
-                    ref={viewedRef}
-                    value={viewed}
-                    defaultChecked={viewed}
-                    onChange={() => setViewed(!viewed)}
-                  >
-                    Viewed
-                  </Checkbox>
-                )}
+              )}
+              {includeViewedFilter && (
                 <Checkbox
-                  ref={commentedRef}
-                  value={commented}
-                  defaultChecked={commented}
-                  onChange={() => setCommented(!commented)}
+                  ref={viewedRef}
+                  value={viewed}
+                  defaultChecked={viewed}
+                  onChange={() => setViewed(!viewed)}
                 >
-                  Commented
+                  Viewed
                 </Checkbox>
-              </Flex>
+              )}
             </Flex>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button
-              mt={-2}
               isFullWidth
-              colorScheme="blue"
+              bg="cwru"
+              color="white"
+              _active={{}}
+              _hover={{
+                backgroundColor: "rgba(10, 48, 78, 0.85)",
+              }}
               onClick={() => {
                 const filteredQuestions = allQuestions
                   .filter(({ answers }) =>
@@ -586,23 +469,6 @@ function FilterDialog({
                       ? views.some((view) => view.caseId === caseId)
                       : true
                   )
-                  .filter(({ answers }) =>
-                    commented
-                      ? answers.some((answer) => answer.comments.length)
-                      : true
-                  )
-                  .filter(({ courseId }) =>
-                    selectedCourses.length
-                      ? selectedCourses.some(
-                          (_courseId) => _courseId === courseId
-                        )
-                      : true
-                  )
-                  .filter(({ publisherName }) =>
-                    selectedNames.length && includeUserFilter
-                      ? selectedNames.some((name) => name === publisherName)
-                      : true
-                  )
                   .sort((a, b) =>
                     oldest
                       ? new Date(a.createdAt) - new Date(b.createdAt)
@@ -611,7 +477,7 @@ function FilterDialog({
 
                 if (!filteredQuestions.length) {
                   return toast({
-                    description: "No questions were found for that filter",
+                    description: `No questions match your filters`,
                     status: "info",
                     position: "bottom-left",
                     variant: "left-accent",

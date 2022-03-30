@@ -25,6 +25,9 @@ import {
   useMediaQuery,
   ButtonGroup,
   Divider,
+  FormLabel,
+  FormHelperText,
+  Input,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -33,6 +36,8 @@ import axios from "axios";
 import { FiEdit } from "react-icons/fi";
 import { AiOutlineEye } from "react-icons/ai";
 import { useSession } from "next-auth/react";
+
+import { GrAttachment } from "react-icons/gr";
 
 export default function QuestionCard({
   _question,
@@ -56,10 +61,6 @@ export default function QuestionCard({
 
   const { data: session } = useSession();
   const answersLength = answers.length;
-  const commentsLength = answers.reduce(
-    (acc, curr) => acc + curr.comments.length,
-    0
-  );
   const viewedDate = views.find((view) => view.caseId === session.user.caseId);
 
   const router = useRouter();
@@ -102,12 +103,13 @@ export default function QuestionCard({
               hasArrow
               label={question}
               arrowSize={7}
-              bg="cwru"
-              color="white"
               boxShadow={"xl"}
               rounded="lg"
               p={2}
               fontSize={"md"}
+              bg="cwru"
+              color="white"
+              placement="top"
             >
               <Heading
                 color="black"
@@ -135,12 +137,6 @@ export default function QuestionCard({
 
               <WrapItem>
                 <Badge colorScheme="blue">
-                  {formatBadge(commentsLength, "comment")}
-                </Badge>
-              </WrapItem>
-
-              <WrapItem>
-                <Badge colorScheme="purple">
                   {viewedDate ? (
                     <>
                       Viewed{" "}
@@ -158,6 +154,21 @@ export default function QuestionCard({
                   )}
                 </Badge>
               </WrapItem>
+
+              {attachment && (
+                <WrapItem>
+                  <Badge
+                    colorScheme="blackAlpha"
+                    w="full"
+                    h="full"
+                    d="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <GrAttachment />
+                  </Badge>
+                </WrapItem>
+              )}
             </Wrap>
           </Stack>
           <Stack
@@ -173,7 +184,8 @@ export default function QuestionCard({
             {" "}
             <Button
               variant="ghost"
-              p={2}
+              px={1}
+              py={2}
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
               }
@@ -275,6 +287,7 @@ export default function QuestionCard({
         questions={questions}
         setQuestions={setQuestions}
         setIsQuestionAltered={setIsQuestionAltered}
+        attachment={attachment}
       />
 
       <DeleteAlert
@@ -308,8 +321,16 @@ function EditAlert({
   questions,
   setQuestions,
   setIsQuestionAltered,
+  attachment,
 }) {
+  const [updatedAttachment, setUpdatedAttachment] = useState(null);
+  const [isDisabled, setIsDisabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setIsDisabled(true);
+  }, [editAlertOpen]);
+
   return (
     <AlertDialog
       isOpen={editAlertOpen}
@@ -324,8 +345,10 @@ function EditAlert({
             Edit Question
           </AlertDialogHeader>
           <AlertDialogBody>
-            <FormControl isInvalid={errorMessage}>
+            <FormControl isInvalid={errorMessage} isRequired>
+              <FormLabel htmlFor="question">Question</FormLabel>
               <Textarea
+                id="question"
                 placeholder={questionTitle}
                 value={questionTitle}
                 h="min-content"
@@ -336,18 +359,47 @@ function EditAlert({
                   setQuestionTitle(value);
                   if (value.length == 0) {
                     setErrorMessage("Question cannot be empty");
+                    !updatedAttachment && setIsDisabled(true);
                   } else if (value.length < 10) {
                     setErrorMessage("Question must be at least 10 characters");
+                    !updatedAttachment && setIsDisabled(true);
                   } else if (value.length > 250) {
                     setErrorMessage(
                       "Question must be less than 250 characters"
                     );
+                    setQuestionValid(false);
+                  } else if (question === value) {
+                    !updatedAttachment && setIsDisabled(true);
                   } else {
                     setErrorMessage("");
+                    setIsDisabled(false);
                   }
                 }}
               />
               <FormErrorMessage>{errorMessage}</FormErrorMessage>
+            </FormControl>
+            <br />
+            <FormControl>
+              <FormLabel>Attachment</FormLabel>
+              <Input
+                type="file"
+                id="attachment"
+                accept="image/jpg, image/jpeg"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setUpdatedAttachment(file);
+                    setIsDisabled(false);
+                  } else {
+                    setUpdatedAttachment(null);
+                    setIsDisabled(true);
+                  }
+                }}
+                size="sm"
+              />
+              <FormHelperText>
+                Only .jpg and .jpeg files are allowed
+              </FormHelperText>
             </FormControl>
           </AlertDialogBody>
           <AlertDialogFooter>
@@ -355,7 +407,7 @@ function EditAlert({
               Cancel
             </Button>
             <Button
-              isDisabled={questionTitle === question || errorMessage}
+              isDisabled={isDisabled}
               colorScheme="blue"
               loadingText="Updating..."
               spinnerPlacement="end"
@@ -363,16 +415,23 @@ function EditAlert({
               onClick={async () => {
                 setIsLoading(true);
                 try {
-                  await axios.post("/api/protected/questions/update", {
-                    id,
-                    question: questionTitle,
+                  const formData = new FormData();
+                  formData.append("id", id);
+                  formData.append("question", questionTitle.trim());
+                  formData.append("attachment", updatedAttachment);
+                  formData.append("existingAttachment", attachment);
+                  const res = await fetch("/api/protected/questions/update", {
+                    method: "POST",
+                    body: formData,
                   });
+                  const { newAttachment } = await res.json();
                   setQuestions(
                     questions.map((_question) =>
                       _question.id === id
                         ? {
                             ..._question,
                             question: questionTitle,
+                            attachment: newAttachment,
                           }
                         : _question
                     )

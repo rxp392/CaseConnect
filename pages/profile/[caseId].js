@@ -15,6 +15,19 @@ export async function getServerSideProps({ params, req, res }) {
     return { props: {} };
   }
 
+  const { courses } = await prisma.user.findUnique({
+    where: { caseId: session.user.caseId },
+    select: {
+      courses: true,
+    },
+  });
+
+  if (!courses.length) {
+    res.writeHead(302, { Location: "/my-courses" });
+    res.end();
+    return { props: {} };
+  }
+
   try {
     if (session.user.caseId === params.caseId) {
       res.writeHead(302, { Location: "/my-profile" });
@@ -34,15 +47,8 @@ export async function getServerSideProps({ params, req, res }) {
         courses: true,
         questions: true,
         answers: true,
-        comments: true,
       },
     });
-
-    if (!user.courses.length) {
-      res.writeHead(302, { Location: "/my-courses" });
-      res.end();
-      return { props: {} };
-    }
 
     return {
       props: {
@@ -55,10 +61,6 @@ export async function getServerSideProps({ params, req, res }) {
           questions: user.questions.map((question) => ({
             ...question,
             createdAt: question.createdAt.toISOString(),
-          })),
-          comments: user.comments.map((comment) => ({
-            ...comment,
-            createdAt: comment.createdAt.toISOString(),
           })),
           accountCreated: user.accountCreated.toISOString(),
         },

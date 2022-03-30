@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import CardPage from "components/CardPage";
 
-export default function MyQuestions({ _questions, courses }) {
+export default function MyQuestions({ _questions }) {
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -45,8 +45,6 @@ export default function MyQuestions({ _questions, courses }) {
       setQuestions={setQuestions}
       allQuestions={_questions}
       title={"My Questions"}
-      courses={courses}
-      includeUserFilter={false}
     />
   );
 }
@@ -75,11 +73,6 @@ export async function getServerSideProps({ req, res }) {
           answers: {
             select: {
               userCaseId: true,
-              comments: {
-                select: {
-                  userCaseId: true,
-                },
-              },
             },
           },
           views: {
@@ -114,7 +107,6 @@ export async function getServerSideProps({ req, res }) {
             viewedAt: view.viewedAt.toISOString(),
           })),
         })),
-      courses,
     },
   };
 }

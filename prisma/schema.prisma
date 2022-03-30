@@ -28,7 +28,6 @@ model User {
   questions      Question[]
   answers        Answer[]
   courses        Course[]
-  comments       Comment[]
   viewHistory    History[]
   notifications  Notification[]
 }
@@ -49,28 +48,15 @@ model Question {
 }
 
 model Answer {
-  id            Int       @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   answer        String
   questionId    Int
-  question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  postedBy      User      @relation(fields: [userCaseId], references: [caseId])
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  postedBy      User     @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
   numThumbsUp   Int
   numThumbsDown Int
-  createdAt     DateTime  @default(now())
-  readOrNot     Boolean   @default(false)
-  comments      Comment[]
-}
-
-model Comment {
-  id            Int      @id @default(autoincrement())
-  comment       String
-  userCaseId    String
-  publisherName String
-  postedBy      User     @relation(fields: [userCaseId], references: [caseId])
-  answerId      Int
-  question      Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
   readOrNot     Boolean  @default(false)
 }

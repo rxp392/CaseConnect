@@ -24,17 +24,16 @@ export default async function handler(req, res) {
 
         const attachment = files.attachment;
 
-        const timeStamp = Math.round(Date.now() + Math.random(), 2).toString();
-
-        const filePath = attachment?.originalFilename
-          ? path.join(
-              __dirname,
-              "../../../../../../public/question-attachments",
-              `${timeStamp}.jpg`
-            )
-          : null;
-
-        if (attachment && !fs.existsSync(filePath)) {
+        if (attachment) {
+          const timeStamp = Math.round(
+            Date.now() + Math.random(),
+            2
+          ).toString();
+          const filePath = path.join(
+            __dirname,
+            "../../../../../../public/question-attachments",
+            `${timeStamp}.jpg`
+          );
           fs.writeFileSync(filePath, fs.readFileSync(attachment.filepath));
           questionData.attachment = timeStamp;
         } else {

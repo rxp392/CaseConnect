@@ -27,7 +27,6 @@ export async function getServerSideProps({ req, res }) {
       courses: true,
       questions: true,
       answers: true,
-      comments: true,
     },
   });
 
@@ -48,10 +47,6 @@ export async function getServerSideProps({ req, res }) {
         questions: user.questions.map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
-        })),
-        comments: user.comments.map((comment) => ({
-          ...comment,
-          createdAt: comment.createdAt.toISOString(),
         })),
         accountCreated: user.accountCreated.toISOString(),
       },

@@ -19,7 +19,6 @@ export default function ProfileCard({ user }) {
     <SlideFade in={true} offsetY="20px">
       <Center py={6}>
         <Box
-          w={["85vw", "320px"]}
           maxW={"320px"}
           bg={"white"}
           boxShadow={"2xl"}
@@ -43,22 +42,17 @@ export default function ProfileCard({ user }) {
             @{user.caseId}
           </Text>
           <Text textAlign={"center"} color={"gray.700"}>
-            {isUser ? "You" : `${user.name} (${user.caseId})`}{" "}
-            {isUser ? "have" : "has"} asked{" "}
+            {isUser ? "You" : `${user.name}`} {isUser ? "have" : "has"} <br />{" "}
+            asked{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
               {user.questions.length}
             </span>{" "}
-            question{user.questions.length === 1 ? "" : "s"}, answered{" "}
+            question{user.questions.length === 1 ? "" : "s"},<br /> answered{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
               {user.answers.length}
             </span>{" "}
             question
-            {user.answers.length === 1 ? "" : "s"}, commented on{" "}
-            <span style={{ fontWeight: "bold", color: "#0a304e" }}>
-              {user.comments.length}
-            </span>{" "}
-            question
-            {user.comments.length === 1 ? "" : "s"}, and belong
+            {user.answers.length === 1 ? "" : "s"}, <br /> and belong
             {isUser ? "" : "s"} to{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
               {user.courses.length}
