@@ -43,7 +43,7 @@ export default function AskQuestion({ courses }) {
       formData.append("courseId", courseId);
       formData.append("caseId", session.user.caseId);
       formData.append("publisherName", session.user.name);
-      formData.append("userImage", session.user.image);
+      formData.append("userImage", session.user.profileImage);
       formData.append("attachment", attachment[0]);
       await fetch("/api/protected/questions/post", {
         method: "POST",

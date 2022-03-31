@@ -1,7 +1,6 @@
 import prisma from "lib/prisma";
-import { IncomingForm } from "formidable";
-import fs from "fs";
-import path from "path";
+import getImage from "utils/getImage";
+import uploadImage from "utils/uploadImage";
 
 export const config = {
   api: {
@@ -13,45 +12,28 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(404).json({ error: "Method not allowed" });
   }
+
   try {
-    const form = new IncomingForm();
-
-    let questionData = {};
-
-    await new Promise((resolve, _) => {
-      form.parse(req, async (__, fields, files) => {
-        questionData = { ...fields };
-
-        const attachment = files.attachment;
-
-        if (attachment) {
-          const timeStamp = Math.round(
-            Date.now() + Math.random(),
-            2
-          ).toString();
-          const filePath = path.join(
-            __dirname,
-            "../../../../../../public/question-attachments",
-            `${timeStamp}.jpg`
-          );
-          fs.writeFileSync(filePath, fs.readFileSync(attachment.filepath));
-          questionData.attachment = timeStamp;
-        } else {
-          questionData.attachment = null;
-        }
-
-        resolve();
+    const { fields, files } = await getImage(req);
+    let secure_url;
+    if (files.attachment) {
+      const { filepath, originalFilename } = files.attachment;
+      secure_url = await uploadImage({
+        imageToUpload: filepath,
+        public_id: originalFilename,
+        folder: "question-attachments",
       });
-    });
+    }
 
     await prisma.question.create({
       data: {
-        question: questionData.question,
-        attachment: questionData.attachment,
-        courseId: Number(questionData.courseId),
-        courseName: questionData.courseName,
-        userCaseId: questionData.caseId,
-        publisherName: questionData.publisherName,
+        question: fields.question.trim(),
+        courseId: Number(fields.courseId),
+        publisherName: fields.publisherName,
+        userCaseId: fields.caseId,
+        courseName: fields.courseName,
+        attachment: secure_url,
+        userImage: fields.userImage,
       },
     });
 

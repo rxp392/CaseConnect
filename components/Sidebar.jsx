@@ -62,7 +62,13 @@ const LinkItems = [
   },
 ];
 
-export default function Sidebar({ subscription, caseId, name, children }) {
+export default function Sidebar({
+  subscription,
+  caseId,
+  name,
+  children,
+  profileImage,
+}) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -85,7 +91,12 @@ export default function Sidebar({ subscription, caseId, name, children }) {
           <SidebarContent onClose={onClose} subscription={subscription} />
         </DrawerContent>
       </Drawer>
-      <MobileNav onOpen={onOpen} caseId={caseId} name={name} />
+      <MobileNav
+        onOpen={onOpen}
+        caseId={caseId}
+        name={name}
+        profileImage={profileImage}
+      />
       <Flex
         ml={{ base: 0, md: 60 }}
         p="4"
@@ -183,7 +194,7 @@ const NavItem = ({ icon, href, children, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, caseId, name, ...rest }) => {
+const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
   const router = useRouter();
   return (
     <Flex
@@ -240,7 +251,7 @@ const MobileNav = ({ onOpen, caseId, name, ...rest }) => {
               <HStack>
                 <Avatar
                   size={"sm"}
-                  src={`/profile-pics/${caseId}.jpg`}
+                  src={profileImage}
                   name={name}
                   bg="cwru"
                   color="white"

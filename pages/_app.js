@@ -34,6 +34,7 @@ function Auth({ children }) {
       caseId={session.user.caseId}
       name={session.user.name}
       subscription={session.user.subscription}
+      profileImage={session.user.profileImage}
     >
       {children}
     </Sidebar>

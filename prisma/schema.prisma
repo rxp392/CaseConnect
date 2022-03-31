@@ -20,6 +20,7 @@ model History {
 model User {
   caseId         String         @id
   name           String
+  profileImage   String?
   subscription   String         @default("Basic")
   canAnswer      Boolean        @default(true)
   browseLimit    Int            @default(10)
@@ -39,11 +40,12 @@ model Question {
   courseId      Int
   courseName    String
   course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  answers       Answer[]
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
+  userImage     String?
   createdAt     DateTime  @default(now())
+  answers       Answer[]
   views         History[]
 }
 

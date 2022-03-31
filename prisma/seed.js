@@ -1,6 +1,3 @@
-const fs = require("fs");
-const path = require("path");
-
 const { PrismaClient } = require("@prisma/client");
 const axios = require("axios");
 const JSSoup = require("jssoup").default;
@@ -52,19 +49,6 @@ async function main() {
     })),
   });
   console.log(`Seeding finished.`);
-  console.log("Started delete...");
-  const profilePics = path.join(__dirname, "../public/profile-pics/");
-  fs.readdirSync(profilePics).forEach((file) => {
-    fs.unlinkSync(path.join(profilePics, file));
-  });
-  const questionAttachments = path.join(
-    __dirname,
-    "../public/question-attachments/"
-  );
-  fs.readdirSync(questionAttachments).forEach((file) => {
-    fs.unlinkSync(path.join(questionAttachments, file));
-  });
-  console.log("Delete finished.");
 }
 
 main()

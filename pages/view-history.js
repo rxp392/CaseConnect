@@ -93,11 +93,6 @@ export const getServerSideProps = async ({ req, res }) => {
       answers: {
         select: {
           userCaseId: true,
-          comments: {
-            select: {
-              userCaseId: true,
-            },
-          },
         },
       },
       views: {
@@ -109,6 +104,7 @@ export const getServerSideProps = async ({ req, res }) => {
       userCaseId: true,
       publisherName: true,
       createdAt: true,
+      userImage: true,
     },
   });
 

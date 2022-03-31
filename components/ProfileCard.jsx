@@ -28,7 +28,7 @@ export default function ProfileCard({ user }) {
         >
           <Avatar
             size={"xl"}
-            src={`/profile-pics/${user.caseId}.jpg`}
+            src={user.profileImage}
             name={user.name}
             bg={"cwru"}
             color={"white"}

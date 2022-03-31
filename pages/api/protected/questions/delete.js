@@ -1,6 +1,5 @@
 import prisma from "lib/prisma";
-import fs from "fs";
-import path from "path";
+import deleteImage from "utils/deleteImage";
 
 export default async function handler(req, res) {
   if (req.method !== "DELETE") {
@@ -16,18 +15,23 @@ export default async function handler(req, res) {
     });
 
     if (attachment) {
-      fs.unlinkSync(
-        path.join(
-          __dirname,
-          "../../../../../../public/question-attachments",
-          `${attachment}.jpg`
-        )
-      );
+      const public_id = attachment.split("/").slice(-2).join("/").slice(0, -4);
+
+      const questions = await prisma.question.findMany({
+        where: {
+          attachment: {
+            contains: public_id,
+          },
+        },
+      });
+
+      if (!questions.length) {
+        await deleteImage({ public_id });
+      }
     }
 
     return res.status(200).json();
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ error });
   }
 }

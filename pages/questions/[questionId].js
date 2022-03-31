@@ -12,10 +12,8 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Button,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState } from "react";
@@ -91,7 +89,7 @@ function AttachmentModal({ isOpen, onClose, attachment }) {
         <ModalHeader>Attachment</ModalHeader>
         <ModalBody>
           <Image
-            src={`/question-attachments/${attachment}.jpg`}
+            src={attachment}
             alt="attachment"
             maxW="full"
             maxH="full"

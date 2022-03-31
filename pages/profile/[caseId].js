@@ -47,6 +47,7 @@ export async function getServerSideProps({ params, req, res }) {
         courses: true,
         questions: true,
         answers: true,
+        profileImage: true,
       },
     });
 
