@@ -21,10 +21,10 @@ model User {
   caseId         String         @id
   name           String
   profileImage   String?
+  isFirstLogin   Boolean        @default(true)
   subscription   String         @default("Basic")
-  canAnswer      Boolean        @default(true)
-  browseLimit    Int            @default(10)
-  postLimit      Int            @default(3)
+  browseCount    Int            @default(0)
+  postCount      Int            @default(0)
   accountCreated DateTime       @default(now())
   questions      Question[]
   answers        Answer[]

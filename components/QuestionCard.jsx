@@ -26,6 +26,7 @@ import {
   ButtonGroup,
   Divider,
   FormLabel,
+  SlideFade,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -319,101 +320,105 @@ function EditAlert({
       trapFocus={false}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Edit Question
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <FormControl isInvalid={errorMessage}>
-              <FormLabel htmlFor="question">Question</FormLabel>
-              <Textarea
-                id="question"
-                placeholder={questionTitle}
-                value={questionTitle}
-                h="min-content"
-                type="text"
-                resize="none"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setQuestionTitle(value);
-                  if (value.length == 0) {
-                    setErrorMessage("Question cannot be empty");
-                    setIsDisabled(true);
-                  } else if (value.length < 10) {
-                    setErrorMessage("Question must be at least 10 characters");
-                    setIsDisabled(true);
-                  } else if (value.length > 250) {
-                    setErrorMessage(
-                      "Question must be less than 250 characters"
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Edit Question
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              <FormControl isInvalid={errorMessage}>
+                <FormLabel htmlFor="question">Question</FormLabel>
+                <Textarea
+                  id="question"
+                  placeholder={questionTitle}
+                  value={questionTitle}
+                  h="min-content"
+                  type="text"
+                  resize="none"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setQuestionTitle(value);
+                    if (value.length == 0) {
+                      setErrorMessage("Question cannot be empty");
+                      setIsDisabled(true);
+                    } else if (value.length < 10) {
+                      setErrorMessage(
+                        "Question must be at least 10 characters"
+                      );
+                      setIsDisabled(true);
+                    } else if (value.length > 250) {
+                      setErrorMessage(
+                        "Question must be less than 250 characters"
+                      );
+                      setIsDisabled(true);
+                    } else {
+                      setErrorMessage("");
+                      setIsDisabled(false);
+                    }
+                  }}
+                />
+                <FormErrorMessage>{errorMessage}</FormErrorMessage>
+              </FormControl>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                isDisabled={isDisabled || question === questionTitle}
+                colorScheme="blue"
+                loadingText="Updating..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await axios.post("/api/protected/questions/update", {
+                      id,
+                      question: questionTitle.trim(),
+                    });
+                    setQuestions(
+                      questions.map((_question) =>
+                        _question.id === id
+                          ? {
+                              ..._question,
+                              question: questionTitle,
+                            }
+                          : _question
+                      )
                     );
-                    setIsDisabled(true);
-                  } else {
-                    setErrorMessage("");
-                    setIsDisabled(false);
+                    toast({
+                      title: "Question Updated",
+                      description: "Your question has been updated",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    setIsQuestionAltered(true);
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setEditAlertOpen(false);
                   }
                 }}
-              />
-              <FormErrorMessage>{errorMessage}</FormErrorMessage>
-            </FormControl>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              isDisabled={isDisabled || question === questionTitle}
-              colorScheme="blue"
-              loadingText="Updating..."
-              spinnerPlacement="end"
-              isLoading={isLoading}
-              onClick={async () => {
-                setIsLoading(true);
-                try {
-                  await axios.post("/api/protected/questions/update", {
-                    id,
-                    question: questionTitle.trim(),
-                  });
-                  setQuestions(
-                    questions.map((_question) =>
-                      _question.id === id
-                        ? {
-                            ..._question,
-                            question: questionTitle,
-                          }
-                        : _question
-                    )
-                  );
-                  toast({
-                    title: "Question Updated",
-                    description: "Your question has been updated",
-                    status: "success",
-                    variant: "left-accent",
-                    position: "bottom-left",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                  setIsQuestionAltered(true);
-                } catch {
-                  toast({
-                    title: "An Error Ocurred",
-                    description: "Please try again",
-                    status: "error",
-                    variant: "left-accent",
-                    position: "bottom-left",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                } finally {
-                  setIsLoading(false);
-                  setEditAlertOpen(false);
-                }
-              }}
-              ml={3}
-            >
-              Update
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+                ml={3}
+              >
+                Update
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
       </AlertDialogOverlay>
     </AlertDialog>
   );
@@ -441,65 +446,67 @@ function DeleteAlert({
       trapFocus={false}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Delete Question
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            Are you sure you want to delete this question?
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="red"
-              loadingText="Deleting..."
-              spinnerPlacement="end"
-              isLoading={isLoading}
-              onClick={async () => {
-                setIsLoading(true);
-                try {
-                  await axios.delete("/api/protected/questions/delete", {
-                    data: {
-                      id,
-                      attachment,
-                    },
-                  });
-                  setQuestions(
-                    questions.filter((question) => question.id !== id)
-                  );
-                  toast({
-                    title: "Question Deleted",
-                    description: "Your question has been deleted",
-                    status: "success",
-                    variant: "left-accent",
-                    position: "bottom-left",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                  setIsQuestionAltered(true);
-                } catch {
-                  toast({
-                    title: "An Error Ocurred",
-                    description: "Please try again",
-                    status: "error",
-                    variant: "left-accent",
-                    position: "bottom-left",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                } finally {
-                  setIsLoading(false);
-                  setDeleteAlertOpen(false);
-                }
-              }}
-              ml={3}
-            >
-              Delete
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Question
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this question?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                loadingText="Deleting..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await axios.delete("/api/protected/questions/delete", {
+                      data: {
+                        id,
+                        attachment,
+                      },
+                    });
+                    setQuestions(
+                      questions.filter((question) => question.id !== id)
+                    );
+                    toast({
+                      title: "Question Deleted",
+                      description: "Your question has been deleted",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    setIsQuestionAltered(true);
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setDeleteAlertOpen(false);
+                  }
+                }}
+                ml={3}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
       </AlertDialogOverlay>
     </AlertDialog>
   );

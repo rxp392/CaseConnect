@@ -17,15 +17,23 @@ export default NextAuth({
 
         const caseId = profile.email.split("@")[0];
 
-        const { name, subscription, canAnswer, accountCreated, profileImage } =
-          await prisma.user.upsert({
-            where: { caseId },
-            update: {},
-            create: {
-              caseId,
-              name: profile.name,
-            },
-          });
+        const {
+          name,
+          subscription,
+          canAnswer,
+          accountCreated,
+          profileImage,
+          isFirstLogin,
+        } = await prisma.user.upsert({
+          where: { caseId },
+          update: {
+            isFirstLogin: false,
+          },
+          create: {
+            caseId,
+            name: profile.name,
+          },
+        });
 
         let secure_url = profileImage;
 
@@ -47,6 +55,7 @@ export default NextAuth({
         user.canAnswer = canAnswer;
         user.accountCreated = accountCreated;
         user.profileImage = secure_url;
+        user.isFirstLogin = isFirstLogin;
 
         return true;
       }
@@ -54,9 +63,6 @@ export default NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        delete token.name;
-        delete token.email;
-        delete token.picture;
         token.user = user;
       }
       return token;

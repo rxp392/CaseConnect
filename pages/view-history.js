@@ -77,10 +77,12 @@ export const getServerSideProps = async ({ req, res }) => {
     return { props: {} };
   }
 
+  const questionIds = viewHistory.map((history) => Number(history.questionId));
+
   const questions = await prisma.question.findMany({
     where: {
       id: {
-        in: viewHistory.map((history) => Number(history.questionId)),
+        in: questionIds,
       },
     },
     select: {
@@ -107,8 +109,6 @@ export const getServerSideProps = async ({ req, res }) => {
       userImage: true,
     },
   });
-
-  const questionIds = viewHistory.map((history) => Number(history.questionId));
 
   return {
     props: {

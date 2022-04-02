@@ -12,29 +12,28 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { signIn, getSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Index() {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const params = new Proxy(new URLSearchParams(window.location.search), {
-    get: (searchParams, prop) => searchParams.get(prop),
-  });
+  const router = useRouter();
+  const { error } = router.query;
 
   useEffect(() => {
-    if (params.error === "AccessDenied") {
+    if (error === "AccessDenied") {
       window.history.replaceState(null, "", `${process.env.NEXT_PUBLIC_URL}/`);
       toast({
         title: "Access Denied",
         description: "You must have a CWRU email to login",
         status: "error",
-        duration: 9000,
+        duration: 4000,
         isClosable: true,
         position: "bottom-left",
         variant: "left-accent",
       });
     }
-  }, [params.error]);
+  }, [error]);
 
   return (
     <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>

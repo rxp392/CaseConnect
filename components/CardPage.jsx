@@ -375,124 +375,126 @@ function FilterDialog({
       trapFocus={false}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent w="250px">
-          <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
-            <Flex w="full" justify="space-between" align="center">
-              <Text>Filter Results By</Text>
-              <IconButton
-                icon={<VscDebugRestart />}
-                size="sm"
-                color="gray.100"
-                bg="cwru"
-                _active={{}}
-                _hover={
-                  !disabledReset && {
-                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent w="250px">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+              <Flex w="full" justify="space-between" align="center">
+                <Text>Filter Results By</Text>
+                <IconButton
+                  icon={<VscDebugRestart />}
+                  size="sm"
+                  color="gray.100"
+                  bg="cwru"
+                  _active={{}}
+                  _hover={
+                    !disabledReset && {
+                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    }
                   }
-                }
-                isDisabled={disabledReset}
-                onClick={() => {
-                  if (oldest) {
-                    setOldest(true);
-                    oldestRef.current.click();
-                  }
-                  if (answered) {
-                    setAnswered(true);
-                    answeredRef.current.click();
-                  }
-                  if (viewed) {
-                    setViewed(true);
-                    viewedRef.current.click();
-                  }
-                  setQuestions(allQuestions);
-                }}
-              />
-            </Flex>
-          </AlertDialogHeader>
-          <AlertDialogBody mt={-1}>
-            <Flex
-              w="full"
-              justify={"start"}
-              align={"start"}
-              flexDirection="column"
-              gap={2.5}
-              transform="translateX(0.75rem)"
-            >
-              <Checkbox
-                ref={oldestRef}
-                value={oldest}
-                defaultChecked={oldest}
-                onChange={() => setOldest(!oldest)}
+                  isDisabled={disabledReset}
+                  onClick={() => {
+                    if (oldest) {
+                      setOldest(true);
+                      oldestRef.current.click();
+                    }
+                    if (answered) {
+                      setAnswered(true);
+                      answeredRef.current.click();
+                    }
+                    if (viewed) {
+                      setViewed(true);
+                      viewedRef.current.click();
+                    }
+                    setQuestions(allQuestions);
+                  }}
+                />
+              </Flex>
+            </AlertDialogHeader>
+            <AlertDialogBody mt={-1}>
+              <Flex
+                w="full"
+                justify={"start"}
+                align={"start"}
+                flexDirection="column"
+                gap={2.5}
+                transform="translateX(0.75rem)"
               >
-                Oldest
-              </Checkbox>
-              {includeAnsweredFilter && (
                 <Checkbox
-                  ref={answeredRef}
-                  value={answered}
-                  defaultChecked={answered}
-                  onChange={() => setAnswered(!answered)}
+                  ref={oldestRef}
+                  value={oldest}
+                  defaultChecked={oldest}
+                  onChange={() => setOldest(!oldest)}
                 >
-                  Answered
+                  Oldest
                 </Checkbox>
-              )}
-              {includeViewedFilter && (
-                <Checkbox
-                  ref={viewedRef}
-                  value={viewed}
-                  defaultChecked={viewed}
-                  onChange={() => setViewed(!viewed)}
-                >
-                  Viewed
-                </Checkbox>
-              )}
-            </Flex>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button
-              isFullWidth
-              bg="cwru"
-              color="white"
-              _active={{}}
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-              onClick={() => {
-                const filteredQuestions = allQuestions
-                  .filter(({ answers }) =>
-                    answered && includeAnsweredFilter
-                      ? Boolean(answers.length)
-                      : true
-                  )
-                  .filter(({ views }) =>
-                    viewed && includeViewedFilter
-                      ? views.some((view) => view.caseId === caseId)
-                      : true
-                  )
-                  .sort((a, b) =>
-                    oldest
-                      ? new Date(a.createdAt) - new Date(b.createdAt)
-                      : new Date(b.createdAt) - new Date(a.createdAt)
-                  );
+                {includeAnsweredFilter && (
+                  <Checkbox
+                    ref={answeredRef}
+                    value={answered}
+                    defaultChecked={answered}
+                    onChange={() => setAnswered(!answered)}
+                  >
+                    Answered
+                  </Checkbox>
+                )}
+                {includeViewedFilter && (
+                  <Checkbox
+                    ref={viewedRef}
+                    value={viewed}
+                    defaultChecked={viewed}
+                    onChange={() => setViewed(!viewed)}
+                  >
+                    Viewed
+                  </Checkbox>
+                )}
+              </Flex>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                isFullWidth
+                bg="cwru"
+                color="white"
+                _active={{}}
+                _hover={{
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
+                }}
+                onClick={() => {
+                  const filteredQuestions = allQuestions
+                    .filter(({ answers }) =>
+                      answered && includeAnsweredFilter
+                        ? Boolean(answers.length)
+                        : true
+                    )
+                    .filter(({ views }) =>
+                      viewed && includeViewedFilter
+                        ? views.some((view) => view.caseId === caseId)
+                        : true
+                    )
+                    .sort((a, b) =>
+                      oldest
+                        ? new Date(a.createdAt) - new Date(b.createdAt)
+                        : new Date(b.createdAt) - new Date(a.createdAt)
+                    );
 
-                if (!filteredQuestions.length) {
-                  return toast({
-                    description: `No questions match your filters`,
-                    status: "info",
-                    position: "bottom-left",
-                    variant: "left-accent",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                }
-                setQuestions(filteredQuestions);
-                setIsFilterDialogOpen(false);
-              }}
-            >
-              Continue
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+                  if (!filteredQuestions.length) {
+                    return toast({
+                      description: `No questions match your filters`,
+                      status: "info",
+                      position: "bottom-left",
+                      variant: "left-accent",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  }
+                  setQuestions(filteredQuestions);
+                  setIsFilterDialogOpen(false);
+                }}
+              >
+                Continue
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
       </AlertDialogOverlay>
     </AlertDialog>
   );

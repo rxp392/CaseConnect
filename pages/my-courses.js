@@ -34,6 +34,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import useSwr from "swr";
 import { FiPlus } from "react-icons/fi";
+import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
@@ -42,6 +43,9 @@ export default function MyCourses({ userCourses }) {
   const { data: session } = useSession();
   const toast = useToast();
   const cancelRef = useRef();
+  const [isFirstLogin, setIsFirstLogin] = useState(
+    !!localStorage.getItem("isFirstLogin") ? false : session.user.isFirstLogin
+  );
   const [drawerOpen, setDrawerOpen] = useState(userCourses.length == 0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedId, setSelectedId] = useState("");
@@ -52,6 +56,12 @@ export default function MyCourses({ userCourses }) {
   useEffect(() => {
     setDrawerOpen(courses.length == 0);
   }, [courses]);
+
+  useEffect(() => {
+    if (!isFirstLogin) {
+      localStorage.setItem("isFirstLogin", false);
+    }
+  }, [isFirstLogin]);
 
   const submitCourses = async () => {
     setIsLoading(true);
@@ -97,7 +107,6 @@ export default function MyCourses({ userCourses }) {
 
   return (
     <>
-      {/* Drawer */}
       <Drawer
         isOpen={drawerOpen}
         size="md"
@@ -193,7 +202,6 @@ export default function MyCourses({ userCourses }) {
         </DrawerContent>
       </Drawer>
 
-      {/* Main Content */}
       <Flex
         justify="space-between"
         align="center"
@@ -257,15 +265,56 @@ export default function MyCourses({ userCourses }) {
         </SlideFade>
       </Flex>
 
-      {/* Confirmation alert */}
-      <AlertDialog
-        isOpen={confirmOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={() => setConfirmOpen(false)}
-        isCentered
-        trapFocus={false}
-      >
-        <AlertDialogOverlay>
+      <DeleteDialog
+        confirmOpen={confirmOpen}
+        setConfirmOpen={setConfirmOpen}
+        cancelRef={cancelRef}
+        toast={toast}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        courses={courses}
+        setCourses={setCourses}
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        session={session}
+      />
+
+      <WelcomeDialog
+        isFirstLogin={isFirstLogin}
+        setIsFirstLogin={setIsFirstLogin}
+        cancelRef={cancelRef}
+        session={session}
+        BROWSE_LIMIT={BROWSE_LIMIT}
+        POST_LIMIT={POST_LIMIT}
+        PREMIUM_PRICE={PREMIUM_PRICE}
+      />
+    </>
+  );
+}
+
+function DeleteDialog({
+  confirmOpen,
+  setConfirmOpen,
+  cancelRef,
+  isLoading,
+  setIsLoading,
+  toast,
+  courses,
+  setCourses,
+  selectedId,
+  setSelectedId,
+  session,
+}) {
+  return (
+    <AlertDialog
+      isOpen={confirmOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setConfirmOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Delete Course
@@ -280,7 +329,6 @@ export default function MyCourses({ userCourses }) {
               <Button
                 colorScheme="red"
                 loadingText="Deleting..."
-                x
                 spinnerPlacement="end"
                 isLoading={isLoading}
                 onClick={async () => {
@@ -325,9 +373,56 @@ export default function MyCourses({ userCourses }) {
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+}
+
+function WelcomeDialog({
+  isFirstLogin,
+  setIsFirstLogin,
+  cancelRef,
+  session,
+  BROWSE_LIMIT,
+  POST_LIMIT,
+  PREMIUM_PRICE,
+}) {
+  return (
+    <AlertDialog
+      isOpen={isFirstLogin}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setIsFirstLogin(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Welcome, {session.user.name}
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              You are currently on the <strong>Basic plan</strong>, which means
+              that you can ask <strong>{POST_LIMIT}</strong> questions and view{" "}
+              <strong>{BROWSE_LIMIT}</strong> questions before needing to
+              upgrade to ask and view unlimited questions. You can upgrade to
+              the <strong>Premium plan</strong> at any time on the{" "}
+              <strong>subscription page</strong> for ${PREMIUM_PRICE}.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                colorScheme="blue"
+                ref={cancelRef}
+                onClick={() => setIsFirstLogin(false)}
+              >
+                Continue
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 

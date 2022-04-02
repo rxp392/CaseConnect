@@ -9,13 +9,17 @@ import {
   ListItem,
   ListIcon,
   Button,
-  Flex,
   SlideFade,
+  useToast,
 } from "@chakra-ui/react";
 import { getSession } from "next-auth/react";
 import { FaCheckCircle } from "react-icons/fa";
 import ReactCanvasConfetti from "react-canvas-confetti";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import axios from "axios";
+import getStripe from "utils/getStripe";
+import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
 
 const canvasStyles = {
   position: "fixed",
@@ -27,11 +31,56 @@ const canvasStyles = {
   transform: "translateX(10%)",
 };
 
-export default function Subscription({ user }) {
+export default function Subscription({ _user }) {
+  const [user, setUser] = useState(_user);
+  const [isLoading, setIsLoading] = useState(false);
   const isBasic = user.subscription === "Basic";
+  const router = useRouter();
+  const { status } = router.query;
+  const toast = useToast();
 
-  const basicPlanPerks = ["perk 1", "perk 2", "perk 3"];
-  const premiumPlanPerks = ["perk 1", "perk 2", "perk 3"];
+  const basicPlanPerks = [
+    `Ask up to ${POST_LIMIT} Questions`,
+    `View up to ${BROWSE_LIMIT} Questions`,
+    `Answer up to ${BROWSE_LIMIT} Questions`,
+  ];
+  const premiumPlanPerks = [
+    "Ask unlimited questions",
+    "View unlimited questions",
+    "Answer unlimited Questions",
+  ];
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    const stripe = await getStripe();
+
+    const checkoutSession = await axios.post(
+      "/api/protected/subscription/create-session",
+      {
+        caseId: _user.caseId,
+      }
+    );
+
+    const result = await stripe.redirectToCheckout({
+      sessionId: checkoutSession.data.id,
+    });
+
+    if (result.error) {
+      // toast
+    }
+
+    // await axios.post("/api/protected/subscription/update", {
+    //   caseId: _user.caseId,
+    // });
+
+    setUser({
+      ...user,
+      subscription: "Premium",
+    });
+
+    // toast
+    setIsLoading(false);
+  };
 
   const refAnimationInstance = useRef(null);
   const getInstance = useCallback((instance) => {
@@ -79,7 +128,7 @@ export default function Subscription({ user }) {
   useEffect(() => {
     let intervalId;
     if (!isBasic) {
-      fire()
+      fire();
       intervalId = setInterval(() => {
         fire();
       }, 1500);
@@ -120,20 +169,18 @@ export default function Subscription({ user }) {
           py={10}
         >
           <PriceWrapper>
-            {isBasic && (
-              <Text
-                textTransform="uppercase"
-                bg="green.600"
-                px={1}
-                py={1}
-                color="white"
-                fontSize="sm"
-                fontWeight="600"
-                rounded="xl"
-              >
-                Your Current Plan
-              </Text>
-            )}
+            <Text
+              textTransform="uppercase"
+              bg="green.600"
+              px={2}
+              py={2}
+              color="white"
+              fontSize="sm"
+              fontWeight="600"
+              roundedTop="lg"
+            >
+              Your Current Plan
+            </Text>
             <Box py={4} px={12}>
               <Text fontWeight="500" fontSize="2xl">
                 Basic Plan
@@ -155,7 +202,6 @@ export default function Subscription({ user }) {
                   </ListItem>
                 ))}
               </List>
-              <Box w="80%" pt={7}></Box>
             </VStack>
           </PriceWrapper>
 
@@ -167,33 +213,18 @@ export default function Subscription({ user }) {
                 left="50%"
                 style={{ transform: "translate(-50%)" }}
               ></Box>
-              {isBasic ? (
-                <Text
-                  textTransform="uppercase"
-                  bg="cwru"
-                  color="white"
-                  px={3}
-                  py={1}
-                  fontSize="sm"
-                  fontWeight="600"
-                  rounded="xl"
-                >
-                  Most Popular Plan
-                </Text>
-              ) : (
-                <Text
-                  textTransform="uppercase"
-                  bg="red.300"
-                  px={3}
-                  py={1}
-                  color="gray.900"
-                  fontSize="sm"
-                  fontWeight="600"
-                  rounded="xl"
-                >
-                  Your Current Plan
-                </Text>
-              )}
+              <Text
+                textTransform="uppercase"
+                bg="cwru"
+                color="white"
+                px={2}
+                py={2}
+                fontSize="sm"
+                fontWeight="600"
+                roundedTop="lg"
+              >
+                Most Popular Plan
+              </Text>
               <Box py={4} px={12}>
                 <Text fontWeight="500" fontSize="2xl">
                   Premium Plan
@@ -203,14 +234,14 @@ export default function Subscription({ user }) {
                     $
                   </Text>
                   <Text fontSize="5xl" fontWeight="900">
-                    5
+                    {PREMIUM_PRICE}
                   </Text>
                   <Text fontSize="3xl" fontWeight="900">
                     <sub>.00</sub>
                   </Text>
                 </HStack>
               </Box>
-              <VStack bg="gray.50" py={4} borderBottomRadius={"xl"}>
+              <VStack bg="gray.50" py={4}>
                 <List spacing={3} textAlign="start" px={12}>
                   {premiumPlanPerks.map((perk, i) => (
                     <ListItem key={i}>
@@ -219,22 +250,25 @@ export default function Subscription({ user }) {
                     </ListItem>
                   ))}
                 </List>
-                <Box w="80%" pt={7}>
-                  <Button
-                    w="full"
-                    size="md"
-                    bg="cwru"
-                    color="white"
-                    colorScheme="black"
-                    _hover={{
-                      backgroundColor: "rgba(10, 48, 78, 0.85)",
-                    }}
-                  >
-                    Subscribe Now
-                  </Button>
-                </Box>
               </VStack>
             </Box>
+            <Button
+              isFullWidth
+              size="md"
+              bg="cwru"
+              color="white"
+              colorScheme="black"
+              _hover={{
+                backgroundColor: "rgba(10, 48, 78, 0.85)",
+              }}
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              loadingText="Loading..."
+              roundedBottom="lg"
+              roundedTop="none"
+            >
+              Subscribe Now
+            </Button>
           </PriceWrapper>
         </Stack>
       </SlideFade>
@@ -250,7 +284,7 @@ function PriceWrapper({ children }) {
       borderWidth="1px"
       alignSelf={{ base: "center", lg: "flex-start" }}
       borderColor="gray.200"
-      borderRadius={"xl"}
+      borderRadius={"lg"}
     >
       {children}
     </Box>
@@ -272,8 +306,6 @@ export async function getServerSideProps({ req, res }) {
       caseId: true,
       name: true,
       subscription: true,
-      canAnswer: true,
-      browseLimit: true,
       accountCreated: true,
       courses: true,
     },
@@ -287,7 +319,7 @@ export async function getServerSideProps({ req, res }) {
 
   return {
     props: {
-      user: {
+      _user: {
         ...user,
         accountCreated: user.accountCreated.toISOString(),
       },

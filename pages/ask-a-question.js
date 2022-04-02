@@ -26,7 +26,6 @@ export default function AskQuestion({ courses }) {
   const {
     handleSubmit,
     register,
-
     formState: { errors, isSubmitting, isValid },
   } = useForm({ mode: "onChange" });
 
