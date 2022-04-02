@@ -69,10 +69,24 @@ export default function ProfileCard({ user }) {
             gap={1}
             mt={6}
           >
-            <Badge px={2} py={1} bg="cwru" color="white" fontWeight={"400"}>
+            <Badge
+              px={2}
+              py={1}
+              bg="cwru"
+              color="white"
+              fontWeight={"400"}
+              rounded="md"
+            >
               {user.subscription} Plan
             </Badge>
-            <Badge px={2} py={1} bg="cwru" color="white" fontWeight={"400"}>
+            <Badge
+              px={2}
+              py={1}
+              bg="cwru"
+              color="white"
+              fontWeight={"400"}
+              rounded="md"
+            >
               Created{" "}
               {new Date(user.accountCreated).toLocaleDateString("en-us")}
             </Badge>

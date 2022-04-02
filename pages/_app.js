@@ -30,14 +30,7 @@ function Auth({ children }) {
   if (status === "loading") return <Loader />;
 
   return status === "authenticated" ? (
-    <Sidebar
-      caseId={session.user.caseId}
-      name={session.user.name}
-      subscription={session.user.subscription}
-      profileImage={session.user.profileImage}
-    >
-      {children}
-    </Sidebar>
+    <Sidebar caseId={session.user.caseId}>{children}</Sidebar>
   ) : (
     children
   );

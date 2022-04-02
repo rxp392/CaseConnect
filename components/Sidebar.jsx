@@ -28,6 +28,10 @@ import NextLink from "next/link";
 import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
 import { IoCheckmarkSharp } from "react-icons/io5";
 import { BsCardText } from "react-icons/bs";
+import axios from "axios";
+import useSwr from "swr";
+
+const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 const LinkItems = [
   {
@@ -62,20 +66,15 @@ const LinkItems = [
   },
 ];
 
-export default function Sidebar({
-  subscription,
-  caseId,
-  name,
-  children,
-  profileImage,
-}) {
+export default function Sidebar({ caseId, children }) {
+  const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box minH="100vh" bg={"gray.100"}>
       <SidebarContent
         onClose={() => onClose}
-        subscription={subscription}
+        subscription={data?.user.subscription}
         display={{ base: "none", md: "block" }}
       />
       <Drawer
@@ -88,14 +87,17 @@ export default function Sidebar({
         size="full"
       >
         <DrawerContent>
-          <SidebarContent onClose={onClose} subscription={subscription} />
+          <SidebarContent
+            onClose={onClose}
+            subscription={data?.user.subscription}
+          />
         </DrawerContent>
       </Drawer>
       <MobileNav
         onOpen={onOpen}
         caseId={caseId}
-        name={name}
-        profileImage={profileImage}
+        name={data?.user.name}
+        profileImage={data?.user.profileImage}
       />
       <Flex
         ml={{ base: 0, md: 60 }}
@@ -152,6 +154,7 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
           color="white"
           fontWeight={"400"}
           fontSize="sm"
+          rounded="md"
         >
           {subscription} Plan
         </Badge>

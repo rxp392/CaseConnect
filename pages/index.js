@@ -27,7 +27,7 @@ export default function Index() {
         title: "Access Denied",
         description: "You must have a CWRU email to login",
         status: "error",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
         position: "bottom-left",
         variant: "left-accent",

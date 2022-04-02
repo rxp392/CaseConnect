@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import getStripe from "utils/getStripe";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
+import { GiUpgrade } from "react-icons/gi";
 
 const canvasStyles = {
   position: "fixed",
@@ -40,15 +41,40 @@ export default function Subscription({ _user }) {
   const toast = useToast();
 
   const basicPlanPerks = [
-    `Ask up to ${POST_LIMIT} Questions`,
-    `View up to ${BROWSE_LIMIT} Questions`,
-    `Answer up to ${BROWSE_LIMIT} Questions`,
+    `Ask up to ${POST_LIMIT} questions`,
+    `View up to ${BROWSE_LIMIT} questions`,
+    `Answer up to ${BROWSE_LIMIT} questions`,
   ];
   const premiumPlanPerks = [
     "Ask unlimited questions",
     "View unlimited questions",
-    "Answer unlimited Questions",
+    "Answer unlimited questions",
   ];
+
+  useEffect(() => {
+    if (status === "success") {
+      window.history.replaceState(
+        null,
+        "",
+        `${process.env.NEXT_PUBLIC_URL}/subscription`
+      );
+    } else if (status === "cancel") {
+      window.history.replaceState(
+        null,
+        "",
+        `${process.env.NEXT_PUBLIC_URL}/subscription`
+      );
+      toast({
+        title: "Payment cancelled",
+        description: "No payment was made",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+        variant: "left-accent",
+      });
+    }
+  }, [status]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -150,23 +176,23 @@ export default function Subscription({ _user }) {
   }
 
   return (
-    <Box py={12} h={["full", "full", "auto"]}>
-      <SlideFade in={true} offsetY="20px">
-        <VStack spacing={2} textAlign="center">
-          <Heading as="h1" fontSize="4xl">
-            Plans that fit your need
-          </Heading>
-          <Text fontSize="lg" color={"gray.500"}>
-            Start with 3 free questions. No credit card needed. Cancel at
-            anytime.
-          </Text>
-        </VStack>
+    <SlideFade in={true} offsetY="20px">
+      <Box py={12} h={"auto"}>
+        <Heading
+          as="h1"
+          fontSize="4xl"
+          textAlign="center"
+          mt={[16, 16, 0]}
+          mb={[6, 6, 0]}
+        >
+          Payment Plans
+        </Heading>
         <Stack
           direction={{ base: "column", md: "row" }}
           textAlign="center"
           justify="center"
-          spacing={{ base: 4, lg: 10 }}
-          py={10}
+          spacing={{ base: 16, lg: 10 }}
+          py={[0, 0, 10]}
         >
           <PriceWrapper>
             <Text
@@ -223,7 +249,7 @@ export default function Subscription({ _user }) {
                 fontWeight="600"
                 roundedTop="lg"
               >
-                Most Popular Plan
+                Most Valuable Plan
               </Text>
               <Box py={4} px={12}>
                 <Text fontWeight="500" fontSize="2xl">
@@ -241,7 +267,7 @@ export default function Subscription({ _user }) {
                   </Text>
                 </HStack>
               </Box>
-              <VStack bg="gray.50" py={4}>
+              <VStack bg="gray.50" py={4} borderBottomRadius={"xl"}>
                 <List spacing={3} textAlign="start" px={12}>
                   {premiumPlanPerks.map((perk, i) => (
                     <ListItem key={i}>
@@ -252,34 +278,36 @@ export default function Subscription({ _user }) {
                 </List>
               </VStack>
             </Box>
-            <Button
-              isFullWidth
-              size="md"
-              bg="cwru"
-              color="white"
-              colorScheme="black"
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              loadingText="Loading..."
-              roundedBottom="lg"
-              roundedTop="none"
-            >
-              Subscribe Now
-            </Button>
           </PriceWrapper>
         </Stack>
-      </SlideFade>
-    </Box>
+      </Box>
+
+      <Button
+        isFullWidth
+        size="md"
+        bg="cwru"
+        color="white"
+        colorScheme="black"
+        _hover={{
+          backgroundColor: "rgba(10, 48, 78, 0.85)",
+        }}
+        onClick={handleSubmit}
+        isLoading={isLoading}
+        loadingText="Loading..."
+        p={"1.5rem"}
+        transform={"translateY(-2rem)"}
+        leftIcon={<GiUpgrade />}
+      >
+        Upgrade Now
+      </Button>
+    </SlideFade>
   );
 }
 
 function PriceWrapper({ children }) {
   return (
     <Box
-      mb={4}
+      mb={-8}
       shadow="base"
       borderWidth="1px"
       alignSelf={{ base: "center", lg: "flex-start" }}
@@ -291,7 +319,7 @@ function PriceWrapper({ children }) {
   );
 }
 
-export async function getServerSideProps({ req, res }) {
+export async function getServerSideProps({ req, res, query }) {
   const session = await getSession({ req });
 
   if (!session) {
@@ -300,21 +328,47 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { caseId: session.user.caseId },
-    select: {
-      caseId: true,
-      name: true,
-      subscription: true,
-      accountCreated: true,
-      courses: true,
-    },
-  });
+  let user;
 
-  if (!user.courses.length) {
-    res.writeHead(302, { Location: "/my-courses" });
-    res.end();
-    return { props: {} };
+  if (query?.status === "success") {
+    user = await prisma.user.update({
+      where: { caseId: session.user.caseId },
+      data: {
+        subscription: "Premium",
+      },
+      select: {
+        caseId: true,
+        name: true,
+        subscription: true,
+        accountCreated: true,
+        courses: true,
+      },
+    });
+    return {
+      props: {
+        _user: {
+          ...user,
+          accountCreated: user.accountCreated.toISOString(),
+        },
+      },
+    };
+  } else {
+    user = await prisma.user.findUnique({
+      where: { caseId: session.user.caseId },
+      select: {
+        caseId: true,
+        name: true,
+        subscription: true,
+        accountCreated: true,
+        courses: true,
+      },
+    });
+
+    if (!user.courses.length) {
+      res.writeHead(302, { Location: "/my-courses" });
+      res.end();
+      return { props: {} };
+    }
   }
 
   return {
