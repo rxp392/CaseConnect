@@ -25,7 +25,6 @@ import {
   useMediaQuery,
   ButtonGroup,
   Divider,
-  FormLabel,
   SlideFade,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
@@ -167,7 +166,8 @@ export default function QuestionCard({
             {" "}
             <Button
               variant="ghost"
-              px={1}
+              pl={1}
+              pr={1.5}
               py={2}
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
@@ -327,7 +327,6 @@ function EditAlert({
             </AlertDialogHeader>
             <AlertDialogBody>
               <FormControl isInvalid={errorMessage}>
-                <FormLabel htmlFor="question">Question</FormLabel>
                 <Textarea
                   id="question"
                   placeholder={questionTitle}

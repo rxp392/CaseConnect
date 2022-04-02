@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import getStripe from "utils/getStripe";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
-import { GiUpgrade } from "react-icons/gi";
+import { MdUpgrade } from "react-icons/md";
 
 const canvasStyles = {
   position: "fixed",
@@ -33,9 +33,8 @@ const canvasStyles = {
 };
 
 export default function Subscription({ _user }) {
-  const [user, setUser] = useState(_user);
   const [isLoading, setIsLoading] = useState(false);
-  const isBasic = user.subscription === "Basic";
+  const isBasic = _user.subscription === "Basic";
   const router = useRouter();
   const { status } = router.query;
   const toast = useToast();
@@ -79,32 +78,13 @@ export default function Subscription({ _user }) {
   const handleSubmit = async () => {
     setIsLoading(true);
     const stripe = await getStripe();
-
     const checkoutSession = await axios.post(
       "/api/protected/subscription/create-session",
-      {
-        caseId: _user.caseId,
-      }
+      {}
     );
-
-    const result = await stripe.redirectToCheckout({
+    await stripe.redirectToCheckout({
       sessionId: checkoutSession.data.id,
     });
-
-    if (result.error) {
-      // toast
-    }
-
-    // await axios.post("/api/protected/subscription/update", {
-    //   caseId: _user.caseId,
-    // });
-
-    setUser({
-      ...user,
-      subscription: "Premium",
-    });
-
-    // toast
     setIsLoading(false);
   };
 
@@ -154,10 +134,12 @@ export default function Subscription({ _user }) {
   useEffect(() => {
     let intervalId;
     if (!isBasic) {
-      fire();
+      for (let i = 0; i < 10; i++) {
+        fire();
+      }
       intervalId = setInterval(() => {
         fire();
-      }, 1500);
+      }, 1750);
     }
     return () => clearInterval(intervalId);
   }, []);
@@ -168,7 +150,7 @@ export default function Subscription({ _user }) {
         <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
         <SlideFade in={true} offsetY="20px">
           <Text fontSize={["lg", "2xl", "3xl"]} textAlign="center">
-            Congratulations! You are a Premium user.
+            Congratulations! You&apos;re a Premium user.
           </Text>
         </SlideFade>
       </>
@@ -262,9 +244,6 @@ export default function Subscription({ _user }) {
                   <Text fontSize="5xl" fontWeight="900">
                     {PREMIUM_PRICE}
                   </Text>
-                  <Text fontSize="3xl" fontWeight="900">
-                    <sub>.00</sub>
-                  </Text>
                 </HStack>
               </Box>
               <VStack bg="gray.50" py={4} borderBottomRadius={"xl"}>
@@ -296,7 +275,13 @@ export default function Subscription({ _user }) {
         loadingText="Loading..."
         p={"1.5rem"}
         transform={"translateY(-2rem)"}
-        leftIcon={<GiUpgrade />}
+        leftIcon={
+          <MdUpgrade
+            style={{
+              transform: "scale(1.25)",
+            }}
+          />
+        }
       >
         Upgrade Now
       </Button>

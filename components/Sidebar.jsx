@@ -18,7 +18,6 @@ import {
   MenuItem,
   MenuList,
   Badge,
-  Tooltip,
 } from "@chakra-ui/react";
 import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
 import { BiBookAlt, BiQuestionMark } from "react-icons/bi";
@@ -69,6 +68,7 @@ const LinkItems = [
 export default function Sidebar({ caseId, children }) {
   const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const router = useRouter();
 
   return (
     <Box minH="100vh" bg={"gray.100"}>
@@ -76,6 +76,7 @@ export default function Sidebar({ caseId, children }) {
         onClose={() => onClose}
         subscription={data?.user.subscription}
         display={{ base: "none", md: "block" }}
+        router={router}
       />
       <Drawer
         autoFocus={false}
@@ -90,6 +91,7 @@ export default function Sidebar({ caseId, children }) {
           <SidebarContent
             onClose={onClose}
             subscription={data?.user.subscription}
+            router={router}
           />
         </DrawerContent>
       </Drawer>
@@ -98,6 +100,7 @@ export default function Sidebar({ caseId, children }) {
         caseId={caseId}
         name={data?.user.name}
         profileImage={data?.user.profileImage}
+        router={router}
       />
       <Flex
         ml={{ base: 0, md: 60 }}
@@ -113,11 +116,12 @@ export default function Sidebar({ caseId, children }) {
   );
 }
 
-const SidebarContent = ({ onClose, subscription, ...rest }) => {
+const SidebarContent = ({ onClose, subscription, router, ...rest }) => {
   return (
     <Box
-      transition="3s ease"
+      color="white"
       bg={"white"}
+      transition="3s ease"
       borderRight="1px"
       borderRightColor={"gray.200"}
       w={{ base: "full", md: 60 }}
@@ -126,21 +130,31 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Text fontSize="xl" fontWeight="bold">
-          📖&nbsp;&nbsp;Case Connect
+        <Text fontSize="xl" fontWeight="bold" color="black">
+          Case Connect
         </Text>
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
-        <NavItem
-          key={link.name}
-          icon={link.icon}
-          href={link.href}
-          onClick={onClose}
-        >
-          {link.name}
-        </NavItem>
-      ))}
+      <Flex
+        h="full"
+        w="full"
+        alignItems="start"
+        justifyContent="start"
+        flexDirection="column"
+        gap={2.5}
+      >
+        {LinkItems.map((link) => (
+          <NavItem
+            key={link.name}
+            icon={link.icon}
+            href={link.href}
+            onClick={onClose}
+            router={router}
+          >
+            {link.name}
+          </NavItem>
+        ))}
+      </Flex>
       <NextLink href="/subscription" passHref>
         <Badge
           pos="absolute"
@@ -150,11 +164,11 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
           mx="8"
           px={2}
           py={1}
-          bg="cwru"
-          color="white"
           fontWeight={"400"}
           fontSize="sm"
           rounded="md"
+          bg="cwru"
+          color="white"
         >
           {subscription} Plan
         </Badge>
@@ -163,33 +177,33 @@ const SidebarContent = ({ onClose, subscription, ...rest }) => {
   );
 };
 
-const NavItem = ({ icon, href, children, ...rest }) => {
+const NavItem = ({ icon, href, children, router, ...rest }) => {
+  const isActive = router.pathname === href;
+
   return (
     <NextLink href={href} passHref>
-      <Link style={{ textDecoration: "none" }} _focus={{ boxShadow: "none" }}>
+      <Link
+        style={{ textDecoration: "none" }}
+        _focus={{ boxShadow: "none" }}
+        color="black"
+        w="full"
+      >
         <Flex
           align="center"
           p="4"
           mx="4"
           borderRadius="lg"
           role="group"
-          cursor="pointer"
-          _hover={{
-            bg: "cwru",
-            color: "white",
-          }}
+          cursor={isActive ? "default" : "pointer"}
+          fontWeight={isActive ? "extrabold" : "none"}
+          _hover={
+            !isActive && {
+              bg: "gray.200",
+            }
+          }
           {...rest}
         >
-          {icon && (
-            <Icon
-              mr="4"
-              fontSize="16"
-              _groupHover={{
-                color: "white",
-              }}
-              as={icon}
-            />
-          )}
+          {icon && <Icon mr="4" fontSize={isActive ? "20" : "15"} as={icon} />}
           {children}
         </Flex>
       </Link>
@@ -197,19 +211,18 @@ const NavItem = ({ icon, href, children, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
-  const router = useRouter();
+const MobileNav = ({ onOpen, caseId, name, profileImage, router, ...rest }) => {
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
       px={{ base: 4, md: 4 }}
       height="20"
       alignItems="center"
-      bg="white"
       borderBottomWidth={"1px"}
       borderBottomColor={"gray.200"}
       justifyContent={{ base: "space-between", md: "flex-end" }}
       {...rest}
+      bg="white"
     >
       <IconButton
         display={{ base: "flex", md: "none" }}
@@ -225,24 +238,17 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
         fontFamily="monospace"
         fontWeight="bold"
       >
-        📖&nbsp;Case Connect
+        Case Connect
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        <Tooltip
-          hasArrow
-          label="No notifications"
-          color="white"
-          bg="cwru"
-          placement="bottom"
-        >
-          <IconButton
-            size="lg"
-            variant="ghost"
-            aria-label="open menu"
-            icon={<FiBell />}
-          />
-        </Tooltip>
+        <IconButton
+          size="lg"
+          variant="ghost"
+          aria-label="open menu"
+          icon={<FiBell />}
+          isDisabled
+        />
 
         <Flex alignItems={"center"}>
           <Menu>
@@ -265,9 +271,9 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, ...rest }) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">{caseId}</Text>
+                  <Text fontSize="sm">{name}</Text>
                   <Text fontSize="xs" color="gray.600">
-                    {name}
+                    {caseId}
                   </Text>
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
