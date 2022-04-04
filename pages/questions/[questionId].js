@@ -12,34 +12,24 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
   Box,
   FormControl,
   FormLabel,
-  Input,
   Stack,
-  Select,
   FormErrorMessage,
-  useToast,
   Textarea,
-  SlideFade,
-  FormHelperText,
-
-      OrderedList,
-    ListItem,
+  OrderedList,
+  ListItem,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState } from "react";
 import { GrAttachment } from "react-icons/gr";
-import AnswerPage from "components/AnswerPage";
 import axios from "axios";
 import { useForm } from "react-hook-form";
-
 import AnswerCard from "components/AnswerCard";
-
 
 export default function Question({ _question, caseId }) {
   const {
@@ -51,14 +41,15 @@ export default function Question({ _question, caseId }) {
     attachment,
     publisherName,
     createdAt,
-    answers
+    answers,
   } = _question;
-  // console.log(_question)
+
   const isUser = caseId === userCaseId;
 
   const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { data: session } = useSession();
-  
+
   const {
     handleSubmit,
     register,
@@ -66,20 +57,17 @@ export default function Question({ _question, caseId }) {
     formState: { errors, isSubmitting, isValid },
   } = useForm({ mode: "onChange" });
 
-  const onSubmit = async ({answer}) => {
-   // console.log(id)
-    //console.log(session.user.caseId)
-    
-    //setIsLoading(true);
+  const onSubmit = async ({ answer }) => {
+    setIsLoading(true);
     try {
-      await axios.post("/api/protected/answer/post", {
+      await axios.post("/api/protected/answers/post", {
         answer: answer,
         caseId: session.user.caseId,
         questionId: Number(id),
-        publisherName: session.user.name
+        publisherName: session.user.name,
       });
     } catch {
-      /*toast({
+      toast({
         title: "An Error Ocurred",
         description: "Please try again",
         status: "error",
@@ -88,9 +76,8 @@ export default function Question({ _question, caseId }) {
         duration: 5000,
         isClosable: true,
       });
-      */
     } finally {
-      //setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -128,23 +115,21 @@ export default function Question({ _question, caseId }) {
             bg="#0A304E"
             color="#CDCDCD"
             boxShadow={"lg"}
-            w= "100%"
+            w="100%"
             p={10}
           >
-             <Heading>{question}</Heading>
+            <Heading>{question}</Heading>
 
-             <Text fontSize="lg">{courseName}</Text>
-             <Text fontSize="md">
-                Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
-                <NextLink
-                  href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
-                  passHref
-                >
-                  <Link>{publisherName}</Link>
-                </NextLink>
-              </Text>
-
-
+            <Text fontSize="lg">{courseName}</Text>
+            <Text fontSize="md">
+              Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+              <NextLink
+                href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+                passHref
+              >
+                <Link>{publisherName}</Link>
+              </NextLink>
+            </Text>
           </Box>
 
           <Box
@@ -153,7 +138,7 @@ export default function Question({ _question, caseId }) {
             rounded={"lg"}
             bg="white"
             boxShadow={"lg"}
-            w= "100%"
+            w="100%"
             p={10}
           >
             <Stack spacing={4}>
@@ -186,7 +171,7 @@ export default function Question({ _question, caseId }) {
                   type="submit"
                   loadingText="Posting..."
                   spinnerPlacement="end"
-                  isLoading={isSubmitting}
+                  isLoading={isLoading}
                   size="lg"
                   bg="cwru"
                   color="white"
@@ -203,21 +188,13 @@ export default function Question({ _question, caseId }) {
             </Stack>
           </Box>
 
-
-
-          {/* <AnswerPage
-            Answers={answers}
-          /> */}
-
           <OrderedList>
             {answers.map((answer) => (
               <ListItem key={answer.id}>
-                <AnswerCard
-                    _answer = {answer}
-                />
+                <AnswerCard _answer={answer} />
               </ListItem>
-             ))}
-         </OrderedList>
+            ))}
+          </OrderedList>
         </Flex>
       </Flex>
     </>
@@ -244,8 +221,6 @@ function AttachmentModal({ isOpen, onClose, attachment }) {
     </Modal>
   );
 }
-
-
 
 export async function getServerSideProps({ params, req, res }) {
   const session = await getSession({ req });
@@ -283,15 +258,15 @@ export async function getServerSideProps({ params, req, res }) {
     const question = await prisma.question.findUnique({
       where: { id: Number(id) },
       select: {
-        id:true,
-        question:true,
-        attachment:true,
+        id: true,
+        question: true,
+        attachment: true,
         courseId: true,
-        courseName:true,
+        courseName: true,
         userCaseId: true,
         publisherName: true,
         createdAt: true,
-        views:true, 
+        views: true,
         answers: true,
       },
     });
@@ -311,20 +286,17 @@ export async function getServerSideProps({ params, req, res }) {
       },
     });
 
-    console.log()
-    console.log(question)
-
     return {
       props: {
         _question: {
           ...question,
-          views: question.views.map(view => ({
+          views: question.views.map((view) => ({
             ...view,
-            viewedAt: view.viewedAt.toISOString()
+            viewedAt: view.viewedAt.toISOString(),
           })),
-          answers: question.answers.map(answer => ({
+          answers: question.answers.map((answer) => ({
             ...answer,
-            createdAt: answer.createdAt.toISOString()
+            createdAt: answer.createdAt.toISOString(),
           })),
           createdAt: question.createdAt.toISOString(),
         },
