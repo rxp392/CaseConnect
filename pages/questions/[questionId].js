@@ -23,6 +23,7 @@ import {
   Textarea,
   OrderedList,
   ListItem,
+  toast, Grid, GridItem
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState } from "react";
@@ -66,6 +67,20 @@ export default function Question({ _question, caseId }) {
         questionId: Number(id),
         publisherName: session.user.name,
       });
+
+      /*
+      router.push("/my-answers");
+      toast({
+        title: "Success",
+        description: "Your answer has been posted.",
+        status: "success",
+        position: "bottom-left",
+        variant: "left-accent",
+        duration: 5000,
+        isClosable: true,
+      });
+      */
+
     } catch {
       toast({
         title: "An Error Ocurred",
@@ -188,13 +203,27 @@ export default function Question({ _question, caseId }) {
             </Stack>
           </Box>
 
-          <OrderedList>
+          <Box
+            as="form"
+            onSubmit={handleSubmit(onSubmit)}
+            rounded={"lg"}
+            bg="white"
+            boxShadow={"lg"}
+            w="100%"
+            p={10}>
+
+            <Heading fontSize="32">
+              Posted Answers
+              
+
+            </Heading>
+
             {answers.map((answer) => (
-              <ListItem key={answer.id}>
+              <Grid gap={4}>
                 <AnswerCard _answer={answer} />
-              </ListItem>
+              </Grid>
             ))}
-          </OrderedList>
+          </Box>
         </Flex>
       </Flex>
     </>
