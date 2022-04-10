@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         id: id, 
       },
       data: {
-        numThumbsUp: {increment: -1}
+        numThumbsDown: {increment: 1}
       },
     });
 
