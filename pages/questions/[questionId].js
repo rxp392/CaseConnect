@@ -46,6 +46,7 @@ export default function Question({ _question, caseId }) {
   } = _question;
 
   const isUser = caseId === userCaseId;
+  var hasAnswered = false;
 
   const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +58,29 @@ export default function Question({ _question, caseId }) {
 
     formState: { errors, isSubmitting, isValid },
   } = useForm({ mode: "onChange" });
+
+  var i;
+  for (i = 0; i < answers.length; i++) {
+    if (hasAnswered) {
+      i = answers.length;
+    } else {
+      const oneAnswer = answers[i];
+      const {
+        id,
+        answer,
+        questionId,
+        userCaseId,
+        publisherName,
+        numThumbsUp,
+        numThumbsDown,
+        createdAt,
+        readOrNot,
+      } = oneAnswer;
+      console.log(userCaseId);
+      hasAnswered = caseId === userCaseId;
+    }
+  };
+  console.log(hasAnswered)
 
   const onSubmit = async ({ answer }) => {
     setIsLoading(true);
@@ -95,7 +119,6 @@ export default function Question({ _question, caseId }) {
       setIsLoading(false);
     }
   };
-
   return (
     <>
       <AttachmentModal
@@ -182,7 +205,7 @@ export default function Question({ _question, caseId }) {
               </FormControl>
               <Stack spacing={10} pt={2}>
                 <Button
-                  isDisabled={!isValid}
+                  isDisabled={!isValid || hasAnswered}
                   type="submit"
                   loadingText="Posting..."
                   spinnerPlacement="end"
@@ -214,13 +237,13 @@ export default function Question({ _question, caseId }) {
 
             <Heading fontSize="32">
               Posted Answers
-              
+
 
             </Heading>
 
             {answers.map((answer) => (
               <Grid gap={4}>
-                <AnswerCard _answer={answer} />
+                <AnswerCard _answer={answer} caseId = {caseId} />
               </Grid>
             ))}
           </Box>
@@ -296,9 +319,13 @@ export async function getServerSideProps({ params, req, res }) {
         publisherName: true,
         createdAt: true,
         views: true,
-        answers: true,
+        answers: {
+          orderBy: { numThumbsUp: 'desc' }
+        },
       },
     });
+
+    console.log(question);
 
     await prisma.history.upsert({
       where: {
