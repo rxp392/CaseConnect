@@ -17,25 +17,31 @@ import {
   Button,
   Box,
   FormControl,
-  FormLabel,
-  Stack,
   FormErrorMessage,
   Textarea,
-  OrderedList,
-  ListItem,
-  toast, Grid, GridItem
+  ButtonGroup,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useToast,
+  SlideFade,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { useState } from "react";
-import { GrAttachment } from "react-icons/gr";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { useForm } from "react-hook-form";
 import AnswerCard from "components/AnswerCard";
+import { ImAttachment } from "react-icons/im";
+import { BsFillTrashFill } from "react-icons/bs";
+import { FiEdit } from "react-icons/fi";
+import { useRouter } from "next/router";
+import { IoCheckmarkSharp } from "react-icons/io5";
 
 export default function Question({ _question, caseId }) {
   const {
     id,
-    courseId,
     userCaseId,
     question,
     courseName,
@@ -45,232 +51,585 @@ export default function Question({ _question, caseId }) {
     answers,
   } = _question;
 
-  const isUser = caseId === userCaseId;
-  var hasAnswered = false;
-
+  const [questionText, setQuestionText] = useState(question);
+  const [questionAnswers, setQuestionAnswers] = useState(answers);
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [editAlertOpen, setEditAlertOpen] = useState(false);
   const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+  const [answerModalOpen, setAnswerModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const cancelRef = useRef();
+  const toast = useToast();
+  const router = useRouter();
   const { data: session } = useSession();
+  const isUser = caseId === userCaseId;
+  const hasAnswered = questionAnswers.some(
+    (answer) => answer.userCaseId === session.user.caseId
+  );
 
-  const {
-    handleSubmit,
-    register,
-
-    formState: { errors, isSubmitting, isValid },
-  } = useForm({ mode: "onChange" });
-
-  var i;
-  for (i = 0; i < answers.length; i++) {
-    if (hasAnswered) {
-      i = answers.length;
-    } else {
-      const oneAnswer = answers[i];
-      const {
-        id,
-        answer,
-        questionId,
-        userCaseId,
-        publisherName,
-        numThumbsUp,
-        numThumbsDown,
-        createdAt,
-        readOrNot,
-      } = oneAnswer;
-      console.log(userCaseId);
-      hasAnswered = caseId === userCaseId;
-    }
-  };
-  console.log(hasAnswered)
-
-  const onSubmit = async ({ answer }) => {
-    setIsLoading(true);
-    try {
-      await axios.post("/api/protected/answers/post", {
-        answer: answer,
-        caseId: session.user.caseId,
-        questionId: Number(id),
-        publisherName: session.user.name,
-      });
-
-      /*
-      router.push("/my-answers");
-      toast({
-        title: "Success",
-        description: "Your answer has been posted.",
-        status: "success",
-        position: "bottom-left",
-        variant: "left-accent",
-        duration: 5000,
-        isClosable: true,
-      });
-      */
-
-    } catch {
-      toast({
-        title: "An Error Ocurred",
-        description: "Please try again",
-        status: "error",
-        variant: "left-accent",
-        position: "bottom-left",
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
     <>
-      <AttachmentModal
-        isOpen={attachmentModalOpen}
-        onClose={() => setAttachmentModalOpen(false)}
-        attachment={attachment}
-      />
-
-      <Flex h="full" w="full" justify="center" mt={6} pos="relative">
-        {attachment && (
-          <Tooltip label="View attachment" placement="left">
-            <IconButton
-              icon={<GrAttachment />}
-              pos="absolute"
-              top="-3"
-              right="1"
-              onClick={() => setAttachmentModalOpen(true)}
-            />
-          </Tooltip>
-        )}
+      <Flex h="full" w="full" justify="center" pos="relative">
         <Flex
           h="min-content"
           w="full"
           justify="center"
           align="center"
           direction="column"
-          gap={1}
         >
-          <Box
-            as="form"
-            rounded={"lg"}
-            bg="#0A304E"
-            color="#CDCDCD"
-            boxShadow={"lg"}
-            w="100%"
-            p={10}
-          >
-            <Heading>{question}</Heading>
-
-            <Text fontSize="lg">{courseName}</Text>
-            <Text fontSize="md">
-              Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
-              <NextLink
-                href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
-                passHref
+          <SlideFade in={true} offsetY="20px">
+            <Flex
+              rounded={"lg"}
+              bg="cwru"
+              color="gray.200"
+              boxShadow={"lg"}
+              p={[4, 6]}
+              justifyContent="space-between"
+              alignItems="center"
+              direction={["column", "row"]}
+              w="100%"
+            >
+              <Flex
+                alignItems="center"
+                justifyContent="center"
+                direction="column"
+                gap={2}
+                textAlign="center"
               >
-                <Link>{publisherName}</Link>
-              </NextLink>
-            </Text>
-          </Box>
+                <Heading>{questionText}</Heading>
+                <Text fontSize={["md", "lg"]}>{courseName}</Text>
+                <Text fontSize={["sm", "md"]}>
+                  Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+                  <NextLink
+                    href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+                    passHref
+                  >
+                    <Link>
+                      {publisherName} {isUser && "(you)"}
+                    </Link>
+                  </NextLink>
+                </Text>
+                {(attachment || isUser) && (
+                  <ButtonGroup isAttached alignSelf={"center"} mt={1.5}>
+                    {attachment && (
+                      <>
+                        <Tooltip label="View Attachment">
+                          <IconButton
+                            p={2.5}
+                            size={["sm", "md"]}
+                            fontSize={["md", "lg"]}
+                            bg="cwru"
+                            color="white"
+                            colorScheme="black"
+                            _hover={{
+                              backgroundColor: "rgba(10, 48, 78, 0.85)",
+                            }}
+                            icon={<ImAttachment />}
+                            onClick={() => setAttachmentModalOpen(true)}
+                            isDisabled={isLoading}
+                          />
+                        </Tooltip>
+                        &nbsp;
+                      </>
+                    )}
+                    {isUser && (
+                      <>
+                        <Tooltip label="Edit Question">
+                          <IconButton
+                            p={2.5}
+                            size={["sm", "md"]}
+                            fontSize={["sm", "md"]}
+                            bg="cwru"
+                            color="white"
+                            colorScheme="black"
+                            _hover={{
+                              backgroundColor: "rgba(10, 48, 78, 0.85)",
+                            }}
+                            icon={<FiEdit />}
+                            onClick={() => setEditAlertOpen(true)}
+                            isDisabled={isLoading}
+                          />
+                        </Tooltip>
+                        &nbsp;
+                        <Tooltip label="Delete Question">
+                          <IconButton
+                            p={2.5}
+                            size={["sm", "md"]}
+                            fontSize={["md", "lg"]}
+                            bg="cwru"
+                            color="white"
+                            colorScheme="black"
+                            _hover={{
+                              backgroundColor: "rgba(10, 48, 78, 0.85)",
+                            }}
+                            icon={<BsFillTrashFill />}
+                            onClick={() => setDeleteAlertOpen(true)}
+                            isDisabled={isLoading}
+                          />
+                        </Tooltip>
+                      </>
+                    )}
+                  </ButtonGroup>
+                )}
+              </Flex>
+            </Flex>
+          </SlideFade>
 
-          <Box
-            as="form"
-            onSubmit={handleSubmit(onSubmit)}
-            rounded={"lg"}
-            bg="white"
-            boxShadow={"lg"}
-            w="100%"
-            p={10}
-          >
-            <Stack spacing={4}>
-              <FormControl isInvalid={errors.answer} isRequired>
-                <FormLabel htmlFor="answer">Answer</FormLabel>
+          <SlideFade in={true} offsetY="20px">
+            <Box mt={8}>
+              {!hasAnswered && !isUser && (
+                <Button
+                  leftIcon={<IoCheckmarkSharp />}
+                  variant="solid"
+                  onClick={() => setAnswerModalOpen(true)}
+                  colorScheme="green"
+                >
+                  Answer Question
+                </Button>
+              )}
+            </Box>
+          </SlideFade>
+
+          {questionAnswers.length > 0 ? (
+            <Box rounded={"lg"} w="100%" p={6}>
+              <SlideFade in={true} offsetY="20px">
+                <Heading textAlign={"center"} fontSize="32" mb={4}>
+                  Posted Answers
+                </Heading>
+              </SlideFade>
+              {questionAnswers.map((answer) => (
+                <AnswerCard
+                  key={answer.id}
+                  _answer={answer}
+                  caseId={caseId}
+                  answers={questionAnswers}
+                  setAnswers={setQuestionAnswers}
+                />
+              ))}
+            </Box>
+          ) : (
+            <SlideFade in={true} offsetY="20px">
+              <Heading mt={36} fontSize={["xl", "2xl", "3xl"]}>
+                No Answers Have Been Posted 😥
+              </Heading>
+            </SlideFade>
+          )}
+        </Flex>
+      </Flex>
+
+      <AttachmentModal
+        isOpen={attachmentModalOpen}
+        onClose={() => setAttachmentModalOpen(false)}
+        attachment={attachment}
+      />
+      <AnswerModal
+        answers={questionAnswers}
+        setAnswers={setQuestionAnswers}
+        answerModalOpen={answerModalOpen}
+        setAnswerModalOpen={setAnswerModalOpen}
+        cancelRef={cancelRef}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        caseId={caseId}
+        userCaseId={userCaseId}
+        id={id}
+        publisherName={publisherName}
+        toast={toast}
+      />
+      <EditAlert
+        id={id}
+        editAlertOpen={editAlertOpen}
+        setEditAlertOpen={setEditAlertOpen}
+        cancelRef={cancelRef}
+        toast={toast}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        question={questionText}
+        setQuestion={setQuestionText}
+      />
+      <DeleteAlert
+        cancelRef={cancelRef}
+        deleteAlertOpen={deleteAlertOpen}
+        setDeleteAlertOpen={setDeleteAlertOpen}
+        toast={toast}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        id={id}
+        attachment={attachment}
+        router={router}
+      />
+    </>
+  );
+}
+
+function AnswerModal({
+  answers,
+  setAnswers,
+  answerModalOpen,
+  setAnswerModalOpen,
+  cancelRef,
+  isLoading,
+  setIsLoading,
+  caseId,
+  userCaseId,
+  id,
+  publisherName,
+  toast,
+}) {
+  const [answer, setAnswer] = useState("");
+  const [isDisabled, setIsDisabled] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setAnswer("");
+    setIsDisabled(true);
+    setErrorMessage("");
+  }, [answerModalOpen]);
+
+  return (
+    <AlertDialog
+      isOpen={answerModalOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setAnswerModalOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Answer Question
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              <FormControl isInvalid={errorMessage}>
                 <Textarea
-                  id="answer"
+                  id="question"
+                  placeholder={"Your answer..."}
+                  value={answer}
                   h="min-content"
                   type="text"
                   resize="none"
-                  {...register("answer", {
-                    required: "Enter an answer",
-                    minLength: {
-                      value: 10,
-                      message: "Answer must be at least 10 characters",
-                    },
-                    maxLength: {
-                      value: 5000,
-                      message: "Answer must be less than 5000 characters",
-                    },
-                  })}
-                />
-                <FormErrorMessage>
-                  {errors.answer && errors.answer.message}
-                </FormErrorMessage>
-              </FormControl>
-              <Stack spacing={10} pt={2}>
-                <Button
-                  isDisabled={!isValid || hasAnswered}
-                  type="submit"
-                  loadingText="Posting..."
-                  spinnerPlacement="end"
-                  isLoading={isLoading}
-                  size="lg"
-                  bg="cwru"
-                  color="white"
-                  colorScheme="black"
-                  _hover={
-                    isValid && {
-                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setAnswer(value);
+                    if (value.length == 0) {
+                      setErrorMessage("Question cannot be empty");
+                      setIsDisabled(true);
+                    } else if (value.length < 10) {
+                      setErrorMessage(
+                        "Question must be at least 10 characters"
+                      );
+                      setIsDisabled(true);
+                    } else if (value.length > 250) {
+                      setErrorMessage(
+                        "Question must be less than 250 characters"
+                      );
+                      setIsDisabled(true);
+                    } else {
+                      setErrorMessage("");
+                      setIsDisabled(false);
                     }
+                  }}
+                />
+                <FormErrorMessage>{errorMessage}</FormErrorMessage>
+              </FormControl>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setAnswerModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                isDisabled={isDisabled}
+                colorScheme="blue"
+                loadingText="Posting..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    const { answerId, createdAt } = await axios.post(
+                      "/api/protected/answers/post",
+                      {
+                        answer: answer.trim(),
+                        caseId,
+                        userCaseId,
+                        questionId: Number(id),
+                        publisherName,
+                      }
+                    );
+                    setAnswers([
+                      ...answers,
+                      {
+                        id: answerId,
+                        answer: answer.trim(),
+                        questionId: id,
+                        userCaseId: caseId,
+                        publisherName,
+                        numThumbsUp: 0,
+                        numThumbsDown: 0,
+                        createdAt,
+                      },
+                    ]);
+                    toast({
+                      title: "Answer Posted",
+                      description: "Your answer has been posted",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setAnswerModalOpen(false);
                   }
-                >
-                  Post Answer
-                </Button>
-              </Stack>
-            </Stack>
-          </Box>
-
-          <Box
-            as="form"
-            onSubmit={handleSubmit(onSubmit)}
-            rounded={"lg"}
-            bg="white"
-            boxShadow={"lg"}
-            w="100%"
-            p={10}>
-
-            <Heading fontSize="32">
-              Posted Answers
-
-
-            </Heading>
-
-            {answers.map((answer) => (
-              <Grid gap={4}>
-                <AnswerCard _answer={answer} caseId = {caseId} />
-              </Grid>
-            ))}
-          </Box>
-        </Flex>
-      </Flex>
-    </>
+                }}
+                ml={3}
+              >
+                Post
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 
 function AttachmentModal({ isOpen, onClose, attachment }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
-      <ModalOverlay />
-      <ModalContent w="fit-content" h="fit-content">
-        <ModalCloseButton />
-        <ModalHeader>Attachment</ModalHeader>
-        <ModalBody>
-          <Image
-            src={attachment}
-            alt="attachment"
-            maxW="full"
-            maxH="full"
-            objectFit="cover"
-          />
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    <SlideFade in={true} offsetY="20px">
+      <Modal isOpen={isOpen} onClose={onClose} isCentered trapFocus={false}>
+        <ModalOverlay />
+        <ModalContent w="fit-content" h="fit-content">
+          <ModalCloseButton />
+          <ModalHeader>Attachment</ModalHeader>
+          <ModalBody>
+            <Image
+              src={attachment}
+              alt="attachment"
+              maxW="full"
+              maxH="full"
+              objectFit="cover"
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </SlideFade>
+  );
+}
+
+function EditAlert({
+  id,
+  editAlertOpen,
+  setEditAlertOpen,
+  cancelRef,
+  toast,
+  isLoading,
+  setIsLoading,
+  question,
+  setQuestion,
+}) {
+  const [questionText, setQuestionText] = useState(question);
+  const [isDisabled, setIsDisabled] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setIsDisabled(true);
+  }, [editAlertOpen]);
+
+  return (
+    <AlertDialog
+      isOpen={editAlertOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setEditAlertOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Edit Question
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              <FormControl isInvalid={errorMessage}>
+                <Textarea
+                  id="question"
+                  placeholder={questionText}
+                  value={questionText}
+                  h="min-content"
+                  type="text"
+                  resize="none"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setQuestionText(value);
+                    if (value.length == 0) {
+                      setErrorMessage("Question cannot be empty");
+                      setIsDisabled(true);
+                    } else if (value.length < 10) {
+                      setErrorMessage(
+                        "Question must be at least 10 characters"
+                      );
+                      setIsDisabled(true);
+                    } else if (value.length > 250) {
+                      setErrorMessage(
+                        "Question must be less than 250 characters"
+                      );
+                      setIsDisabled(true);
+                    } else {
+                      setErrorMessage("");
+                      setIsDisabled(false);
+                    }
+                  }}
+                />
+                <FormErrorMessage>{errorMessage}</FormErrorMessage>
+              </FormControl>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                isDisabled={isDisabled || question === questionText}
+                colorScheme="blue"
+                loadingText="Updating..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await axios.post("/api/protected/questions/update", {
+                      id,
+                      question: questionText.trim(),
+                    });
+                    setQuestion(questionText);
+                    toast({
+                      title: "Question Updated",
+                      description: "Your question has been updated",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setEditAlertOpen(false);
+                  }
+                }}
+                ml={3}
+              >
+                Update
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+}
+
+function DeleteAlert({
+  cancelRef,
+  deleteAlertOpen,
+  setDeleteAlertOpen,
+  toast,
+  isLoading,
+  setIsLoading,
+  id,
+  attachment,
+  router,
+}) {
+  return (
+    <AlertDialog
+      isOpen={deleteAlertOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setDeleteAlertOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Question
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this question?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                loadingText="Deleting..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await axios.delete("/api/protected/questions/delete", {
+                      data: {
+                        id,
+                        attachment,
+                      },
+                    });
+                    router.push("/questions");
+                    toast({
+                      title: "Question Deleted",
+                      description: "Your question has been deleted",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } catch {
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setDeleteAlertOpen(false);
+                  }
+                }}
+                ml={3}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 
@@ -320,12 +679,19 @@ export async function getServerSideProps({ params, req, res }) {
         createdAt: true,
         views: true,
         answers: {
-          orderBy: { numThumbsUp: 'desc' }
+          select: {
+            id: true,
+            answer: true,
+            questionId: true,
+            userCaseId: true,
+            publisherName: true,
+            thumbsUp: true,
+            thumbsDown: true,
+            createdAt: true,
+          },
         },
       },
     });
-
-    console.log(question);
 
     await prisma.history.upsert({
       where: {
@@ -350,10 +716,14 @@ export async function getServerSideProps({ params, req, res }) {
             ...view,
             viewedAt: view.viewedAt.toISOString(),
           })),
-          answers: question.answers.map((answer) => ({
-            ...answer,
-            createdAt: answer.createdAt.toISOString(),
-          })),
+          answers: question.answers
+            .sort((a, b) => {
+              return b.answer.length - a.answer.length;
+            })
+            .map((answer) => ({
+              ...answer,
+              createdAt: answer.createdAt.toISOString(),
+            })),
           createdAt: question.createdAt.toISOString(),
         },
         caseId,

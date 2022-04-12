@@ -1,11 +1,7 @@
 import {
   Text,
   Flex,
-  Box,
-  IconButton,
-  HStack,
   Link,
-  Heading,
   Button,
   AlertDialog,
   AlertDialogBody,
@@ -16,154 +12,272 @@ import {
   useToast,
   Textarea,
   FormControl,
-  FormErrorMessage,
   Tooltip,
-  Badge,
-  Wrap,
-  WrapItem,
-  useMediaQuery,
-  ButtonGroup,
-  Divider,
   SlideFade,
+  IconButton,
+  ButtonGroup,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useState, useRef, useEffect } from "react";
-import {
-  TriangleDownIcon,
-  TriangleUpIcon
-} from '@chakra-ui/icons'
-import { useRouter } from "next/router";
+import NextLink from "next/link";
 import { BsFillTrashFill } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
-import { AiOutlineEye } from "react-icons/ai";
-import { useSession } from "next-auth/react";
+import { HiOutlineThumbDown, HiOutlineThumbUp } from "react-icons/hi";
 
-
-
-export default function AnswerCard({ _answer, caseId}) {
+export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
   const {
     id,
     answer,
-    questionId,
     userCaseId,
     publisherName,
-    numThumbsUp,
-    numThumbsDown,
+    thumbsUp,
+    thumbsDown,
     createdAt,
-    readOrNot,
   } = _answer;
 
-  const isAuthor = caseId === userCaseId;
-  const { data: session } = useSession();
-  //const viewedDate = views.find((view) => view.caseId === session.user.caseId);
-
-  const router = useRouter();
+  const isUser = caseId === userCaseId;
   const toast = useToast();
   const cancelRef = useRef();
+  const [currentAnswer, setCurrentAnswer] = useState(answer);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [editAlertOpen, setEditAlertOpen] = useState(false);
-  const [answerUpdate, setAnswer] = useState(answerUpdate);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(false);
-  const [isLarge] = useMediaQuery("(min-width: 480px)");
+  const [thumbUpCount, setThumbUpCount] = useState(thumbsUp?.length || 0);
+  const [thumbDownCount, setThumbDownCount] = useState(thumbsDown?.length || 0);
+  const [isUpVoted, setIsUpVoted] = useState(
+    thumbsUp?.some((item) => item.userCaseId === caseId)
+  );
+  const [isDownVoted, setIsDownVoted] = useState(
+    thumbsDown?.some((item) => item.userCaseId === caseId)
+  );
 
+  const handleThumbsUp = async () => {
+    if (isUpVoted || isUser) return;
+    setThumbUpCount(thumbUpCount + 1);
+    setIsLoading(true);
+    try {
+      await axios.post("/api/protected/answers/thumbUp", {
+        id,
+        caseId,
+        userCaseId,
+        publisherName,
+      });
+      toast({
+        title: "Answer Upvoted",
+        description: "Your upvote was successful",
+        status: "success",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: "An Error Ocurred",
+        description: "Please try again",
+        status: "error",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+      setIsUpVoted(true);
+      setIsDownVoted(false);
+    }
+    if (isDownVoted) {
+      setIsDownVoted(false);
+      setThumbDownCount(thumbDownCount - 1);
+    }
+  };
+
+  const handleThumbsDown = async () => {
+    if (isDownVoted || isUser) return;
+    setThumbDownCount(thumbDownCount + 1);
+    setIsLoading(true);
+    try {
+      await axios.post("/api/protected/answers/thumbDown", {
+        id,
+        caseId,
+        userCaseId,
+        publisherName,
+      });
+      toast({
+        title: "Answer Downvoted",
+        description: "Your downvote was successful",
+        status: "success",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: "An Error Ocurred",
+        description: "Please try again",
+        status: "error",
+        variant: "left-accent",
+        position: "bottom-left",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+      setIsDownVoted(true);
+      setIsUpVoted(false);
+    }
+
+    if (isUpVoted) {
+      setIsUpVoted(false);
+      setThumbUpCount(thumbUpCount - 1);
+    }
+  };
 
   return (
     <>
-      <Flex h="min-content"
-        w="full"
-        justify="center"
-        align="center"
-        direction="column"
-        gap={1}>
-
-
-        <Box
-          as="form"
-          rounded={"lg"}
-          bg="#c4cbcf"
-          color="#495c69"
-          boxShadow={"lg"}
-          w="100%"
-          p={10}
+      <SlideFade in={true} offsetY="20px">
+        <Flex
+          h="min-content"
+          w="full"
+          justify="center"
+          align="center"
+          direction="column"
+          gap={1}
         >
+          <Flex
+            w="100%"
+            p={4}
+            borderBottom="1px solid #cdcdcd"
+            justify="space-between"
+            align={["center", "center", "center", "end"]}
+            direction={["column", "column", "column", "row"]}
+            gap={[3, 3, 0]}
+          >
+            <Flex
+              justify={["center", "center", "center", "start"]}
+              align={["center", "center", "center", "start"]}
+              direction="column"
+              gap={1}
+              textAlign={["center", "center", "center", "left"]}
+            >
+              <Text fontSize="xl" fontWeight="bold">
+                {currentAnswer}
+              </Text>
+              <Text fontSize={"sm"}>
+                Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+                <NextLink
+                  href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+                  passHref
+                >
+                  <Link>
+                    {publisherName} {isUser && "(you)"}
+                  </Link>
+                </NextLink>
+              </Text>
+            </Flex>
 
-          <Heading fontSize='xl'>{
-            <Link>{publisherName}</Link>
-          }</Heading>
-
-          <Text fontSize="xl">
-            {answer}
-          </Text>
-
-          <HStack spacing={1}>
-
-            <IconButton
-              bg="#66CC99"
-              color="white"
-              aria-label='Search database'
-              icon={<TriangleUpIcon />}
-              onClick={async () => {
-                try {
-                  await axios.post("/api/protected/answers/thumbUp", {
-                    id: id,
-                  });
-                } catch {
-                } finally {
-                }
-              }}
-            />
-            <Text>{numThumbsUp}</Text>
-            <IconButton
-              bg="#CC6666"
-              color="white"
-
-              aria-label='Search database'
-              icon={<TriangleDownIcon />}
-              onClick={async () => {
-                try {
-                  await axios.post("/api/protected/answers/thumbDown", {
-                    id: id,
-                  });
-                } catch {
-                } finally {
-                }
-              }}
-            />
-            <Text>{numThumbsDown}</Text>
-
-            <IconButton
-              p={2.5}
-              size={["sm", "md"]}
-              fontSize={["sm", "md"]}
-              bg="cwru"
-              color="white"
-              colorScheme="black"
-              _hover={{
-                backgroundColor: "rgba(10, 48, 78, 0.85)",
-              }}
-              icon={<FiEdit />}
-              onClick={() => setEditAlertOpen(true)}
-              isDisabled={isPageLoading || !isAuthor}
-            />
-
-          </HStack>
-        </Box>
-      </Flex>
+            <Flex
+              justify={isUser ? "space-evenly" : "center"}
+              align="end"
+              gap={2}
+              w={["full", "auto"]}
+            >
+              <Flex justify="end" align="end">
+                {isUser && (
+                  <ButtonGroup isAttached>
+                    <Tooltip label="Edit Answer">
+                      <IconButton
+                        icon={<FiEdit />}
+                        onClick={() => setEditAlertOpen(true)}
+                      />
+                    </Tooltip>
+                    <Tooltip label="Delete Answer">
+                      <IconButton
+                        icon={<BsFillTrashFill />}
+                        onClick={() => setDeleteAlertOpen(true)}
+                      />
+                    </Tooltip>
+                  </ButtonGroup>
+                )}
+              </Flex>
+              <Flex align="center" justify="center" gap={1.5}>
+                <Tooltip label="Up Vote" isDisabled={isUpVoted || isUser}>
+                  <Flex
+                    justify="center"
+                    align="center"
+                    onClick={handleThumbsUp}
+                    cursor={isUpVoted || isUser ? "not-allowed" : "pointer"}
+                  >
+                    <IconButton
+                      icon={<HiOutlineThumbUp />}
+                      fontSize="1.4rem"
+                      isDisabled={isUpVoted || isUser}
+                      _hover={{}}
+                      _focus={{}}
+                      _active={
+                        !(isUpVoted || isUser) && {
+                          transform: "scale(0.95)",
+                        }
+                      }
+                    />
+                    <Text userSelect={"none"}>{thumbUpCount}</Text>
+                  </Flex>
+                </Tooltip>
+                <Tooltip label="Down Vote" isDisabled={isDownVoted || isUser}>
+                  <Flex
+                    justify="center"
+                    align="center"
+                    onClick={handleThumbsDown}
+                    cursor={isDownVoted || isUser ? "not-allowed" : "pointer"}
+                  >
+                    <IconButton
+                      icon={<HiOutlineThumbDown />}
+                      fontSize="1.4rem"
+                      isDisabled={isDownVoted || isUser}
+                      _hover={{}}
+                      _focus={{}}
+                      _active={
+                        !(isDownVoted || isUser) && {
+                          transform: "scale(0.95)",
+                        }
+                      }
+                    />
+                    <Text userSelect={"none"}>{thumbDownCount}</Text>
+                  </Flex>
+                </Tooltip>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Flex>
+      </SlideFade>
       <EditAlert
         id={id}
         editAlertOpen={editAlertOpen}
-        //cancelRef={cancelRef}
+        cancelRef={cancelRef}
         setEditAlertOpen={setEditAlertOpen}
         toast={toast}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        //question={question}
-        answerUpdate={answerUpdate}
-        setAnswer={setAnswer}
-      //questions={questions}
-      //setQuestions={setQuestions}
-      //setIsQuestionAltered={setIsQuestionAltered}
+        answers={answers}
+        setAnswers={setAnswers}
+        answer={currentAnswer}
+        setAnswer={setCurrentAnswer}
+        caseId={caseId}
+        userCaseId={userCaseId}
+        publisherName={publisherName}
+      />
+      <DeleteAlert
+        cancelRef={cancelRef}
+        deleteAlertOpen={deleteAlertOpen}
+        setDeleteAlertOpen={setDeleteAlertOpen}
+        toast={toast}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        id={id}
+        answers={answers}
+        setAnswers={setAnswers}
       />
     </>
   );
@@ -177,57 +291,59 @@ function EditAlert({
   toast,
   isLoading,
   setIsLoading,
-  question,
-  answerUpdate,
-  setAnswer,
   answers,
-  setQuestions,
-  setIsQuestionAltered,
+  setAnswers,
+  answer,
+  setAnswer,
+  caseId,
+  userCaseId,
+  publisherName,
 }) {
+  const [editedAnswer, setEditedAnswer] = useState(answer);
   const [isDisabled, setIsDisabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    setEditedAnswer(answer);
     setIsDisabled(true);
+    setErrorMessage("");
   }, [editAlertOpen]);
+
   return (
     <AlertDialog
       isOpen={editAlertOpen}
-      //leastDestructiveRef={cancelRef}
+      leastDestructiveRef={cancelRef}
       onClose={() => setEditAlertOpen(false)}
       isCentered
-    //trapFocus={false}
+      trapFocus={false}
     >
       <AlertDialogOverlay>
         <SlideFade in={true} offsetY="20px">
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Edit Question
+              Edit Answer
             </AlertDialogHeader>
             <AlertDialogBody>
-              <FormControl //isInvalid={errorMessage}
-              >
+              <FormControl isInvalid={errorMessage}>
                 <Textarea
                   id="answer"
-                  //placeholder={questionTitle}
-                  //value={questionTitle}
+                  placeholder={editedAnswer}
+                  value={editedAnswer}
                   h="min-content"
                   type="text"
                   resize="none"
                   onChange={(e) => {
                     const value = e.target.value;
-                    setAnswer(value);
+                    setEditedAnswer(value);
                     if (value.length == 0) {
-                      setErrorMessage("Question cannot be empty");
+                      setErrorMessage("Answer cannot be empty");
                       setIsDisabled(true);
                     } else if (value.length < 10) {
-                      setErrorMessage(
-                        "Question must be at least 10 characters"
-                      );
+                      setErrorMessage("Answer must be at least 10 characters");
                       setIsDisabled(true);
                     } else if (value.length > 250) {
                       setErrorMessage(
-                        "Question must be less than 250 characters"
+                        "Answer must be less than 250 characters"
                       );
                       setIsDisabled(true);
                     } else {
@@ -236,15 +352,15 @@ function EditAlert({
                     }
                   }}
                 />
+                <FormErrorMessage>{errorMessage}</FormErrorMessage>
               </FormControl>
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button //ref={cancelRef} 
-                onClick={() => setEditAlertOpen(false)}>
+              <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
                 Cancel
               </Button>
               <Button
-                //isDisabled={isDisabled || question === questionTitle}
+                isDisabled={isDisabled || answer === editedAnswer}
                 colorScheme="blue"
                 loadingText="Updating..."
                 spinnerPlacement="end"
@@ -253,31 +369,29 @@ function EditAlert({
                   setIsLoading(true);
                   try {
                     await axios.post("/api/protected/answers/update", {
-                      id: id,
-                      answer: answerUpdate,
+                      id,
+                      answer: editedAnswer.trim(),
+                      caseId,
+                      userCaseId,
+                      publisherName,
                     });
-                    /*
-                    setQuestions(
-                      questions.map((_question) =>
-                        _question.id === id
-                          ? {
-                              ..._question,
-                              question: questionTitle,
-                            }
-                          : _question
-                      )
+                    setAnswer(editedAnswer);
+                    setAnswers(
+                      answers.map((_answer) => {
+                        return _answer.id === id
+                          ? { ..._answer, answer: editedAnswer }
+                          : _answer;
+                      })
                     );
-                    */
                     toast({
-                      title: "Question Updated",
-                      description: "Your question has been updated",
+                      title: "Answer Updated",
+                      description: "Your answer has been updated",
                       status: "success",
                       variant: "left-accent",
                       position: "bottom-left",
                       duration: 5000,
                       isClosable: true,
                     });
-                    setIsQuestionAltered(true);
                   } catch {
                     toast({
                       title: "An Error Ocurred",
@@ -296,6 +410,93 @@ function EditAlert({
                 ml={3}
               >
                 Update
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+}
+
+function DeleteAlert({
+  cancelRef,
+  deleteAlertOpen,
+  setDeleteAlertOpen,
+  toast,
+  isLoading,
+  setIsLoading,
+  id,
+  answers,
+  setAnswers,
+}) {
+  return (
+    <AlertDialog
+      isOpen={deleteAlertOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setDeleteAlertOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Answer
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this answer?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                loadingText="Deleting..."
+                spinnerPlacement="end"
+                isLoading={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await axios.delete("/api/protected/answers/delete", {
+                      data: {
+                        id,
+                      },
+                    });
+                    setAnswers(
+                      answers.filter((_answer) => {
+                        return _answer.id !== id;
+                      })
+                    );
+                    toast({
+                      title: "Answer Deleted",
+                      description: "Your answer has been deleted",
+                      status: "success",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } catch (e) {
+                    console.log(e);
+                    toast({
+                      title: "An Error Ocurred",
+                      description: "Please try again",
+                      status: "error",
+                      variant: "left-accent",
+                      position: "bottom-left",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  } finally {
+                    setIsLoading(false);
+                    setDeleteAlertOpen(false);
+                  }
+                }}
+                ml={3}
+              >
+                Delete
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

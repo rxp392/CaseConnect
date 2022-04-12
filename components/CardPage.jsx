@@ -17,6 +17,7 @@ import {
   Checkbox,
   useToast,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import QuestionCard from "components/QuestionCard";
@@ -241,8 +242,28 @@ export default function CardPage({
           <Flex pos="absolute" top="0" right="0" m={2} gap={2}>
             {!isQuestionAltered && !isFiltered && (
               <SlideFade in={true} offsetY="20px">
+                <Tooltip label="Reset Questions">
+                  <IconButton
+                    icon={<VscDebugRestart />}
+                    size="md"
+                    color="gray.100"
+                    bg="cwru"
+                    _active={{}}
+                    _hover={{
+                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    }}
+                    onClick={() => {
+                      setQuestions(allQuestions);
+                      setDisabledReset(true);
+                    }}
+                  />
+                </Tooltip>
+              </SlideFade>
+            )}
+            <SlideFade in={true} offsetY="20px">
+              <Tooltip label="Filter Questions">
                 <IconButton
-                  icon={<VscDebugRestart />}
+                  icon={<IoFilterSharp />}
                   size="md"
                   color="gray.100"
                   bg="cwru"
@@ -250,25 +271,9 @@ export default function CardPage({
                   _hover={{
                     backgroundColor: "rgba(10, 48, 78, 0.85)",
                   }}
-                  onClick={() => {
-                    setQuestions(allQuestions);
-                    setDisabledReset(true);
-                  }}
+                  onClick={() => setIsFilterDialogOpen(true)}
                 />
-              </SlideFade>
-            )}
-            <SlideFade in={true} offsetY="20px">
-              <IconButton
-                icon={<IoFilterSharp />}
-                size="md"
-                color="gray.100"
-                bg="cwru"
-                _active={{}}
-                _hover={{
-                  backgroundColor: "rgba(10, 48, 78, 0.85)",
-                }}
-                onClick={() => setIsFilterDialogOpen(true)}
-              />
+              </Tooltip>
             </SlideFade>
           </Flex>
         )}
@@ -380,34 +385,36 @@ function FilterDialog({
             <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
               <Flex w="full" justify="space-between" align="center">
                 <Text>Filter Results By</Text>
-                <IconButton
-                  icon={<VscDebugRestart />}
-                  size="sm"
-                  color="gray.100"
-                  bg="cwru"
-                  _active={{}}
-                  _hover={
-                    !disabledReset && {
-                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                <Tooltip label="Reset Filters">
+                  <IconButton
+                    icon={<VscDebugRestart />}
+                    size="sm"
+                    color="gray.100"
+                    bg="cwru"
+                    _active={{}}
+                    _hover={
+                      !disabledReset && {
+                        backgroundColor: "rgba(10, 48, 78, 0.85)",
+                      }
                     }
-                  }
-                  isDisabled={disabledReset}
-                  onClick={() => {
-                    if (oldest) {
-                      setOldest(true);
-                      oldestRef.current.click();
-                    }
-                    if (answered) {
-                      setAnswered(true);
-                      answeredRef.current.click();
-                    }
-                    if (viewed) {
-                      setViewed(true);
-                      viewedRef.current.click();
-                    }
-                    setQuestions(allQuestions);
-                  }}
-                />
+                    isDisabled={disabledReset}
+                    onClick={() => {
+                      if (oldest) {
+                        setOldest(true);
+                        oldestRef.current.click();
+                      }
+                      if (answered) {
+                        setAnswered(true);
+                        answeredRef.current.click();
+                      }
+                      if (viewed) {
+                        setViewed(true);
+                        viewedRef.current.click();
+                      }
+                      setQuestions(allQuestions);
+                    }}
+                  />
+                </Tooltip>
               </Flex>
             </AlertDialogHeader>
             <AlertDialogBody mt={-1}>

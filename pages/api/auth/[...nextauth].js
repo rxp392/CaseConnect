@@ -20,7 +20,6 @@ export default NextAuth({
         const {
           name,
           subscription,
-          canAnswer,
           accountCreated,
           profileImage,
           isFirstLogin,
@@ -52,7 +51,6 @@ export default NextAuth({
         user.caseId = caseId;
         user.name = name;
         user.subscription = subscription;
-        user.canAnswer = canAnswer;
         user.accountCreated = accountCreated;
         user.profileImage = secure_url;
         user.isFirstLogin = isFirstLogin;

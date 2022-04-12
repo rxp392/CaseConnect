@@ -41,8 +41,6 @@ export async function getServerSideProps({ params, req, res }) {
         caseId: true,
         name: true,
         subscription: true,
-        canAnswer: true,
-        browseLimit: true,
         accountCreated: true,
         courses: true,
         questions: true,

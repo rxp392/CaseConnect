@@ -28,11 +28,10 @@ import {
   SlideFade,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { BsFillTrashFill } from "react-icons/bs";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { FiEdit } from "react-icons/fi";
-import { AiOutlineEye } from "react-icons/ai";
+import { BsFillTrashFill } from "react-icons/bs";
+import { FiEdit, FiEye } from "react-icons/fi";
 import { useSession } from "next-auth/react";
 
 export default function QuestionCard({
@@ -151,6 +150,12 @@ export default function QuestionCard({
                   )}
                 </Badge>
               </WrapItem>
+
+              <WrapItem>
+                <Badge colorScheme="facebook">
+                  {attachment ? "1" : "no"} Attachment
+                </Badge>
+              </WrapItem>
             </Wrap>
           </Stack>
           <Stack
@@ -172,6 +177,7 @@ export default function QuestionCard({
               onClick={() =>
                 router.push(isUser ? "/my-profile" : `/profile/${userCaseId}`)
               }
+              isDisabled={isPageLoading}
               rounded={"lg"}
             >
               <Flex gap={2} justifyContent={"center"} align={"center"}>
@@ -182,8 +188,15 @@ export default function QuestionCard({
                   bg="cwru"
                   color="white"
                 />
-                <Stack direction={"column"} spacing={0} fontSize={"xs"}>
-                  <Text fontWeight={600}>{publisherName}</Text>
+                <Stack
+                  direction={"column"}
+                  spacing={0}
+                  fontSize={"xs"}
+                  textAlign="left"
+                >
+                  <Text fontWeight={600}>
+                    {publisherName} {isUser && "(you)"}
+                  </Text>
                   <Text color={"gray.500"}>
                     {new Date(createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -197,60 +210,61 @@ export default function QuestionCard({
             <Flex gap={1.5}>
               {isUser && (
                 <ButtonGroup isAttached>
-                  <IconButton
-                    p={2.5}
-                    size={["sm", "md"]}
-                    fontSize={["sm", "md"]}
-                    bg="cwru"
-                    color="white"
-                    colorScheme="black"
-                    _hover={{
-                      backgroundColor: "rgba(10, 48, 78, 0.85)",
-                    }}
-                    icon={<BsFillTrashFill />}
-                    onClick={() => setDeleteAlertOpen(true)}
-                    isDisabled={isPageLoading}
-                  />
+                  <Tooltip label="Edit Question">
+                    <IconButton
+                      p={2.5}
+                      size={["sm", "md"]}
+                      fontSize={["sm", "md"]}
+                      bg="cwru"
+                      color="white"
+                      colorScheme="black"
+                      _hover={{
+                        backgroundColor: "rgba(10, 48, 78, 0.85)",
+                      }}
+                      icon={<FiEdit />}
+                      onClick={() => setEditAlertOpen(true)}
+                      isDisabled={isPageLoading}
+                    />
+                  </Tooltip>
                   <Divider orientation="vertical" colorScheme="gray" />
-                  <IconButton
-                    p={2.5}
-                    size={["sm", "md"]}
-                    fontSize={["sm", "md"]}
-                    bg="cwru"
-                    color="white"
-                    colorScheme="black"
-                    _hover={{
-                      backgroundColor: "rgba(10, 48, 78, 0.85)",
-                    }}
-                    icon={<FiEdit />}
-                    onClick={() => setEditAlertOpen(true)}
-                    isDisabled={isPageLoading}
-                  />
+                  <Tooltip label="Delete Question">
+                    <IconButton
+                      p={2.5}
+                      size={["sm", "md"]}
+                      fontSize={["sm", "md"]}
+                      bg="cwru"
+                      color="white"
+                      colorScheme="black"
+                      _hover={{
+                        backgroundColor: "rgba(10, 48, 78, 0.85)",
+                      }}
+                      icon={<BsFillTrashFill />}
+                      onClick={() => setDeleteAlertOpen(true)}
+                      isDisabled={isPageLoading}
+                    />
+                  </Tooltip>
                 </ButtonGroup>
               )}
 
-              <Button
-                leftIcon={<AiOutlineEye />}
-                type="submit"
-                loadingText="Loading..."
-                isLoading={isPageLoading}
-                spinnerPlacement="end"
-                p={2.5}
-                size={["sm", "md"]}
-                fontSize={["sm", "md"]}
-                bg="cwru"
-                color="white"
-                colorScheme="black"
-                _hover={{
-                  backgroundColor: "rgba(10, 48, 78, 0.85)",
-                }}
-                onClick={() => {
-                  setIsPageLoading(true);
-                  router.push(`/questions/${id}-${courseId}`);
-                }}
-              >
-                View
-              </Button>
+              <Tooltip label="View Question">
+                <IconButton
+                  p={2.5}
+                  size={["sm", "md"]}
+                  fontSize={["sm", "md"]}
+                  bg="cwru"
+                  color="white"
+                  colorScheme="black"
+                  _hover={{
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+                  }}
+                  icon={<FiEye />}
+                  onClick={() => {
+                    setIsPageLoading(true);
+                    router.push(`/questions/${id}-${courseId}`);
+                  }}
+                  isDisabled={isPageLoading}
+                />
+              </Tooltip>
             </Flex>
           </Stack>
         </Box>

@@ -8,6 +8,18 @@ export default async function handler(req, res) {
     const { caseId } = req.query;
     const user = await prisma.user.findUnique({
       where: { caseId },
+      select: {
+        caseId: true,
+        name: true,
+        profileImage: true,
+        isFirstLogin: true,
+        subscription: true,
+        accountCreated: true,
+        questions: true,
+        answers: true,
+        viewHistory: true,
+        notifications: true,
+      },
     });
     return res.status(200).json({ user });
   } catch (error) {

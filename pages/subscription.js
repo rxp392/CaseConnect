@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import getStripe from "utils/getStripe";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
-import { MdUpgrade } from "react-icons/md";
+import { MdPayment } from "react-icons/md";
 
 const canvasStyles = {
   position: "fixed",
@@ -276,7 +276,7 @@ export default function Subscription({ _user }) {
         p={"1.5rem"}
         transform={"translateY(-2rem)"}
         leftIcon={
-          <MdUpgrade
+          <MdPayment
             style={{
               transform: "scale(1.25)",
             }}

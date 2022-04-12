@@ -8,6 +8,20 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+model User {
+  caseId         String         @id
+  name           String
+  profileImage   String?
+  isFirstLogin   Boolean        @default(true)
+  subscription   String         @default("Basic")
+  accountCreated DateTime       @default(now())
+  questions      Question[]
+  answers        Answer[]
+  courses        Course[]
+  viewHistory    History[]
+  notifications  Notification[]
+}
+
 model History {
   id         Int      @id @default(autoincrement())
   viewedAt   DateTime @default(now())
@@ -17,20 +31,23 @@ model History {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  caseId         String         @id
-  name           String
-  profileImage   String?
-  isFirstLogin   Boolean        @default(true)
-  subscription   String         @default("Basic")
-  browseCount    Int            @default(0)
-  postCount      Int            @default(0)
-  accountCreated DateTime       @default(now())
-  questions      Question[]
-  answers        Answer[]
-  courses        Course[]
-  viewHistory    History[]
-  notifications  Notification[]
+model Course {
+  id         Int        @id @default(autoincrement())
+  courseName String
+  questions  Question[]
+  users      User[]
+}
+
+model Notification {
+  id             Int      @id @default(autoincrement())
+  type           String
+  notifierName   String
+  notifierCaseId String
+  userCaseId     String
+  belongsTo      User     @relation(fields: [userCaseId], references: [caseId])
+  answerId       Int
+  answer         Answer   @relation(fields: [answerId], references: [id])
+  createdAt      DateTime @default(now())
 }
 
 model Question {
@@ -50,32 +67,29 @@ model Question {
 }
 
 model Answer {
-  id            Int      @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   answer        String
   questionId    Int
-  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  postedBy      User     @relation(fields: [userCaseId], references: [caseId])
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  postedBy      User           @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
-  numThumbsUp   Int      @default(0)
-  numThumbsDown Int      @default(0)
-  createdAt     DateTime @default(now())
-  readOrNot     Boolean  @default(false)
+  thumbsUp      ThumbUp[]
+  thumbsDown    ThumbDown[]
+  createdAt     DateTime       @default(now())
+  Notification  Notification[]
 }
 
-model Course {
-  id         Int        @id @default(autoincrement())
-  courseName String
-  questions  Question[]
-  users      User[]
+model ThumbUp {
+  id         Int    @id @default(autoincrement())
+  answerId   Int
+  answer     Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  userCaseId String
 }
 
-model Notification {
-  id             Int      @id @default(autoincrement())
-  type           String
-  notifierName   String
-  notifierCaseId String
-  userCaseId     String
-  belongsTo      User     @relation(fields: [userCaseId], references: [caseId])
-  createdAt      DateTime @default(now())
+model ThumbDown {
+  id         Int    @id @default(autoincrement())
+  answerId   Int
+  answer     Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  userCaseId String
 }

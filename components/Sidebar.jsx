@@ -70,6 +70,8 @@ export default function Sidebar({ caseId, children }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
 
+  console.log(data);
+
   return (
     <Box minH="100vh" bg={"gray.100"}>
       <SidebarContent
