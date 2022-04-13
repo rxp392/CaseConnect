@@ -121,6 +121,7 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
         size="md"
         closeOnOverlayClick={courses.length != 0}
         onClose={() => setDrawerOpen(false)}
+        autoFocus={false}
       >
         <DrawerOverlay />
         <DrawerContent>

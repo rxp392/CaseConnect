@@ -78,23 +78,29 @@ const LinkItems = [
 ];
 
 export default function Sidebar({ caseId, children }) {
-  const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher);
+  const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher, {
+    refreshInterval: 5000,
+  });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [hasLoaded, setHasLoaded] = useState(false);
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [notifications, setNotifications] = useState(
-    data?.user?.notifications || []
-  );
+  const [notifications, setNotifications] = useState([]);
   const cancelRef = useRef();
 
   useEffect(() => {
-    setNotifications(data?.user?.notifications || []);
+    const { id, courseId } = router.query;
+    const filteredNotifications = (data?.user?.notifications || []).filter(
+      (_notification) =>
+        _notification.courseId !== Number(courseId) &&
+        _notification.questionId !== Number(id)
+    );
+    setNotifications(filteredNotifications);
     if (data) {
       setHasLoaded(true);
     }
-  }, [data]);
+  }, [data, router]);
 
   return (
     <>
@@ -183,7 +189,7 @@ const SidebarContent = ({
         <Text fontSize="xl" fontWeight="bold" color="black">
           Case Connect
         </Text>
-        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
+        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} color="black" />
       </Flex>
       <Flex
         h="full"
@@ -248,6 +254,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           role="group"
           cursor={isActive ? "default" : "pointer"}
           fontWeight={isActive ? "extrabold" : "none"}
+          fontSize={isActive ? "md" : "sm"}
           _hover={
             !isActive && {
               bg: "gray.200",
@@ -255,7 +262,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           }
           {...rest}
         >
-          {icon && <Icon mr="4" fontSize={isActive ? "20" : "15"} as={icon} />}
+          {icon && <Icon mr="4" fontSize={isActive ? "21" : "15"} as={icon} />}
           {children}
         </Flex>
       </Link>

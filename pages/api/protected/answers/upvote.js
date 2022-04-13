@@ -13,6 +13,7 @@ export default async function handler(req, res) {
       question,
       questionId,
       courseId,
+      isUser,
     } = req.body;
     await prisma.thumbUp.create({
       data: {
@@ -27,52 +28,54 @@ export default async function handler(req, res) {
       },
     });
 
-    const { notifications } = await prisma.user.findUnique({
-      where: {
-        caseId: userCaseId,
-      },
-      include: {
-        notifications: true,
-      },
-    });
-
-    await prisma.notification.upsert({
-      where: {
-        id:
-          notifications.find(
-            (_notification) =>
-              _notification.answerId === Number(id) &&
-              _notification.type === "upvote" &&
-              _notification.notifierCaseId === caseId
-          )?.id || -1,
-      },
-      create: {
-        type: "upvote",
-        notifierName: publisherName,
-        notifierCaseId: caseId,
-        userCaseId,
-        answerId: Number(id),
-        question,
-        questionId,
-        courseId,
-      },
-      update: {
-        createdAt: new Date(),
-      },
-    });
-
-    const downVotes = notifications.filter(
-      (_notification) =>
-        _notification.answerId === Number(id) &&
-        _notification.type === "downvote" &&
-        _notification.notifierCaseId === caseId
-    );
-    if (downVotes.length) {
-      await prisma.notification.delete({
+    if (!isUser) {
+      const { notifications } = await prisma.user.findUnique({
         where: {
-          id: downVotes[0].id,
+          caseId: userCaseId,
+        },
+        include: {
+          notifications: true,
         },
       });
+
+      await prisma.notification.upsert({
+        where: {
+          id:
+            notifications.find(
+              (_notification) =>
+                _notification.answerId === Number(id) &&
+                _notification.type === "upvote" &&
+                _notification.notifierCaseId === caseId
+            )?.id || -1,
+        },
+        create: {
+          type: "upvote",
+          notifierName: publisherName,
+          notifierCaseId: caseId,
+          userCaseId,
+          answerId: Number(id),
+          question,
+          questionId,
+          courseId,
+        },
+        update: {
+          createdAt: new Date(),
+        },
+      });
+
+      const downVotes = notifications.filter(
+        (_notification) =>
+          _notification.answerId === Number(id) &&
+          _notification.type === "downvote" &&
+          _notification.notifierCaseId === caseId
+      );
+      if (downVotes.length) {
+        await prisma.notification.delete({
+          where: {
+            id: downVotes[0].id,
+          },
+        });
+      }
     }
 
     return res.status(200).json();

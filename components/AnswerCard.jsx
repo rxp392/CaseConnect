@@ -75,6 +75,7 @@ export default function AnswerCard({
         question,
         questionId,
         courseId,
+        isUser: questionCaseId === caseId,
       });
       toast({
         title: "Answer Upvoted",
@@ -119,6 +120,7 @@ export default function AnswerCard({
         question,
         questionId,
         courseId,
+        isUser: questionCaseId === caseId,
       });
       toast({
         title: "Answer Downvoted",
@@ -160,6 +162,7 @@ export default function AnswerCard({
           w="full"
           direction="column"
           align={["center", "start"]}
+          mt={0.5}
         >
           <Text fontSize="xl" fontWeight="bold" isTruncated>
             {currentAnswer}

@@ -774,6 +774,14 @@ export async function getServerSideProps({ req, res, query }) {
       },
     });
 
+    await prisma.notification.deleteMany({
+      where: {
+        questionId: Number(id),
+        courseId: Number(courseId),
+        userCaseId: session.user.caseId,
+      },
+    });
+
     return {
       props: {
         _question: {

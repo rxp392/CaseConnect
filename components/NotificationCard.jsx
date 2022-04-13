@@ -44,7 +44,7 @@ export default function NotificationCard({
       case "upvote":
         return "green";
       case "downvote":
-        return "red";
+        return "yellow";
     }
   };
 

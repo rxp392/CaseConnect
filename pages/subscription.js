@@ -149,8 +149,11 @@ export default function Subscription({ _user }) {
       <>
         <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
         <SlideFade in={true} offsetY="20px">
-          <Text fontSize={["lg", "2xl", "3xl"]} textAlign="center">
+          <Heading fontSize={["lg", "2xl", "3xl"]} textAlign="center">
             Congratulations! You&apos;re a Premium user.
+          </Heading>
+          <Text textAlign={"center"} mt={2} fontSize={["md", "lg", "xl"]}>
+            You&apos;re now able to ask, view, and answer unlimited questions
           </Text>
         </SlideFade>
       </>
