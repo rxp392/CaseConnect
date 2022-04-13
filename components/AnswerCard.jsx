@@ -25,7 +25,17 @@ import { BsFillTrashFill } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
 import { HiOutlineThumbDown, HiOutlineThumbUp } from "react-icons/hi";
 
-export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
+export default function AnswerCard({
+  _answer,
+  answers,
+  setAnswers,
+  name,
+  caseId,
+  questionCaseId,
+  question,
+  questionId,
+  courseId,
+}) {
   const {
     id,
     answer,
@@ -53,15 +63,18 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
   );
 
   const handleThumbsUp = async () => {
-    if (isUpVoted || isUser) return;
-    setThumbUpCount(thumbUpCount + 1);
+    if (isUpVoted || isUser || isLoading) return;
     setIsLoading(true);
+    setThumbUpCount(thumbUpCount + 1);
     try {
-      await axios.post("/api/protected/answers/thumbUp", {
+      await axios.post("/api/protected/answers/upvote", {
         id,
         caseId,
-        userCaseId,
-        publisherName,
+        userCaseId: questionCaseId,
+        publisherName: name,
+        question,
+        questionId,
+        courseId,
       });
       toast({
         title: "Answer Upvoted",
@@ -94,15 +107,18 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
   };
 
   const handleThumbsDown = async () => {
-    if (isDownVoted || isUser) return;
-    setThumbDownCount(thumbDownCount + 1);
+    if (isDownVoted || isUser || isLoading) return;
     setIsLoading(true);
+    setThumbDownCount(thumbDownCount + 1);
     try {
-      await axios.post("/api/protected/answers/thumbDown", {
+      await axios.post("/api/protected/answers/downvote", {
         id,
         caseId,
-        userCaseId,
-        publisherName,
+        userCaseId: questionCaseId,
+        publisherName: name,
+        question,
+        questionId,
+        courseId,
       });
       toast({
         title: "Answer Downvoted",
@@ -128,7 +144,6 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
       setIsDownVoted(true);
       setIsUpVoted(false);
     }
-
     if (isUpVoted) {
       setIsUpVoted(false);
       setThumbUpCount(thumbUpCount - 1);
@@ -139,52 +154,36 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
     <>
       <SlideFade in={true} offsetY="20px">
         <Flex
-          h="min-content"
+          justify={["center", "space-between"]}
+          borderBottom="1px solid #cdcdcd"
+          p={1}
           w="full"
-          justify="center"
-          align="center"
           direction="column"
-          gap={1}
+          align={["center", "start"]}
         >
-          <Flex
-            w="100%"
-            p={4}
-            borderBottom="1px solid #cdcdcd"
-            justify="space-between"
-            align={["center", "center", "center", "end"]}
-            direction={["column", "column", "column", "row"]}
-            gap={[3, 3, 0]}
-          >
-            <Flex
-              justify={["center", "center", "center", "start"]}
-              align={["center", "center", "center", "start"]}
-              direction="column"
-              gap={1}
-              textAlign={["center", "center", "center", "left"]}
-            >
-              <Text fontSize="xl" fontWeight="bold">
-                {currentAnswer}
-              </Text>
-              <Text fontSize={"sm"}>
-                Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
-                <NextLink
-                  href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
-                  passHref
-                >
-                  <Link>
-                    {publisherName} {isUser && "(you)"}
-                  </Link>
-                </NextLink>
-              </Text>
-            </Flex>
+          <Text fontSize="xl" fontWeight="bold" isTruncated>
+            {currentAnswer}
+          </Text>
 
-            <Flex
-              justify={isUser ? "space-evenly" : "center"}
-              align="end"
-              gap={2}
-              w={["full", "auto"]}
-            >
-              <Flex justify="end" align="end">
+          <Flex
+            align="center"
+            w="full"
+            mt={[1, -1]}
+            justify={["center", "space-between"]}
+            direction={["column", "row"]}
+          >
+            <Text fontSize={"sm"}>
+              Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+              <NextLink
+                href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+                passHref
+              >
+                <Link>{isUser ? `${name} (you)` : publisherName}</Link>
+              </NextLink>
+            </Text>
+
+            <Flex gap={3}>
+              <Flex>
                 {isUser && (
                   <ButtonGroup isAttached>
                     <Tooltip label="Edit Answer">
@@ -202,7 +201,7 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
                   </ButtonGroup>
                 )}
               </Flex>
-              <Flex align="center" justify="center" gap={1.5}>
+              <Flex gap={1.5}>
                 <Tooltip label="Up Vote" isDisabled={isUpVoted || isUser}>
                   <Flex
                     justify="center"
@@ -252,6 +251,7 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
           </Flex>
         </Flex>
       </SlideFade>
+
       <EditAlert
         id={id}
         editAlertOpen={editAlertOpen}
@@ -265,8 +265,11 @@ export default function AnswerCard({ _answer, answers, setAnswers, caseId }) {
         answer={currentAnswer}
         setAnswer={setCurrentAnswer}
         caseId={caseId}
-        userCaseId={userCaseId}
+        userCaseId={questionCaseId}
         publisherName={publisherName}
+        question={question}
+        questionId={questionId}
+        courseId={courseId}
       />
       <DeleteAlert
         cancelRef={cancelRef}
@@ -298,6 +301,9 @@ function EditAlert({
   caseId,
   userCaseId,
   publisherName,
+  question,
+  questionId,
+  courseId,
 }) {
   const [editedAnswer, setEditedAnswer] = useState(answer);
   const [isDisabled, setIsDisabled] = useState(true);
@@ -374,6 +380,9 @@ function EditAlert({
                       caseId,
                       userCaseId,
                       publisherName,
+                      question,
+                      questionId,
+                      courseId,
                     });
                     setAnswer(editedAnswer);
                     setAnswers(

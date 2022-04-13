@@ -260,7 +260,7 @@ export default function QuestionCard({
                   icon={<FiEye />}
                   onClick={() => {
                     setIsPageLoading(true);
-                    router.push(`/questions/${id}-${courseId}`);
+                    router.push(`/question?id=${id}&courseId=${courseId}`);
                   }}
                   isDisabled={isPageLoading}
                 />

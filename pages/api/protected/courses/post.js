@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
-    const { courseIds, caseId } = req.body;
+    const { courseIds, caseId, isFirstLogin } = req.body;
 
     await prisma.user.update({
       where: { caseId },
@@ -15,6 +15,15 @@ export default async function handler(req, res) {
         },
       },
     });
+
+    if (isFirstLogin) {
+      await prisma.user.update({
+        where: { caseId },
+        data: {
+          isFirstLogin: false,
+        },
+      });
+    }
 
     return res.status(200).json();
   } catch (error) {

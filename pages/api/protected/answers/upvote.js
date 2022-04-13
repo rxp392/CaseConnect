@@ -7,20 +7,23 @@ export default async function handler(req, res) {
   try {
     const {
       id,
-      answer,
-      userCaseId,
       caseId,
       publisherName,
+      userCaseId,
       question,
       questionId,
       courseId,
     } = req.body;
-    await prisma.answer.update({
-      where: {
-        id,
-      },
+    await prisma.thumbUp.create({
       data: {
-        answer: answer.trim(),
+        answerId: id,
+        userCaseId: caseId,
+      },
+    });
+
+    await prisma.thumbDown.deleteMany({
+      where: {
+        userCaseId: caseId,
       },
     });
 
@@ -39,11 +42,12 @@ export default async function handler(req, res) {
           notifications.find(
             (_notification) =>
               _notification.answerId === Number(id) &&
-              _notification.type === "update"
+              _notification.type === "upvote" &&
+              _notification.notifierCaseId === caseId
           )?.id || -1,
       },
       create: {
-        type: "update",
+        type: "upvote",
         notifierName: publisherName,
         notifierCaseId: caseId,
         userCaseId,
@@ -56,6 +60,20 @@ export default async function handler(req, res) {
         createdAt: new Date(),
       },
     });
+
+    const downVotes = notifications.filter(
+      (_notification) =>
+        _notification.answerId === Number(id) &&
+        _notification.type === "downvote" &&
+        _notification.notifierCaseId === caseId
+    );
+    if (downVotes.length) {
+      await prisma.notification.delete({
+        where: {
+          id: downVotes[0].id,
+        },
+      });
+    }
 
     return res.status(200).json();
   } catch (error) {

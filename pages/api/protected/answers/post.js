@@ -5,7 +5,15 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
-    const { answer, caseId, questionId, publisherName, userCaseId } = req.body;
+    const {
+      answer,
+      caseId,
+      questionId,
+      publisherName,
+      userCaseId,
+      question,
+      courseId,
+    } = req.body;
     const { answers } = await prisma.user.update({
       where: {
         caseId,
@@ -24,15 +32,19 @@ export default async function handler(req, res) {
       },
     });
 
-    const { id, createdAt } = answers[0];
+    const { id, createdAt } = answers.slice(-1)[0];
 
     await prisma.notification.create({
       data: {
-        type: "create",
+        type: "answer",
         notifierName: publisherName,
-        notifierCaseId: userCaseId,
-        userCaseId: caseId,
+        notifierCaseId: caseId,
+        userCaseId,
         answerId: Number(id),
+        createdAt,
+        question,
+        questionId,
+        courseId,
       },
     });
 

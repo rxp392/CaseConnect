@@ -40,6 +40,7 @@ model Course {
 
 model Notification {
   id             Int      @id @default(autoincrement())
+  question       String
   type           String
   notifierName   String
   notifierCaseId String
@@ -48,6 +49,8 @@ model Notification {
   answerId       Int
   answer         Answer   @relation(fields: [answerId], references: [id])
   createdAt      DateTime @default(now())
+  questionId     Int
+  courseId       Int
 }
 
 model Question {
@@ -71,13 +74,13 @@ model Answer {
   answer        String
   questionId    Int
   question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  postedBy      User           @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
+  postedBy      User           @relation(fields: [userCaseId], references: [caseId])
   publisherName String
   thumbsUp      ThumbUp[]
   thumbsDown    ThumbDown[]
-  createdAt     DateTime       @default(now())
   Notification  Notification[]
+  createdAt     DateTime       @default(now())
 }
 
 model ThumbUp {

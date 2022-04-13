@@ -7,27 +7,9 @@ export default async function handler(req, res) {
   try {
     const { id } = req.body;
 
-    await prisma.thumbUp.deleteMany({
+    await prisma.notification.delete({
       where: {
-        answerId: id,
-      },
-    });
-
-    await prisma.thumbDown.deleteMany({
-      where: {
-        answerId: id,
-      },
-    });
-
-    await prisma.notification.deleteMany({
-      where: {
-        answerId: Number(id),
-      },
-    });
-
-    await prisma.answer.delete({
-      where: {
-        id,
+        id: Number(id),
       },
     });
 

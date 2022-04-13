@@ -5,32 +5,12 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
-    const { id } = req.body;
-
-    await prisma.thumbUp.deleteMany({
-      where: {
-        answerId: id,
-      },
-    });
-
-    await prisma.thumbDown.deleteMany({
-      where: {
-        answerId: id,
-      },
-    });
-
+    const { userCaseId } = req.body;
     await prisma.notification.deleteMany({
       where: {
-        answerId: Number(id),
+        userCaseId,
       },
     });
-
-    await prisma.answer.delete({
-      where: {
-        id,
-      },
-    });
-
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ error });

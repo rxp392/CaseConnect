@@ -1,5 +1,4 @@
 import {
-  IconButton,
   Avatar,
   Box,
   CloseButton,
@@ -18,8 +17,18 @@ import {
   MenuItem,
   MenuList,
   Badge,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Button,
+  SlideFade,
+  Tooltip,
+  IconButton,
 } from "@chakra-ui/react";
-import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
+import { FiMenu, FiChevronDown } from "react-icons/fi";
 import { BiBookAlt, BiQuestionMark } from "react-icons/bi";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -29,6 +38,9 @@ import { IoCheckmarkSharp } from "react-icons/io5";
 import { BsCardText } from "react-icons/bs";
 import axios from "axios";
 import useSwr from "swr";
+import NotificationCard from "./NotificationCard";
+import { useState, useRef, useEffect } from "react";
+import { GrClear } from "react-icons/gr";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
@@ -69,56 +81,92 @@ export default function Sidebar({ caseId, children }) {
   const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notifications, setNotifications] = useState(
+    data?.user?.notifications || []
+  );
+  const cancelRef = useRef();
 
-  console.log(data);
+  useEffect(() => {
+    setNotifications(data?.user?.notifications || []);
+    if (data) {
+      setHasLoaded(true);
+    }
+  }, [data]);
 
   return (
-    <Box minH="100vh" bg={"gray.100"}>
-      <SidebarContent
-        onClose={() => onClose}
-        subscription={data?.user.subscription}
-        display={{ base: "none", md: "block" }}
-        router={router}
+    <>
+      <Box minH="100vh" bg={"gray.100"}>
+        <SidebarContent
+          onClose={() => onClose}
+          subscription={data?.user.subscription}
+          display={{ base: "none", md: "block" }}
+          router={router}
+          hasLoaded={hasLoaded}
+        />
+        <Drawer
+          autoFocus={false}
+          isOpen={isOpen}
+          placement="left"
+          onClose={onClose}
+          returnFocusOnClose={false}
+          onOverlayClick={onClose}
+          size="full"
+        >
+          <DrawerContent>
+            <SidebarContent
+              onClose={onClose}
+              subscription={data?.user.subscription}
+              router={router}
+              hasLoaded={hasLoaded}
+            />
+          </DrawerContent>
+        </Drawer>
+        <MobileNav
+          onOpen={onOpen}
+          caseId={caseId}
+          name={data?.user.name}
+          profileImage={data?.user.profileImage}
+          router={router}
+          notifications={notifications}
+          setNotificationAlertOpen={setNotificationAlertOpen}
+          hasLoaded={hasLoaded}
+        />
+        <Flex
+          ml={{ base: 0, md: 60 }}
+          p="4"
+          justify="center"
+          align="center"
+          height="calc(100vh - 5rem)"
+          overflow="scroll"
+        >
+          {children}
+        </Flex>
+      </Box>
+
+      <NotificationAlert
+        notificationAlertOpen={notificationAlertOpen}
+        setNotificationAlertOpen={setNotificationAlertOpen}
+        cancelRef={cancelRef}
+        notifications={notifications}
+        setNotifications={setNotifications}
+        userCaseId={caseId}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
       />
-      <Drawer
-        autoFocus={false}
-        isOpen={isOpen}
-        placement="left"
-        onClose={onClose}
-        returnFocusOnClose={false}
-        onOverlayClick={onClose}
-        size="full"
-      >
-        <DrawerContent>
-          <SidebarContent
-            onClose={onClose}
-            subscription={data?.user.subscription}
-            router={router}
-          />
-        </DrawerContent>
-      </Drawer>
-      <MobileNav
-        onOpen={onOpen}
-        caseId={caseId}
-        name={data?.user.name}
-        profileImage={data?.user.profileImage}
-        router={router}
-      />
-      <Flex
-        ml={{ base: 0, md: 60 }}
-        p="4"
-        justify="center"
-        align="center"
-        height="calc(100vh - 5rem)"
-        overflow="scroll"
-      >
-        {children}
-      </Flex>
-    </Box>
+    </>
   );
 }
 
-const SidebarContent = ({ onClose, subscription, router, ...rest }) => {
+const SidebarContent = ({
+  onClose,
+  subscription,
+  router,
+  hasLoaded,
+  ...rest
+}) => {
   return (
     <Box
       color="white"
@@ -157,24 +205,26 @@ const SidebarContent = ({ onClose, subscription, router, ...rest }) => {
           </NavItem>
         ))}
       </Flex>
-      <NextLink href="/subscription" passHref>
-        <Badge
-          pos="absolute"
-          bottom="4%"
-          cursor="pointer"
-          variant="solid"
-          mx="8"
-          px={2}
-          py={1}
-          fontWeight={"400"}
-          fontSize="sm"
-          rounded="md"
-          bg="cwru"
-          color="white"
-        >
-          {subscription} Plan
-        </Badge>
-      </NextLink>
+      {hasLoaded && (
+        <NextLink href="/subscription" passHref>
+          <Badge
+            pos="absolute"
+            bottom="4%"
+            cursor="pointer"
+            variant="solid"
+            mx="8"
+            px={2}
+            py={1}
+            fontWeight={"400"}
+            fontSize="sm"
+            rounded="md"
+            bg="cwru"
+            color="white"
+          >
+            {subscription} Plan
+          </Badge>
+        </NextLink>
+      )}
     </Box>
   );
 };
@@ -213,11 +263,21 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, caseId, name, profileImage, router, ...rest }) => {
+const MobileNav = ({
+  onOpen,
+  caseId,
+  name,
+  profileImage,
+  router,
+  notifications,
+  setNotificationAlertOpen,
+  hasLoaded,
+  ...rest
+}) => {
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
-      px={{ base: 4, md: 4 }}
+      px={{ base: 2.5, md: 4 }}
       height="20"
       alignItems="center"
       borderBottomWidth={"1px"}
@@ -236,7 +296,7 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, router, ...rest }) => {
 
       <Text
         display={{ base: "flex", md: "none" }}
-        fontSize="xl"
+        fontSize={["lg", "xl"]}
         fontFamily="monospace"
         fontWeight="bold"
       >
@@ -244,13 +304,19 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, router, ...rest }) => {
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        <IconButton
-          size="lg"
-          variant="ghost"
-          aria-label="open menu"
-          icon={<FiBell />}
-          isDisabled
-        />
+        {hasLoaded && (
+          <Button
+            isDisabled={notifications.length === 0}
+            onClick={() => setNotificationAlertOpen(true)}
+            size="md"
+            variant="ghost"
+            fontSize={["xs", "md"]}
+          >
+            {notifications.length > 0 ? notifications.length : "No"}{" "}
+            Notification
+            {notifications.length !== 1 ? "s" : ""}
+          </Button>
+        )}
 
         <Flex alignItems={"center"}>
           <Menu>
@@ -305,3 +371,81 @@ const MobileNav = ({ onOpen, caseId, name, profileImage, router, ...rest }) => {
     </Flex>
   );
 };
+
+function NotificationAlert({
+  notificationAlertOpen,
+  setNotificationAlertOpen,
+  cancelRef,
+  notifications,
+  setNotifications,
+  userCaseId,
+  isLoading,
+  setIsLoading,
+}) {
+  return (
+    <AlertDialog
+      isOpen={notificationAlertOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setNotificationAlertOpen(false)}
+      isCentered
+      trapFocus={false}
+      scrollBehavior={"inside"}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Notifications
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              <Tooltip label="Clear">
+                <IconButton
+                  icon={<GrClear />}
+                  pos="absolute"
+                  top="0"
+                  right="0"
+                  variant="ghost"
+                  size="sm"
+                  m={1}
+                  onClick={async () => {
+                    await axios.delete(
+                      "/api/protected/notifications/delete-all",
+                      {
+                        userCaseId,
+                      }
+                    );
+                    setNotifications([]);
+                    setNotificationAlertOpen(false);
+                  }}
+                  isDisabled={isLoading}
+                />
+              </Tooltip>
+              <Flex direction="column" align="center" justify="center" gap={2}>
+                {notifications.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    notification={notification}
+                    setNotificationAlertOpen={setNotificationAlertOpen}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                    notifications={notifications}
+                    setNotifications={setNotifications}
+                  />
+                ))}
+              </Flex>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                colorScheme="blue"
+                ref={cancelRef}
+                onClick={() => setNotificationAlertOpen(false)}
+              >
+                Close
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+}
