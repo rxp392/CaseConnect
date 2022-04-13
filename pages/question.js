@@ -28,6 +28,9 @@ import {
   AlertDialogOverlay,
   useToast,
   SlideFade,
+  Radio,
+  Stack,
+  RadioGroup,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -39,6 +42,7 @@ import { FiEdit } from "react-icons/fi";
 import { useRouter } from "next/router";
 import { IoCheckmarkSharp } from "react-icons/io5";
 import { send } from "emailjs-com";
+import { IoFilterSharp } from "react-icons/io5";
 
 export default function Question({ _question, caseId }) {
   const {
@@ -53,6 +57,8 @@ export default function Question({ _question, caseId }) {
     courseId,
   } = _question;
 
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filterBy, setFilterBy] = useState("recent");
   const [questionText, setQuestionText] = useState(question);
   const [questionAnswers, setQuestionAnswers] = useState(answers);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
@@ -115,7 +121,7 @@ export default function Question({ _question, caseId }) {
                   <ButtonGroup isAttached alignSelf={"center"} mt={1.5}>
                     {attachment && (
                       <>
-                        <Tooltip label="View Attachment">
+                        <Tooltip label="Attachment">
                           <IconButton
                             p={2.5}
                             size={["sm", "md"]}
@@ -136,7 +142,7 @@ export default function Question({ _question, caseId }) {
                     )}
                     {isUser && (
                       <>
-                        <Tooltip label="Edit Question">
+                        <Tooltip label="Edit">
                           <IconButton
                             p={2.5}
                             size={["sm", "md"]}
@@ -153,7 +159,7 @@ export default function Question({ _question, caseId }) {
                           />
                         </Tooltip>
                         &nbsp;
-                        <Tooltip label="Delete Question">
+                        <Tooltip label="Delete">
                           <IconButton
                             p={2.5}
                             size={["sm", "md"]}
@@ -180,9 +186,27 @@ export default function Question({ _question, caseId }) {
           {questionAnswers.length > 0 ? (
             <Box rounded={"lg"} w="100%" p={6}>
               <SlideFade in={true} offsetY="20px">
-                <Heading textAlign={"center"} fontSize="32" mt={8} mb={0.5}>
-                  Posted Answers
-                </Heading>
+                <Flex justify="center" align="center" gap={4} mt={8} mb={0.5}>
+                  <Heading textAlign={"center"} fontSize="32">
+                    Posted Answers
+                  </Heading>
+
+                  {questionAnswers.length > 1 && (
+                    <Tooltip label="Filter">
+                      <IconButton
+                        icon={<IoFilterSharp />}
+                        size="md"
+                        color="gray.100"
+                        bg="cwru"
+                        _active={{}}
+                        _hover={{
+                          backgroundColor: "rgba(10, 48, 78, 0.85)",
+                        }}
+                        onClick={() => setFilterModalOpen(true)}
+                      />
+                    </Tooltip>
+                  )}
+                </Flex>
               </SlideFade>
               {questionAnswers.map((answer) => (
                 <AnswerCard
@@ -297,7 +321,102 @@ export default function Question({ _question, caseId }) {
         attachment={attachment}
         router={router}
       />
+      <FilterModal
+        filterModalOpen={filterModalOpen}
+        setFilterModalOpen={setFilterModalOpen}
+        answers={questionAnswers}
+        setAnswers={setQuestionAnswers}
+        cancelRef={cancelRef}
+        filterBy={filterBy}
+        setFilterBy={setFilterBy}
+      />
     </>
+  );
+}
+
+function FilterModal({
+  filterModalOpen,
+  setFilterModalOpen,
+  answers,
+  setAnswers,
+  cancelRef,
+  filterBy,
+  setFilterBy,
+}) {
+  return (
+    <AlertDialog
+      isOpen={filterModalOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={() => setFilterModalOpen(false)}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent w="250px">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+              Filter Answers By
+            </AlertDialogHeader>
+            <AlertDialogBody mt={-1}>
+              <RadioGroup
+                defaultValue={filterBy}
+                transform="translateX(0.75rem)"
+              >
+                <Stack>
+                  <Radio
+                    size="md"
+                    name="recent"
+                    value="recent"
+                    onChange={() => {
+                      setFilterBy("recent");
+                      setAnswers(
+                        answers.sort(
+                          (a, b) =>
+                            new Date(b.createdAt) - new Date(a.createdAt)
+                        )
+                      );
+                      setFilterModalOpen(false);
+                    }}
+                  >
+                    Most Recent
+                  </Radio>
+                  <Radio
+                    size="md"
+                    name="upvoted"
+                    value="upvoted"
+                    onChange={() => {
+                      setFilterBy("upvoted");
+                      setAnswers(
+                        answers.sort(
+                          (a, b) => b.thumbsUp.length - a.thumbsUp.length
+                        )
+                      );
+                      setFilterModalOpen(false);
+                    }}
+                  >
+                    Most Upvoted
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                isFullWidth
+                bg="cwru"
+                color="white"
+                _active={{}}
+                _hover={{
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
+                }}
+                onClick={() => setFilterModalOpen(false)}
+              >
+                Close
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 

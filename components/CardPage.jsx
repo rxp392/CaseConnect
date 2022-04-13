@@ -242,7 +242,7 @@ export default function CardPage({
           <Flex pos="absolute" top="0" right="0" m={2} gap={2}>
             {!isQuestionAltered && !isFiltered && (
               <SlideFade in={true} offsetY="20px">
-                <Tooltip label="Reset Questions">
+                <Tooltip label="Reset">
                   <IconButton
                     icon={<VscDebugRestart />}
                     size="md"
@@ -261,7 +261,7 @@ export default function CardPage({
               </SlideFade>
             )}
             <SlideFade in={true} offsetY="20px">
-              <Tooltip label="Filter Questions">
+              <Tooltip label="Filter">
                 <IconButton
                   icon={<IoFilterSharp />}
                   size="md"
@@ -384,9 +384,10 @@ function FilterDialog({
           <AlertDialogContent w="250px">
             <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
               <Flex w="full" justify="space-between" align="center">
-                <Text>Filter Results By</Text>
-                <Tooltip label="Reset Filters">
+                <Text transform="translateX(-4px)">Filter Results By</Text>
+                <Tooltip label="Reset">
                   <IconButton
+                    transform="translateX(4px)"
                     icon={<VscDebugRestart />}
                     size="sm"
                     color="gray.100"

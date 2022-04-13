@@ -9,6 +9,19 @@ const theme = extendTheme({
     cwru: "#0a304e",
   },
   components: {
+    Radio: {
+      baseStyle: {
+        control: {
+          _checked: {
+            bg: "cwru",
+            borderColor: "cwru",
+            _hover: {
+              bg: "rgba(10, 48, 78, 0.85)",
+            },
+          },
+        },
+      },
+    },
     Checkbox: {
       baseStyle: {
         control: {

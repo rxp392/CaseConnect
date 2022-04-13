@@ -210,7 +210,7 @@ export default function QuestionCard({
             <Flex gap={1.5}>
               {isUser && (
                 <ButtonGroup isAttached>
-                  <Tooltip label="Edit Question">
+                  <Tooltip label="Edit">
                     <IconButton
                       p={2.5}
                       size={["sm", "md"]}
@@ -227,7 +227,7 @@ export default function QuestionCard({
                     />
                   </Tooltip>
                   <Divider orientation="vertical" colorScheme="gray" />
-                  <Tooltip label="Delete Question">
+                  <Tooltip label="Delete">
                     <IconButton
                       p={2.5}
                       size={["sm", "md"]}
@@ -246,7 +246,7 @@ export default function QuestionCard({
                 </ButtonGroup>
               )}
 
-              <Tooltip label="View Question">
+              <Tooltip label="View">
                 <IconButton
                   p={2.5}
                   size={["sm", "md"]}

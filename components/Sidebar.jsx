@@ -41,6 +41,7 @@ import useSwr from "swr";
 import NotificationCard from "./NotificationCard";
 import { useState, useRef, useEffect } from "react";
 import { GrClear } from "react-icons/gr";
+import { BROWSE_LIMIT, POST_LIMIT } from "constants";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
@@ -88,6 +89,8 @@ export default function Sidebar({ caseId, children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const cancelRef = useRef();
+  const [questions, setQuestions] = useState(0);
+  const [views, setViews] = useState(0);
 
   useEffect(() => {
     const { id, courseId } = router.query;
@@ -97,6 +100,8 @@ export default function Sidebar({ caseId, children }) {
         _notification.questionId !== Number(id)
     );
     setNotifications(filteredNotifications);
+    setQuestions(data?.user?.questions.length || 0);
+    setViews(data?.user?.viewHistory.length || 0);
     if (data) {
       setHasLoaded(true);
     }
@@ -111,6 +116,10 @@ export default function Sidebar({ caseId, children }) {
           display={{ base: "none", md: "block" }}
           router={router}
           hasLoaded={hasLoaded}
+          questions={questions}
+          views={views}
+          BROWSE_LIMIT={BROWSE_LIMIT}
+          POST_LIMIT={POST_LIMIT}
         />
         <Drawer
           autoFocus={false}
@@ -127,6 +136,10 @@ export default function Sidebar({ caseId, children }) {
               subscription={data?.user.subscription}
               router={router}
               hasLoaded={hasLoaded}
+              questions={questions}
+              views={views}
+              BROWSE_LIMIT={BROWSE_LIMIT}
+              POST_LIMIT={POST_LIMIT}
             />
           </DrawerContent>
         </Drawer>
@@ -171,6 +184,10 @@ const SidebarContent = ({
   subscription,
   router,
   hasLoaded,
+  questions,
+  views,
+  BROWSE_LIMIT,
+  POST_LIMIT,
   ...rest
 }) => {
   return (
@@ -185,15 +202,19 @@ const SidebarContent = ({
       h="full"
       {...rest}
     >
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+      <Flex h="20" alignItems="center" mx="4" justifyContent="space-between">
         <Text fontSize="xl" fontWeight="bold" color="black">
           Case Connect
         </Text>
-        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} color="black" />
+        <CloseButton
+          display={{ base: "flex", md: "none" }}
+          onClick={onClose}
+          color="black"
+        />
       </Flex>
       <Flex
+        mx="-2"
         h="full"
-        w="full"
         alignItems="start"
         justifyContent="start"
         flexDirection="column"
@@ -211,16 +232,72 @@ const SidebarContent = ({
           </NavItem>
         ))}
       </Flex>
-      {hasLoaded && (
-        <NextLink href="/subscription" passHref>
+
+      {subscription === "Basic" ? (
+        <SlideFade in={true} offsetY="20px">
+          <NextLink href="/subscription" passHref>
+            <Badge
+              pos="absolute"
+              bottom="3%"
+              mx="4"
+              px={2}
+              py={1}
+              cursor="pointer"
+              variant="solid"
+              fontWeight={"400"}
+              fontSize="sm"
+              rounded="md"
+              bg="cwru"
+              color="white"
+            >
+              {subscription} Plan
+            </Badge>
+          </NextLink>
           <Badge
             pos="absolute"
-            bottom="4%"
-            cursor="pointer"
-            variant="solid"
-            mx="8"
+            bottom="8%"
+            mx="4"
             px={2}
             py={1}
+            variant="solid"
+            fontWeight={"400"}
+            fontSize="sm"
+            rounded="md"
+            bg="transparent"
+            color="black"
+          >
+            <strong>
+              {views}/{BROWSE_LIMIT} Questions Viewed
+            </strong>{" "}
+          </Badge>
+          <Badge
+            pos="absolute"
+            bottom="13%"
+            mx="4"
+            px={2}
+            py={1}
+            variant="solid"
+            fontWeight={"400"}
+            fontSize="sm"
+            rounded="md"
+            bg="transparent"
+            color="black"
+          >
+            <strong>
+              {questions}/{POST_LIMIT} Questions Asked
+            </strong>
+          </Badge>
+        </SlideFade>
+      ) : (
+        <SlideFade in={true} offsetY="20px">
+          <Badge
+            pos="absolute"
+            bottom="3%"
+            mx="4"
+            px={2}
+            py={1}
+            cursor="pointer"
+            variant="solid"
             fontWeight={"400"}
             fontSize="sm"
             rounded="md"
@@ -229,7 +306,7 @@ const SidebarContent = ({
           >
             {subscription} Plan
           </Badge>
-        </NextLink>
+        </SlideFade>
       )}
     </Box>
   );
@@ -254,7 +331,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           role="group"
           cursor={isActive ? "default" : "pointer"}
           fontWeight={isActive ? "extrabold" : "none"}
-          fontSize={isActive ? "md" : "sm"}
+          fontSize={"md"}
           _hover={
             !isActive && {
               bg: "gray.200",
@@ -262,7 +339,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           }
           {...rest}
         >
-          {icon && <Icon mr="4" fontSize={isActive ? "21" : "15"} as={icon} />}
+          {icon && <Icon mr="4" fontSize={isActive ? "20" : "16"} as={icon} />}
           {children}
         </Flex>
       </Link>

@@ -189,13 +189,13 @@ export default function AnswerCard({
               <Flex>
                 {isUser && (
                   <ButtonGroup isAttached>
-                    <Tooltip label="Edit Answer">
+                    <Tooltip label="Edit">
                       <IconButton
                         icon={<FiEdit />}
                         onClick={() => setEditAlertOpen(true)}
                       />
                     </Tooltip>
-                    <Tooltip label="Delete Answer">
+                    <Tooltip label="Delete">
                       <IconButton
                         icon={<BsFillTrashFill />}
                         onClick={() => setDeleteAlertOpen(true)}
@@ -205,7 +205,7 @@ export default function AnswerCard({
                 )}
               </Flex>
               <Flex gap={1.5}>
-                <Tooltip label="Up Vote" isDisabled={isUpVoted || isUser}>
+                <Tooltip label="Upvote" isDisabled={isUpVoted || isUser}>
                   <Flex
                     justify="center"
                     align="center"
@@ -227,7 +227,7 @@ export default function AnswerCard({
                     <Text userSelect={"none"}>{thumbUpCount}</Text>
                   </Flex>
                 </Tooltip>
-                <Tooltip label="Down Vote" isDisabled={isDownVoted || isUser}>
+                <Tooltip label="Downvote" isDisabled={isDownVoted || isUser}>
                   <Flex
                     justify="center"
                     align="center"
