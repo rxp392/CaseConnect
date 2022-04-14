@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import CardPage from "components/CardPage";
 
-export default function MyAnswers({ _questions }) {
+export default function MyAnswers({ _questions, courses }) {
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -46,6 +46,7 @@ export default function MyAnswers({ _questions }) {
       allQuestions={_questions}
       title={"My Answers"}
       includeAnsweredFilter={false}
+      courses={courses}
     />
   );
 }
@@ -87,6 +88,7 @@ export async function getServerSideProps({ req, res }) {
       answers: {
         select: {
           userCaseId: true,
+          createdAt: true,
         },
       },
       views: {
@@ -100,21 +102,39 @@ export async function getServerSideProps({ req, res }) {
       createdAt: true,
       userImage: true,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
   });
 
   return {
     props: {
-      _questions: questions.map((question) => ({
-        ...question,
-        createdAt: question.createdAt.toISOString(),
-        views: question.views.map((view) => ({
-          ...view,
-          viewedAt: view.viewedAt.toISOString(),
+      _questions: questions
+        .sort(
+          (a, b) =>
+            new Date(
+              b.answers.find(
+                (answer) => answer.userCaseId === session.user.caseId
+              ).createdAt
+            ) -
+            new Date(
+              a.answers.find(
+                (answer) => answer.userCaseId === session.user.caseId
+              ).createdAt
+            )
+        )
+        .map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
+          answers: question.answers.map((answer) => ({
+            ...answer,
+            createdAt: answer.createdAt.toISOString(),
+          })),
+          views: question.views.map((view) => ({
+            ...view,
+            viewedAt: view.viewedAt.toISOString(),
+          })),
         })),
-      })),
+      courses: courses.filter((course) =>
+        questions.some((q) => q.courseId === course.id)
+      ),
     },
   };
 }

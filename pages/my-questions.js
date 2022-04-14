@@ -5,7 +5,7 @@ import NextLink from "next/link";
 import { useState } from "react";
 import CardPage from "components/CardPage";
 
-export default function MyQuestions({ _questions }) {
+export default function MyQuestions({ _questions, courses }) {
   const [questions, setQuestions] = useState(_questions);
 
   if (!questions.length) {
@@ -45,6 +45,8 @@ export default function MyQuestions({ _questions }) {
       setQuestions={setQuestions}
       allQuestions={_questions}
       title={"My Questions"}
+      courses={courses}
+      includeUserFilter={false}
     />
   );
 }
@@ -99,7 +101,7 @@ export async function getServerSideProps({ req, res }) {
   return {
     props: {
       _questions: questions
-        .sort((a, b) => b.createdAt - a.createdAt)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .map((question) => ({
           ...question,
           createdAt: question.createdAt.toISOString(),
@@ -108,6 +110,9 @@ export async function getServerSideProps({ req, res }) {
             viewedAt: view.viewedAt.toISOString(),
           })),
         })),
+      courses: courses.filter((course) =>
+        questions.some((q) => q.courseId === course.id)
+      ),
     },
   };
 }

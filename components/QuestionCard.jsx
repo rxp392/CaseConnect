@@ -255,7 +255,7 @@ export default function QuestionCard({
                   color="white"
                   colorScheme="black"
                   _hover={{
-                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    backgroundColor: "rgba(10, 48, 78, 0.85)", 
                   }}
                   icon={<FiEye />}
                   onClick={() => {

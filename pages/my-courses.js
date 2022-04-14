@@ -62,9 +62,24 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
   );
   const [hasReadInfoDialog, setHasReadInfoDialog] = useState(false);
 
+  function uniqueArray(arr) {
+    var seen = {};
+    return arr.filter(function (item) {
+      return seen.hasOwnProperty(item.id) ? false : (seen[item.id] = true);
+    });
+  }
+
   useEffect(() => {
     setDrawerOpen(courses.length == 0);
-    setAllCourses(data?.allCourses || []);
+    if (data?.allCourses) {
+      setAllCourses(
+        uniqueArray([...data?.allCourses, ...courses]).sort((a, b) =>
+          a.courseName.localeCompare(b.courseName)
+        )
+      );
+    } else {
+      setAllCourses([]);
+    }
   }, [courses, data]);
 
   const submitCourses = async () => {
@@ -78,7 +93,7 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
         isFirstLogin,
       });
       setCourses(
-        [...new Set([...selectedCourses, ...courses])].sort((a, b) =>
+        uniqueArray([...selectedCourses, ...courses]).sort((a, b) =>
           a.courseName.localeCompare(b.courseName)
         )
       );

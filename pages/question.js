@@ -85,7 +85,7 @@ export default function Question({ _question, caseId, isAtLimit }) {
         style={
           isAtLimit
             ? {
-                filter: "blur(6px)",
+                filter: "blur(5px)",
               }
             : {}
         }
