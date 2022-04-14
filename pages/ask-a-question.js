@@ -12,16 +12,28 @@ import {
   SlideFade,
   Heading,
   FormHelperText,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Link,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { getSession, useSession } from "next-auth/react";
 import prisma from "lib/prisma";
 import { useRouter } from "next/router";
+import { POST_LIMIT } from "constants/index";
+import { useState, useRef } from "react";
+import NextLink from "next/link";
 
-export default function AskQuestion({ courses }) {
+export default function AskQuestion({ courses, isAtLimit }) {
   const toast = useToast();
   const router = useRouter();
   const { data: session } = useSession();
+  const [atLimit, setAtLimit] = useState(isAtLimit);
+  const cancelRef = useRef();
 
   const {
     handleSubmit,
@@ -72,98 +84,145 @@ export default function AskQuestion({ courses }) {
   };
 
   return (
-    <SlideFade in={true} offsetY="20px">
-      <Heading textAlign={"center"}>Ask a question</Heading>
-      <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-        <Box
-          as="form"
-          onSubmit={handleSubmit(onSubmit)}
-          rounded={"lg"}
-          bg="white"
-          boxShadow={"lg"}
-          p={8}
-        >
-          <Stack spacing={4}>
-            <FormControl isInvalid={errors.question} isRequired>
-              <FormLabel htmlFor="question">Question</FormLabel>
-              <Textarea
-                id="question"
-                h="min-content"
-                type="text"
-                resize="none"
-                {...register("question", {
-                  required: "Enter a question",
-                  minLength: {
-                    value: 10,
-                    message: "Question must be at least 10 characters",
-                  },
-                  maxLength: {
-                    value: 250,
-                    message: "Question must be less than 250 characters",
-                  },
-                })}
-              />
-              <FormErrorMessage>
-                {errors.question && errors.question.message}
-              </FormErrorMessage>
-            </FormControl>
-            <FormControl isInvalid={errors.courseName} isRequired>
-              <FormLabel htmlFor="courseName">Course</FormLabel>
-              <Select
-                placeholder={"Select a course"}
-                id="courseName"
-                {...register("courseName", {
-                  required: "Pick a course",
-                  minLength: {
-                    value: 4,
-                    message: "Minimum length should be 4",
-                  },
-                })}
-              >
-                {courses.map(({ id, courseName }) => (
-                  <option key={id} value={`${courseName}|${id}`}>
-                    {courseName}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl>
-              <FormLabel>Attachment</FormLabel>
-              <Input
-                type="file"
-                id="attachment"
-                accept="image/jpg, image/jpeg"
-                {...register("attachment")}
-                size="sm"
-              />
-              <FormHelperText>
-                Only .jpg and .jpeg files are allowed
-              </FormHelperText>
-            </FormControl>
-            <Stack spacing={10} pt={2}>
-              <Button
-                isDisabled={!isValid}
-                type="submit"
-                loadingText="Posting..."
-                spinnerPlacement="end"
-                isLoading={isSubmitting}
-                size="lg"
-                bg="cwru"
-                color="white"
-                colorScheme="black"
-                _hover={
-                  isValid && {
-                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+    <>
+      <SlideFade in={true} offsetY="20px">
+        <Heading textAlign={"center"}>Ask a question</Heading>
+        <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
+          <Box
+            as="form"
+            onSubmit={handleSubmit(onSubmit)}
+            rounded={"lg"}
+            bg="white"
+            boxShadow={"lg"}
+            p={8}
+          >
+            <Stack spacing={4}>
+              <FormControl isInvalid={errors.question} isRequired>
+                <FormLabel htmlFor="question">Question</FormLabel>
+                <Textarea
+                  id="question"
+                  h="min-content"
+                  type="text"
+                  resize="none"
+                  {...register("question", {
+                    required: "Enter a question",
+                    minLength: {
+                      value: 10,
+                      message: "Question must be at least 10 characters",
+                    },
+                    maxLength: {
+                      value: 250,
+                      message: "Question must be less than 250 characters",
+                    },
+                  })}
+                />
+                <FormErrorMessage>
+                  {errors.question && errors.question.message}
+                </FormErrorMessage>
+              </FormControl>
+              <FormControl isInvalid={errors.courseName} isRequired>
+                <FormLabel htmlFor="courseName">Course</FormLabel>
+                <Select
+                  placeholder={"Select a course"}
+                  id="courseName"
+                  {...register("courseName", {
+                    required: "Pick a course",
+                    minLength: {
+                      value: 4,
+                      message: "Minimum length should be 4",
+                    },
+                  })}
+                >
+                  {courses.map(({ id, courseName }) => (
+                    <option key={id} value={`${courseName}|${id}`}>
+                      {courseName}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Attachment</FormLabel>
+                <Input
+                  type="file"
+                  id="attachment"
+                  accept="image/jpg, image/jpeg"
+                  {...register("attachment")}
+                  size="sm"
+                />
+                <FormHelperText>
+                  Only .jpg and .jpeg files are allowed
+                </FormHelperText>
+              </FormControl>
+              <Stack spacing={10} pt={2}>
+                <Button
+                  isDisabled={!isValid}
+                  type="submit"
+                  loadingText="Posting..."
+                  spinnerPlacement="end"
+                  isLoading={isSubmitting}
+                  size="lg"
+                  bg="cwru"
+                  color="white"
+                  colorScheme="black"
+                  _hover={
+                    isValid && {
+                      backgroundColor: "rgba(10, 48, 78, 0.85)",
+                    }
                   }
-                }
-              >
-                Post Question
-              </Button>
+                >
+                  Post Question
+                </Button>
+              </Stack>
             </Stack>
-          </Stack>
-        </Box>
-      </Stack>
-    </SlideFade>
+          </Box>
+        </Stack>
+      </SlideFade>
+
+      <LimitModal
+        atLimit={atLimit}
+        setAtLimit={setAtLimit}
+        cancelRef={cancelRef}
+        router={router}
+      />
+    </>
+  );
+}
+
+function LimitModal({ atLimit, cancelRef, router }) {
+  return (
+    <AlertDialog
+      isOpen={atLimit}
+      leastDestructiveRef={cancelRef}
+      closeOnOverlayClick={false}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent w="250px">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+              Ask Limit Reached
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              To view, ask, and answer unlimited questions, upgrade to{" "}
+              <strong>premium</strong> on the{" "}
+              <NextLink href={"/subscription"} passHref>
+                <Link color="blue.500">Subscription</Link>
+              </NextLink>{" "}
+              page
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                colorScheme="blue"
+                onClick={() => router.push("/questions")}
+              >
+                Ok
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 
@@ -176,10 +235,12 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const { courses } = await prisma.user.findUnique({
+  const { courses, subscription, questions } = await prisma.user.findUnique({
     where: { caseId: session.user.caseId },
     select: {
       courses: true,
+      subscription: true,
+      questions: true,
     },
   });
 
@@ -189,9 +250,12 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
+  let isAtLimit = subscription === "Basic" && questions.length === POST_LIMIT;
+
   return {
     props: {
       courses,
+      isAtLimit,
     },
   };
 }

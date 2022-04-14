@@ -40,11 +40,11 @@ import { ImAttachment } from "react-icons/im";
 import { BsFillTrashFill } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
 import { useRouter } from "next/router";
-import { IoCheckmarkSharp } from "react-icons/io5";
+import { IoCheckmarkSharp, IoFilterSharp } from "react-icons/io5";
 import { send } from "emailjs-com";
-import { IoFilterSharp } from "react-icons/io5";
+import { BROWSE_LIMIT } from "constants/index";
 
-export default function Question({ _question, caseId }) {
+export default function Question({ _question, caseId, isAtLimit }) {
   const {
     id,
     userCaseId,
@@ -57,6 +57,7 @@ export default function Question({ _question, caseId }) {
     courseId,
   } = _question;
 
+  const [limitModalOpen, setLimitModalOpen] = useState(isAtLimit);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filterBy, setFilterBy] = useState("recent");
   const [questionText, setQuestionText] = useState(question);
@@ -77,7 +78,19 @@ export default function Question({ _question, caseId }) {
 
   return (
     <>
-      <Flex h="full" w="full" justify="center" pos="relative">
+      <Flex
+        h="full"
+        w="full"
+        justify="center"
+        pos="relative"
+        style={
+          isAtLimit
+            ? {
+                filter: "blur(6px)",
+              }
+            : {}
+        }
+      >
         <Flex
           h="min-content"
           w="full"
@@ -330,7 +343,50 @@ export default function Question({ _question, caseId }) {
         filterBy={filterBy}
         setFilterBy={setFilterBy}
       />
+      <LimitModal
+        cancelRef={cancelRef}
+        limitModalOpen={limitModalOpen}
+        router={router}
+      />
     </>
+  );
+}
+
+function LimitModal({ limitModalOpen, cancelRef, router }) {
+  return (
+    <AlertDialog
+      isOpen={limitModalOpen}
+      leastDestructiveRef={cancelRef}
+      closeOnOverlayClick={false}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent w="250px">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+              View Limit Reached
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              To view, ask, and answer unlimited questions, upgrade to{" "}
+              <strong>premium</strong> on the{" "}
+              <NextLink href={"/subscription"} passHref>
+                <Link color="blue.500">Subscription</Link>
+              </NextLink>{" "}
+              page
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                colorScheme="blue"
+                onClick={() => router.push("/questions")}
+              >
+                Ok
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 }
 
@@ -827,14 +883,16 @@ export async function getServerSideProps({ req, res, query }) {
     return { props: {} };
   }
 
-  const { courses, viewHistory, caseId } = await prisma.user.findUnique({
-    where: { caseId: session.user.caseId },
-    select: {
-      courses: true,
-      viewHistory: true,
-      caseId: true,
-    },
-  });
+  const { courses, viewHistory, caseId, subscription } =
+    await prisma.user.findUnique({
+      where: { caseId: session.user.caseId },
+      select: {
+        courses: true,
+        viewHistory: true,
+        caseId: true,
+        subscription: true,
+      },
+    });
 
   if (!courses.length) {
     res.writeHead(302, { Location: "/my-courses" });
@@ -878,28 +936,42 @@ export async function getServerSideProps({ req, res, query }) {
       },
     });
 
-    await prisma.history.upsert({
-      where: {
-        id:
-          viewHistory.find((history) => history.questionId === Number(id))
-            ?.id || -1,
-      },
-      update: {
-        viewedAt: new Date(),
-      },
-      create: {
-        questionId: Number(id),
-        caseId: session.user.caseId,
-      },
-    });
+    let isAtLimit = false;
 
-    await prisma.notification.deleteMany({
-      where: {
-        questionId: Number(id),
-        courseId: Number(courseId),
-        userCaseId: session.user.caseId,
-      },
-    });
+    const hasViewed = viewHistory.some(
+      (view) => view.questionId === Number(id)
+    );
+
+    if (
+      !hasViewed &&
+      subscription === "Basic" &&
+      viewHistory.length === BROWSE_LIMIT
+    ) {
+      isAtLimit = true;
+    } else {
+      await prisma.history.upsert({
+        where: {
+          id:
+            viewHistory.find((history) => history.questionId === Number(id))
+              ?.id || -1,
+        },
+        update: {
+          viewedAt: new Date(),
+        },
+        create: {
+          questionId: Number(id),
+          caseId: session.user.caseId,
+        },
+      });
+
+      await prisma.notification.deleteMany({
+        where: {
+          questionId: Number(id),
+          courseId: Number(courseId),
+          userCaseId: session.user.caseId,
+        },
+      });
+    }
 
     return {
       props: {
@@ -920,6 +992,7 @@ export async function getServerSideProps({ req, res, query }) {
           createdAt: question.createdAt.toISOString(),
         },
         caseId,
+        isAtLimit,
       },
     };
   } catch {

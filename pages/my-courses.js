@@ -550,7 +550,7 @@ function InfoDialog({ showInfoDialog, setShowInfoDialog, cancelRef }) {
               {linkData.map(({ href, name, description }) => (
                 <Flex key={name}>
                   <NextLink passHref href={href}>
-                    <Link color="blue.600">{name}</Link>
+                    <Link color="blue.500">{name}</Link>
                   </NextLink>
                   &nbsp; - &nbsp; {description}
                 </Flex>

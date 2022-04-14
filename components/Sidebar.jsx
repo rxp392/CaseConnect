@@ -79,9 +79,13 @@ const LinkItems = [
 ];
 
 export default function Sidebar({ caseId, children }) {
-  const { data } = useSwr(`/api/protected/user?caseId=${caseId}`, fetcher, {
-    refreshInterval: 5000,
-  });
+  const { data, mutate } = useSwr(
+    `/api/protected/user?caseId=${caseId}`,
+    fetcher,
+    {
+      refreshInterval: 5000,
+    }
+  );
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -107,6 +111,20 @@ export default function Sidebar({ caseId, children }) {
     }
   }, [data, router]);
 
+  useEffect(() => {
+    mutate();
+  }, [router]);
+
+  const getBadgeColor = (number, limit) => {
+    if (number == limit) {
+      return "red";
+    } else if (number > limit / 2) {
+      return "yellow";
+    } else {
+      return "green";
+    }
+  };
+
   return (
     <>
       <Box minH="100vh" bg={"gray.100"}>
@@ -115,11 +133,11 @@ export default function Sidebar({ caseId, children }) {
           subscription={data?.user.subscription}
           display={{ base: "none", md: "block" }}
           router={router}
-          hasLoaded={hasLoaded}
           questions={questions}
           views={views}
           BROWSE_LIMIT={BROWSE_LIMIT}
           POST_LIMIT={POST_LIMIT}
+          getBadgeColor={getBadgeColor}
         />
         <Drawer
           autoFocus={false}
@@ -135,11 +153,11 @@ export default function Sidebar({ caseId, children }) {
               onClose={onClose}
               subscription={data?.user.subscription}
               router={router}
-              hasLoaded={hasLoaded}
               questions={questions}
               views={views}
               BROWSE_LIMIT={BROWSE_LIMIT}
               POST_LIMIT={POST_LIMIT}
+              getBadgeColor={getBadgeColor}
             />
           </DrawerContent>
         </Drawer>
@@ -183,11 +201,11 @@ const SidebarContent = ({
   onClose,
   subscription,
   router,
-  hasLoaded,
   questions,
   views,
   BROWSE_LIMIT,
   POST_LIMIT,
+  getBadgeColor,
   ...rest
 }) => {
   return (
@@ -236,24 +254,20 @@ const SidebarContent = ({
       {subscription === "Basic" ? (
         <SlideFade in={true} offsetY="20px">
           <NextLink href="/subscription" passHref>
-            <Badge
+            <Link
               pos="absolute"
               bottom="3%"
               mx="4"
               px={2}
               py={1}
-              cursor="pointer"
-              variant="solid"
-              fontWeight={"400"}
-              fontSize="sm"
-              rounded="md"
-              bg="cwru"
-              color="white"
+              color="black"
+              textDecoration="underline"
             >
-              {subscription} Plan
-            </Badge>
+              Basic Plan
+            </Link>
           </NextLink>
           <Badge
+            cursor="default"
             pos="absolute"
             bottom="8%"
             mx="4"
@@ -263,14 +277,14 @@ const SidebarContent = ({
             fontWeight={"400"}
             fontSize="sm"
             rounded="md"
-            bg="transparent"
-            color="black"
+            colorScheme={getBadgeColor(views, BROWSE_LIMIT)}
           >
             <strong>
               {views}/{BROWSE_LIMIT} Questions Viewed
             </strong>{" "}
           </Badge>
           <Badge
+            cursor="default"
             pos="absolute"
             bottom="13%"
             mx="4"
@@ -280,8 +294,7 @@ const SidebarContent = ({
             fontWeight={"400"}
             fontSize="sm"
             rounded="md"
-            bg="transparent"
-            color="black"
+            colorScheme={getBadgeColor(questions, POST_LIMIT)}
           >
             <strong>
               {questions}/{POST_LIMIT} Questions Asked
@@ -290,22 +303,17 @@ const SidebarContent = ({
         </SlideFade>
       ) : (
         <SlideFade in={true} offsetY="20px">
-          <Badge
+          <Text
             pos="absolute"
             bottom="3%"
             mx="4"
             px={2}
             py={1}
-            cursor="pointer"
-            variant="solid"
-            fontWeight={"400"}
-            fontSize="sm"
-            rounded="md"
-            bg="cwru"
-            color="white"
+            color="black"
+            cursor={"default"}
           >
-            {subscription} Plan
-          </Badge>
+            Premium Plan
+          </Text>
         </SlideFade>
       )}
     </Box>
