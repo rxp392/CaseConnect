@@ -15,6 +15,7 @@ model User {
   isFirstLogin   Boolean        @default(true)
   subscription   String         @default("Basic")
   accountCreated DateTime       @default(now())
+  totalQuestions Int?           @default(0)
   questions      Question[]
   answers        Answer[]
   courses        Course[]

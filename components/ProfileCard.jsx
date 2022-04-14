@@ -45,9 +45,9 @@ export default function ProfileCard({ user }) {
             {isUser ? "You" : `${user.name}`} {isUser ? "have" : "has"} <br />{" "}
             asked{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
-              {user.questions.length}
+              {user.totalQuestions}
             </span>{" "}
-            question{user.questions.length === 1 ? "" : "s"},<br /> answered{" "}
+            question{user.totalQuestions === 1 ? "" : "s"},<br /> answered{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
               {user.answers.length}
             </span>{" "}

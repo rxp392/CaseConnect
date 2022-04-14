@@ -37,6 +37,17 @@ export default async function handler(req, res) {
       },
     });
 
+    await prisma.user.update({
+      where: {
+        caseId: fields.caseId,
+      },
+      data: {
+        totalQuestions: {
+          increment: 1,
+        },
+      },
+    });
+
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ error });

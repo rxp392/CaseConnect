@@ -104,7 +104,7 @@ export default function Sidebar({ caseId, children }) {
         _notification.questionId !== Number(id)
     );
     setNotifications(filteredNotifications);
-    setQuestions(data?.user?.questions.length || 0);
+    setQuestions(data?.user?.totalQuestions || 0);
     setViews(
       data?.user?.viewHistory.filter((view) => view.questionCaseId !== caseId)
         .length || 0

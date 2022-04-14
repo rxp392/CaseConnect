@@ -204,7 +204,7 @@ function LimitModal({ atLimit, cancelRef, router }) {
               Ask Limit Reached
             </AlertDialogHeader>
             <AlertDialogBody>
-              To view, ask, and answer unlimited questions, upgrade to{" "}
+              To ask and view unlimited questions, upgrade to{" "}
               <strong>premium</strong> on the{" "}
               <NextLink href={"/subscription"} passHref>
                 <Link color="blue.500">Subscription</Link>
@@ -235,14 +235,15 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  const { courses, subscription, questions } = await prisma.user.findUnique({
-    where: { caseId: session.user.caseId },
-    select: {
-      courses: true,
-      subscription: true,
-      questions: true,
-    },
-  });
+  const { courses, subscription, totalQuestions } =
+    await prisma.user.findUnique({
+      where: { caseId: session.user.caseId },
+      select: {
+        courses: true,
+        subscription: true,
+        totalQuestions: true,
+      },
+    });
 
   if (!courses.length) {
     res.writeHead(302, { Location: "/my-courses" });
@@ -250,7 +251,7 @@ export async function getServerSideProps({ req, res }) {
     return { props: {} };
   }
 
-  let isAtLimit = subscription === "Basic" && questions.length === POST_LIMIT;
+  let isAtLimit = subscription === "Basic" && totalQuestions === POST_LIMIT;
 
   return {
     props: {

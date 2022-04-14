@@ -19,6 +19,7 @@ export default async function handler(req, res) {
         answers: true,
         viewHistory: true,
         notifications: true,
+        totalQuestions: true,
       },
     });
     return res.status(200).json({ user });

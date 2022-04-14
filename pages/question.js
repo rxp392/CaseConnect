@@ -367,7 +367,7 @@ function LimitModal({ limitModalOpen, cancelRef, router }) {
               View Limit Reached
             </AlertDialogHeader>
             <AlertDialogBody>
-              To view, ask, and answer unlimited questions, upgrade to{" "}
+              To ask and view unlimited questions, upgrade to{" "}
               <strong>premium</strong> on the{" "}
               <NextLink href={"/subscription"} passHref>
                 <Link color="blue.500">Subscription</Link>
@@ -882,7 +882,7 @@ export async function getServerSideProps({ req, res, query }) {
     return { props: {} };
   }
 
-  const { courses, viewHistory, caseId, subscription } =
+  const { courses, viewHistory, caseId, subscription, notifications } =
     await prisma.user.findUnique({
       where: { caseId: session.user.caseId },
       select: {
@@ -890,6 +890,7 @@ export async function getServerSideProps({ req, res, query }) {
         viewHistory: true,
         caseId: true,
         subscription: true,
+        notifications: true,
       },
     });
 
@@ -939,10 +940,9 @@ export async function getServerSideProps({ req, res, query }) {
     const hasViewed = viewHistory.some(
       (view) => view.questionId === Number(id)
     );
-    const isUser = question.userCaseId === caseId;
 
     if (
-      !isUser &&
+      question.userCaseId !== caseId &&
       !hasViewed &&
       subscription === "Basic" &&
       viewHistory.length === BROWSE_LIMIT
@@ -965,15 +965,13 @@ export async function getServerSideProps({ req, res, query }) {
         },
       });
 
-      if (isUser) {
-        await prisma.notification.deleteMany({
-          where: {
-            questionId: Number(id),
-            courseId: Number(courseId),
-            userCaseId: session.user.caseId,
+      await prisma.notification.deleteMany({
+        where: {
+          id: {
+            in: notifications.map((notification) => notification.id),
           },
-        });
-      }
+        },
+      });
     }
 
     return {

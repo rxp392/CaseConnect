@@ -14,8 +14,7 @@ export default async function handler(req, res) {
         },
         unit_amount: PREMIUM_PRICE * 100,
       },
-      description:
-        "Unlock the ability to ask, view, and answer unlimited questions",
+      description: "ask and view unlimited questions",
       quantity: 1,
     };
     const session = await stripe.checkout.sessions.create({

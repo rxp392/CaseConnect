@@ -146,7 +146,7 @@ export default function Subscription({ _user }) {
             Congratulations! You&apos;re a Premium user
           </Heading>
           <Text textAlign={"center"} mt={2} fontSize={["md", "lg", "xl"]}>
-            You&apos;re now able to ask, view, and answer unlimited questions
+            You can now ask and view unlimited questions
           </Text>
         </SlideFade>
       </>

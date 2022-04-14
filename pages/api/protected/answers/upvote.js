@@ -62,7 +62,6 @@ export default async function handler(req, res) {
           createdAt: new Date(),
         },
       });
-
       const downVotes = notifications.filter(
         (_notification) =>
           _notification.answerId === Number(id) &&
