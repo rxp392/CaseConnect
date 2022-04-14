@@ -6,13 +6,15 @@ export default async function handler(req, res) {
   }
   try {
     const { courseName } = req.body;
-
-    await prisma.course.create({
+    const { id } = await prisma.course.create({
       data: {
         courseName,
       },
+      select: {
+        id: true,
+      },
     });
-    return res.status(200).json();
+    return res.status(200).json({ addedCourseId: id });
   } catch (error) {
     return res.status(500).json({ error });
   }

@@ -490,8 +490,7 @@ function DeleteAlert({
                       duration: 5000,
                       isClosable: true,
                     });
-                  } catch (e) {
-                    console.log(e);
+                  } catch {
                     toast({
                       title: "An Error Ocurred",
                       description: "Please try again",

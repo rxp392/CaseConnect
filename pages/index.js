@@ -49,7 +49,7 @@ export default function Index() {
             <Link color="cwru" href="https://case.edu/" target="_blank">
               CWRU
             </Link>{" "}
-            course with ease.
+            course with ease
           </Text>
 
           <Flex align="start" flexDirection="column" gap={4}>

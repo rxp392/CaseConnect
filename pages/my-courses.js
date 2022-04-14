@@ -449,7 +449,9 @@ function AddDialog({
                       .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
                       .join(" ")
                       .trim();
-                    await axios.post("/api/protected/courses/create", {
+                    const {
+                      data: { addedCourseId },
+                    } = await axios.post("/api/protected/courses/create", {
                       courseName: `${_courseId}. ${_courseTitle}`,
                     });
                     toast({
@@ -465,7 +467,7 @@ function AddDialog({
                       [
                         ...allCourses,
                         {
-                          id: _courseId,
+                          id: addedCourseId.toString(),
                           courseName: `${_courseId}. ${_courseTitle}`,
                         },
                       ].sort((a, b) => a.courseName.localeCompare(b.courseName))

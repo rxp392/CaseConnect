@@ -83,7 +83,7 @@ export default function Sidebar({ caseId, children }) {
     `/api/protected/user?caseId=${caseId}`,
     fetcher,
     {
-      refreshInterval: 5000,
+      refreshInterval: 10 * 1000,
     }
   );
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -105,7 +105,10 @@ export default function Sidebar({ caseId, children }) {
     );
     setNotifications(filteredNotifications);
     setQuestions(data?.user?.questions.length || 0);
-    setViews(data?.user?.viewHistory.length || 0);
+    setViews(
+      data?.user?.viewHistory.filter((view) => view.questionCaseId !== caseId)
+        .length || 0
+    );
     if (data) {
       setHasLoaded(true);
     }
@@ -253,19 +256,17 @@ const SidebarContent = ({
 
       {subscription === "Basic" ? (
         <SlideFade in={true} offsetY="20px">
-          <NextLink href="/subscription" passHref>
-            <Link
-              pos="absolute"
-              bottom="3%"
-              mx="4"
-              px={2}
-              py={1}
-              color="black"
-              textDecoration="underline"
-            >
-              Basic Plan
-            </Link>
-          </NextLink>
+          <Text
+            pos="absolute"
+            bottom="3%"
+            mx="4"
+            px={2}
+            py={1}
+            color="black"
+            cursor={"default"}
+          >
+            Basic Plan
+          </Text>
           <Badge
             cursor="default"
             pos="absolute"
@@ -275,7 +276,7 @@ const SidebarContent = ({
             py={1}
             variant="solid"
             fontWeight={"400"}
-            fontSize="sm"
+            fontSize="xs"
             rounded="md"
             colorScheme={getBadgeColor(views, BROWSE_LIMIT)}
           >
@@ -292,7 +293,7 @@ const SidebarContent = ({
             py={1}
             variant="solid"
             fontWeight={"400"}
-            fontSize="sm"
+            fontSize="xs"
             rounded="md"
             colorScheme={getBadgeColor(questions, POST_LIMIT)}
           >

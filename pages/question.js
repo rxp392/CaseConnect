@@ -57,7 +57,6 @@ export default function Question({ _question, caseId, isAtLimit }) {
     courseId,
   } = _question;
 
-  const [limitModalOpen, setLimitModalOpen] = useState(isAtLimit);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filterBy, setFilterBy] = useState("recent");
   const [questionText, setQuestionText] = useState(question);
@@ -345,7 +344,7 @@ export default function Question({ _question, caseId, isAtLimit }) {
       />
       <LimitModal
         cancelRef={cancelRef}
-        limitModalOpen={limitModalOpen}
+        limitModalOpen={isAtLimit}
         router={router}
       />
     </>
@@ -610,7 +609,7 @@ function AnswerModal({
                           process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
                           process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
                           {
-                            to_email: `${userCaseId}@gmail.com`,
+                            to_email: `${userCaseId}@case.edu`,
                             to_name: publisherName.split(" ")[0],
                             question,
                             website: window.location.href,
@@ -937,12 +936,13 @@ export async function getServerSideProps({ req, res, query }) {
     });
 
     let isAtLimit = false;
-
     const hasViewed = viewHistory.some(
       (view) => view.questionId === Number(id)
     );
+    const isUser = question.userCaseId === caseId;
 
     if (
+      !isUser &&
       !hasViewed &&
       subscription === "Basic" &&
       viewHistory.length === BROWSE_LIMIT
@@ -960,17 +960,20 @@ export async function getServerSideProps({ req, res, query }) {
         },
         create: {
           questionId: Number(id),
+          questionCaseId: question.userCaseId,
           caseId: session.user.caseId,
         },
       });
 
-      await prisma.notification.deleteMany({
-        where: {
-          questionId: Number(id),
-          courseId: Number(courseId),
-          userCaseId: session.user.caseId,
-        },
-      });
+      if (isUser) {
+        await prisma.notification.deleteMany({
+          where: {
+            questionId: Number(id),
+            courseId: Number(courseId),
+            userCaseId: session.user.caseId,
+          },
+        });
+      }
     }
 
     return {

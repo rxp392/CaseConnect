@@ -132,16 +132,9 @@ export default function Subscription({ _user }) {
   }, [makeShot]);
 
   useEffect(() => {
-    let intervalId;
     if (!isBasic) {
-      for (let i = 0; i < 10; i++) {
-        fire();
-      }
-      intervalId = setInterval(() => {
-        fire();
-      }, 1750);
+      fire();
     }
-    return () => clearInterval(intervalId);
   }, []);
 
   if (!isBasic) {
@@ -150,7 +143,7 @@ export default function Subscription({ _user }) {
         <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
         <SlideFade in={true} offsetY="20px">
           <Heading fontSize={["lg", "2xl", "3xl"]} textAlign="center">
-            Congratulations! You&apos;re a Premium user.
+            Congratulations! You&apos;re a Premium user
           </Heading>
           <Text textAlign={"center"} mt={2} fontSize={["md", "lg", "xl"]}>
             You&apos;re now able to ask, view, and answer unlimited questions
