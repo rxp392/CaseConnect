@@ -103,7 +103,11 @@ export default function Sidebar({ caseId, children }) {
         _notification.courseId !== Number(courseId) &&
         _notification.questionId !== Number(id)
     );
-    setNotifications(filteredNotifications);
+    setNotifications(
+      filteredNotifications.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      )
+    );
     setQuestions(data?.user?.totalQuestions || 0);
     setViews(
       data?.user?.viewHistory.filter((view) => view.questionCaseId !== caseId)
@@ -341,6 +345,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           cursor={isActive ? "default" : "pointer"}
           fontWeight={isActive ? "extrabold" : "none"}
           fontSize={"md"}
+          color={isActive ? "black" : "gray.600"}
           _hover={
             !isActive && {
               bg: "gray.200",
@@ -348,7 +353,7 @@ const NavItem = ({ icon, href, children, router, ...rest }) => {
           }
           {...rest}
         >
-          {icon && <Icon mr="4" fontSize={isActive ? "20" : "16"} as={icon} />}
+          {icon && <Icon mr="4" fontSize={isActive ? "19" : "16"} as={icon} />}
           {children}
         </Flex>
       </Link>

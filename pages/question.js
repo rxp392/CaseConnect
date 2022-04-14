@@ -203,7 +203,7 @@ export default function Question({ _question, caseId, isAtLimit }) {
                     Posted Answers
                   </Heading>
 
-                  {questionAnswers.length > 1 && (
+                  {questionAnswers.length > 2 && (
                     <Tooltip label="Filter">
                       <IconButton
                         icon={<IoFilterSharp />}

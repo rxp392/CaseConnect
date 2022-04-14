@@ -58,8 +58,8 @@ export default function NotificationCard({
     >
       <Flex direction="column" w="full" fontSize="sm">
         <Flex w="full" textAlign="left" align="center" gap={1}>
-          <Badge fontSize="xs" colorScheme={getBadgeColor(type)}>
-            {type}
+          <Badge fontSize="xs" colorScheme={getBadgeColor(type)} rounded="sm">
+            {type === "update" ? "Answer Change" : type}
           </Badge>{" "}
           from{" "}
           <NextLink href={`/profile/${notifierCaseId}`} passHref>

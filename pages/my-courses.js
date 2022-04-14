@@ -519,32 +519,32 @@ function InfoDialog({ showInfoDialog, setShowInfoDialog, cancelRef }) {
   const linkData = [
     {
       href: "/questions",
-      name: "Home",
+      name: "Home Page",
       description: "Questions for your courses",
     },
     {
       href: "/ask-a-question",
-      name: "Ask",
+      name: "Ask Page",
       description: "Ask a question",
     },
     {
       href: "/my-questions",
-      name: "Questions",
+      name: "Questions Page",
       description: "Your questions",
     },
     {
       href: "my-courses",
-      name: "Courses",
+      name: "Courses Page",
       description: "Your courses",
     },
     {
       href: "my-answers",
-      name: "Answers",
+      name: "Answers Page",
       description: "Your answers",
     },
     {
       href: "view-history",
-      name: "View History",
+      name: "View History Page",
       description: "Your view history",
     },
   ];

@@ -57,6 +57,17 @@ export default async function handler(req, res) {
       },
     });
 
+    const toDeleteId = notifications.find(
+      (notification) => notification.questionId === questionId
+    ).id;
+    if (toDeleteId) {
+      await prisma.notification.delete({
+        where: {
+          id: toDeleteId,
+        },
+      });
+    }
+
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ error });

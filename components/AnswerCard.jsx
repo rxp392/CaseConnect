@@ -70,7 +70,7 @@ export default function AnswerCard({
       await axios.post("/api/protected/answers/upvote", {
         id,
         caseId,
-        userCaseId: questionCaseId,
+        userCaseId: userCaseId,
         publisherName: name,
         question,
         questionId,
@@ -114,7 +114,7 @@ export default function AnswerCard({
       await axios.post("/api/protected/answers/downvote", {
         id,
         caseId,
-        userCaseId: questionCaseId,
+        userCaseId: userCaseId,
         publisherName: name,
         question,
         questionId,
