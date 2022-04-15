@@ -160,7 +160,7 @@ export default function AnswerCard({
           w="full"
           direction="column"
           align={["center", "start"]}
-          mt={0.5}
+          mt={2}
         >
           <Text fontSize="xl" fontWeight="bold" isTruncated>
             {currentAnswer}

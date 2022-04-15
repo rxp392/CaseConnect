@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.6.0",
     "@fontsource/ibm-plex-sans": "^4.5.5",
     "@prisma/client": "^3.10.0",
+    "@splitbee/web": "^0.3.0",
     "@stripe/stripe-js": "^1.26.0",
     "axios": "^0.26.0",
     "cloudinary": "^1.29.0",
