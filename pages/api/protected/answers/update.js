@@ -15,6 +15,7 @@ export default async function handler(req, res) {
       questionId,
       courseId,
     } = req.body;
+
     await prisma.answer.update({
       where: {
         id,
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
 
     const toDeleteId = notifications.find(
       (notification) => notification.questionId === questionId
-    ).id;
+    )?.id;
     if (toDeleteId) {
       await prisma.notification.delete({
         where: {
