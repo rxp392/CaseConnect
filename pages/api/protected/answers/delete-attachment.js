@@ -6,19 +6,14 @@ export default async function handler(req, res) {
   }
   try {
     const { id } = req.body;
-
-    await prisma.notification.deleteMany({
-      where: {
-        questionId: Number(id),
-      },
-    });
-
-    await prisma.question.delete({
+    await prisma.answer.update({
       where: {
         id: Number(id),
       },
+      data: {
+        attachment: null,
+      },
     });
-
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ error });

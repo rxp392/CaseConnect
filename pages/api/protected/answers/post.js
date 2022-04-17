@@ -1,10 +1,19 @@
 import prisma from "lib/prisma";
+import getImage from "utils/getImage";
+import uploadImage from "utils/uploadImage";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
+    const { fields, files } = await getImage(req);
     const {
       answer,
       caseId,
@@ -13,7 +22,18 @@ export default async function handler(req, res) {
       userCaseId,
       question,
       courseId,
-    } = req.body;
+    } = fields;
+
+    let secure_url;
+    if (files.attachment) {
+      const { filepath, originalFilename } = files.attachment;
+      secure_url = await uploadImage({
+        imageToUpload: filepath,
+        public_id: originalFilename,
+        folder: "answer-attachments",
+      });
+    }
+
     const { answers } = await prisma.user.update({
       where: {
         caseId,
@@ -22,7 +42,8 @@ export default async function handler(req, res) {
         answers: {
           create: {
             answer,
-            question: { connect: { id: questionId } },
+            attachment: secure_url,
+            question: { connect: { id: Number(questionId) } },
             publisherName,
           },
         },
@@ -43,8 +64,8 @@ export default async function handler(req, res) {
         answerId: Number(id),
         createdAt,
         question,
-        questionId,
-        courseId,
+        questionId: Number(questionId),
+        courseId: Number(courseId),
       },
     });
 

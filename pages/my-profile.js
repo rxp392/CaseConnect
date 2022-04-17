@@ -26,6 +26,7 @@ export async function getServerSideProps({ req, res }) {
       answers: true,
       profileImage: true,
       totalQuestions: true,
+      questions: true,
     },
   });
 
@@ -42,6 +43,10 @@ export async function getServerSideProps({ req, res }) {
         answers: user.answers.map((answer) => ({
           ...answer,
           createdAt: answer.createdAt.toISOString(),
+        })),
+        questions: user.questions.map((question) => ({
+          ...question,
+          createdAt: question.createdAt.toISOString(),
         })),
         accountCreated: user.accountCreated.toISOString(),
       },

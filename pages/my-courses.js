@@ -11,7 +11,6 @@ import {
   TagLabel,
   Tag,
   TagCloseButton,
-  Select,
   FormControl,
   Flex,
   useToast,
@@ -31,6 +30,9 @@ import {
   Input,
   FormErrorMessage,
   Text,
+  Box,
+  InputGroup,
+  InputRightElement,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { getSession, useSession } from "next-auth/react";
@@ -39,6 +41,7 @@ import axios from "axios";
 import useSwr from "swr";
 import { FiPlus } from "react-icons/fi";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
+import Filter from "bad-words";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
@@ -51,9 +54,11 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
   const [drawerOpen, setDrawerOpen] = useState(userCourses.length == 0);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [selectedId, setSelectedId] = useState("");
+  const [currentId, setCurrentId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [courses, setCourses] = useState(userCourses);
   const [allCourses, setAllCourses] = useState(data?.allCourses || []);
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -142,36 +147,78 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
         <DrawerContent>
           {courses.length > 0 && <DrawerCloseButton />}
           <DrawerHeader>
-            Select your courses {!courses.length && "to get started"}
+            Enter your courses {!courses.length && "to get started"}
           </DrawerHeader>
           <DrawerBody>
             {allCourses.length ? (
               <FormControl>
-                <Select
-                  ref={selectRef}
-                  placeholder={"CWRU courses"}
-                  id="courseName"
-                  onChange={(e) => {
-                    const [courseName, id] = e.target.value.split("|");
-                    if (
-                      !courses.some(
-                        (course) => Number(course.id) === Number(id)
-                      ) &&
-                      courseName
-                    ) {
-                      setSelectedCourses([
-                        { courseName, id },
-                        ...selectedCourses,
-                      ]);
-                    }
-                  }}
-                >
+                <InputGroup size="md">
+                  <Input
+                    pr="4.5rem"
+                    list="courses"
+                    placeholder="Your course name..."
+                    _placeholder={{ opacity: 0.75, color: "gray.500" }}
+                    ref={selectRef}
+                    value={selectedCourse}
+                    type="text"
+                    onChange={(e) => {
+                      const course = e.target.value.split("|");
+                      if (course.length == 2) {
+                        const [courseName, id] = course;
+                        setSelectedCourse(courseName);
+                        setCurrentId(Number(id));
+                      } else {
+                        setSelectedCourse(e.target.value);
+                        setCurrentId("");
+                      }
+                    }}
+                    focusBorderColor="cwru"
+                  />
+                  <InputRightElement>
+                    <IconButton
+                      isDisabled={!selectedCourse}
+                      icon={<FiPlus />}
+                      bg="cwru"
+                      color="white"
+                      colorScheme="black"
+                      _hover={
+                        selectedCourse && {
+                          backgroundColor: "rgba(10, 48, 78, 0.85)",
+                        }
+                      }
+                      onClick={() => {
+                        const foundCourse = allCourses.some(
+                          (c) =>
+                            c.courseName.toLowerCase() ===
+                            selectedCourse.toLowerCase()
+                        );
+                        if (!foundCourse) {
+                          setAddDialogOpen(true);
+                        } else {
+                          if (
+                            !courses.some(
+                              (course) => Number(course.id) === currentId
+                            )
+                          ) {
+                            setSelectedCourses([
+                              { courseName: selectedCourse, id: currentId },
+                              ...selectedCourses,
+                            ]);
+                          }
+                          setSelectedCourse("");
+                          selectRef.current.focus();
+                        }
+                      }}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+                <datalist id="courses">
                   {allCourses.map(({ id, courseName }) => (
                     <option key={id} value={`${courseName}|${id}`}>
                       {courseName}
                     </option>
                   ))}
-                </Select>
+                </datalist>
               </FormControl>
             ) : (
               <Text fontSize="medium">Loading Courses...</Text>
@@ -193,7 +240,8 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
                       }
                       setSelectedCourses(
                         selectedCourses.filter(
-                          (selectedCourse) => selectedCourse.id !== _id
+                          (_selectedCourse) =>
+                            _selectedCourse.id !== Number(_id)
                         )
                       );
                     }}
@@ -203,49 +251,40 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
             </Stack>
           </DrawerBody>
           <DrawerFooter>
-            <Flex justifyContent="space-between" alignItems="center" w="full">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setAddDialogOpen(true)}
-              >
-                Can&apos;t find your course?
-              </Button>
-
-              <Button
-                isLoading={isLoading}
-                type="submit"
-                loadingText={"Adding..."}
-                spinnerPlacement="end"
-                size="md"
-                bg="cwru"
-                color="white"
-                colorScheme="black"
-                _hover={
-                  !selectedCourses.length == 0 && {
-                    backgroundColor: "rgba(10, 48, 78, 0.85)",
-                  }
+            <Button
+              isLoading={isLoading}
+              type="submit"
+              loadingText={"Adding..."}
+              spinnerPlacement="end"
+              size="md"
+              bg="cwru"
+              color="white"
+              colorScheme="black"
+              _hover={
+                !selectedCourses.length == 0 && {
+                  backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }
-                isDisabled={selectedCourses.length == 0}
-                onClick={submitCourses}
-              >
-                Continue
-              </Button>
-            </Flex>
+              }
+              isDisabled={selectedCourses.length == 0}
+              onClick={submitCourses}
+            >
+              Continue
+            </Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
       <Flex
         justify="space-between"
         align="center"
         direction="column"
-        h="full"
-        pt="2rem"
+        h="calc(100vh - 10rem)"
+        overflowY="scroll"
         overflowX="hidden"
       >
-        <SlideFade in={true} offsetY="20px">
-          {courses.length > 0 && (
-            <Flex justifyContent="center" alignItems="center" gap={2}>
+        {courses.length > 0 && (
+          <SlideFade in={true} offsetY="20px">
+            <Flex justify={"center"} align="center" gap={2} pt={2}>
               <Heading>My Courses&nbsp;</Heading>
               <IconButton
                 size="md"
@@ -260,22 +299,16 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
                 icon={<FiPlus />}
               />
             </Flex>
-          )}
-
-          <Wrap
-            spacing="30px"
-            align="center"
-            justify="center"
-            h="full"
-            overflowY="scroll"
-            overflowX="hidden"
-            transform="translateY(3rem)"
-            px={[0, 15]}
-          >
+          </SlideFade>
+        )}
+        <SlideFade in={true} offsetY="20px">
+          <Wrap spacing="30px" align="center" justify="center" px={[0, 15]}>
             {courses.map(({ courseName, id }) => (
-              <WrapItem key={id} w={["85vw", "fit-content"]}>
+              <WrapItem key={id} w={"fit-content"}>
                 <Tag bg="cwru" color="white" w="fit-content" p={2}>
-                  <TagLabel>{courseName}</TagLabel>
+                  <TagLabel isTruncated fontSize={["xs", "sm"]}>
+                    {courseName}
+                  </TagLabel>
                   <TagCloseButton
                     color="white"
                     transform="scale(1.1)"
@@ -296,6 +329,7 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
             ))}
           </Wrap>
         </SlideFade>
+        <Box></Box>
       </Flex>
 
       <DeleteDialog
@@ -333,6 +367,10 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
         allCourses={allCourses}
         setAllCourses={setAllCourses}
         selectRef={selectRef}
+        Filter={Filter}
+        setSelectedCourse={setSelectedCourse}
+        selectedCourses={selectedCourses}
+        setSelectedCourses={setSelectedCourses}
       />
     </>
   );
@@ -346,6 +384,10 @@ function AddDialog({
   allCourses,
   setAllCourses,
   selectRef,
+  Filter,
+  setSelectedCourse,
+  selectedCourses,
+  setSelectedCourses,
 }) {
   const [courseId, setCourseId] = useState("");
   const [courseIdError, setCourseIdError] = useState("");
@@ -354,12 +396,16 @@ function AddDialog({
   const [courseTitleError, setCourseTitleError] = useState("");
   const [courseTitleValid, setCourseTitleValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const filter = new Filter();
 
   return (
     <AlertDialog
       isOpen={addDialogOpen}
       leastDestructiveRef={cancelRef}
-      onClose={() => setAddDialogOpen(false)}
+      onClose={() => {
+        setSelectedCourse("");
+        setAddDialogOpen(false);
+      }}
       isCentered
       finalFocusRef={selectRef}
     >
@@ -367,9 +413,12 @@ function AddDialog({
         <SlideFade in={true} offsetY="20px">
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Add a Course
+              Add your Course
             </AlertDialogHeader>
             <AlertDialogBody>
+              <Text mb={4} mt={-5}>
+                Your course was not found, so please add it below
+              </Text>
               <FormControl isInvalid={courseIdError} isRequired>
                 <FormLabel htmlFor="courseId">Course Id</FormLabel>
                 <Input
@@ -449,6 +498,20 @@ function AddDialog({
                 loadingText="Adding..."
                 spinnerPlacement="end"
                 onClick={async () => {
+                  if (
+                    filter.isProfane(courseId) ||
+                    filter.isProfane(courseTitle)
+                  ) {
+                    return toast({
+                      title: "Profanity detected",
+                      description: "Please remove profanity from your course",
+                      status: "error",
+                      position: "bottom-left",
+                      variant: "left-accent",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  }
                   setIsLoading(true);
                   try {
                     const _courseId = courseId
@@ -465,10 +528,21 @@ function AddDialog({
                       .join(" ")
                       .trim();
                     const {
-                      data: { addedCourseId },
+                      data: { addedCourseId, error },
                     } = await axios.post("/api/protected/courses/create", {
                       courseName: `${_courseId}. ${_courseTitle}`,
                     });
+                    if (error) {
+                      return toast({
+                        title: "Course already exists",
+                        description: "Please add that course or try again",
+                        status: "error",
+                        position: "bottom-left",
+                        variant: "left-accent",
+                        duration: 5000,
+                        isClosable: true,
+                      });
+                    }
                     toast({
                       title: "Success",
                       description: "Your course has been created",
@@ -487,8 +561,18 @@ function AddDialog({
                         },
                       ].sort((a, b) => a.courseName.localeCompare(b.courseName))
                     );
+                    setSelectedCourses([
+                      {
+                        id: Number(addedCourseId),
+                        courseName: `${_courseId}. ${_courseTitle}`,
+                      },
+                      ...selectedCourses,
+                    ]);
+                    setSelectedCourse("");
                     setCourseId("");
                     setCourseTitle("");
+                    setIsLoading(false);
+                    setAddDialogOpen(false);
                   } catch {
                     toast({
                       title: "An error occurred",
@@ -499,7 +583,6 @@ function AddDialog({
                       duration: 5000,
                       isClosable: true,
                     });
-                  } finally {
                     setIsLoading(false);
                     setAddDialogOpen(false);
                   }
@@ -614,10 +697,10 @@ function DeleteDialog({
         <SlideFade in={true} offsetY="20px">
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Course
+              Remove Course
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to delete this course?
+              Are you sure you want to remove this course?
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={() => setDeleteAlertOpen(false)}>
@@ -666,7 +749,7 @@ function DeleteDialog({
                 }}
                 ml={3}
               >
-                Delete
+                Remove
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

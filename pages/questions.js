@@ -99,7 +99,6 @@ export async function getServerSideProps({ req, res }) {
       userCaseId: true,
       publisherName: true,
       createdAt: true,
-      userImage: true,
     },
   });
 

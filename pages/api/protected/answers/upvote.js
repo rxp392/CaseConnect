@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       courseId,
     } = req.body;
 
-    await prisma.thumbUp.create({
+    const thumbUp = await prisma.thumbUp.create({
       data: {
         answerId: id,
         userCaseId: caseId,
@@ -75,8 +75,7 @@ export default async function handler(req, res) {
         },
       });
     }
-
-    return res.status(200).json();
+    return res.status(200).json({ thumbUpId: thumbUp.id });
   } catch (error) {
     return res.status(500).json({ error });
   }

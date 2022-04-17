@@ -27,6 +27,7 @@ import { useRouter } from "next/router";
 import { POST_LIMIT } from "constants/index";
 import { useState, useRef } from "react";
 import NextLink from "next/link";
+import Filter from "bad-words";
 
 export default function AskQuestion({ courses, isAtLimit }) {
   const toast = useToast();
@@ -34,6 +35,7 @@ export default function AskQuestion({ courses, isAtLimit }) {
   const { data: session } = useSession();
   const [atLimit, setAtLimit] = useState(isAtLimit);
   const cancelRef = useRef();
+  const filter = new Filter();
 
   const {
     handleSubmit,
@@ -43,18 +45,26 @@ export default function AskQuestion({ courses, isAtLimit }) {
 
   const onSubmit = async ({ question, courseName, attachment }) => {
     try {
+      if (filter.isProfane(question)) {
+        return toast({
+          title: "Profanity detected",
+          description: "Please remove profanity from your question",
+          status: "error",
+          position: "bottom-left",
+          variant: "left-accent",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
       const [_courseName, courseId] = courseName.split("|");
-
       const capitalizedQuestion =
         question.charAt(0).toUpperCase() + question.slice(1);
-
       const formData = new FormData();
       formData.append("question", capitalizedQuestion.trim());
       formData.append("courseName", _courseName);
       formData.append("courseId", courseId);
       formData.append("caseId", session.user.caseId);
       formData.append("publisherName", session.user.name);
-      formData.append("userImage", session.user.profileImage);
       formData.append("attachment", attachment[0]);
       await fetch("/api/protected/questions/post", {
         method: "POST",
@@ -75,7 +85,7 @@ export default function AskQuestion({ courses, isAtLimit }) {
         title: "An error occurred",
         description: "Please try again",
         status: "error",
-        position: "bottom-right",
+        position: "bottom-left",
         variant: "left-accent",
         duration: 5000,
         isClosable: true,
@@ -123,7 +133,7 @@ export default function AskQuestion({ courses, isAtLimit }) {
               <FormControl isInvalid={errors.courseName} isRequired>
                 <FormLabel htmlFor="courseName">Course</FormLabel>
                 <Select
-                  placeholder={"Select a course"}
+                  placeholder={"Select your course"}
                   id="courseName"
                   {...register("courseName", {
                     required: "Pick a course",

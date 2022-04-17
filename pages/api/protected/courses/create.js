@@ -6,6 +6,14 @@ export default async function handler(req, res) {
   }
   try {
     const { courseName } = req.body;
+    const courses = await prisma.course.findMany({
+      where: {
+        courseName,
+      },
+    });
+    if (courses.length) {
+      return res.status(200).json({ error: "Course already exists" });
+    }
     const { id } = await prisma.course.create({
       data: {
         courseName,

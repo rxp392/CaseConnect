@@ -43,6 +43,8 @@ import { useState, useRef, useEffect } from "react";
 import { GrClear } from "react-icons/gr";
 import { BROWSE_LIMIT, POST_LIMIT } from "constants";
 
+import Loader from "./Loader";
+
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 const LinkItems = [
@@ -228,7 +230,7 @@ const SidebarContent = ({
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="4" justifyContent="space-between">
-        <Text fontSize="xl" fontWeight="bold" color="black">
+        <Text fontSize="1.375rem" fontWeight="bold" color="black">
           Case Connect
         </Text>
         <CloseButton
@@ -274,7 +276,7 @@ const SidebarContent = ({
           <Badge
             cursor="default"
             pos="absolute"
-            bottom="8%"
+            bottom="7.75%"
             mx="4"
             px={2}
             py={1}

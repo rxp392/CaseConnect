@@ -18,7 +18,7 @@ export default function Index() {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { error } = router.query;
+  const { error, deleted } = router.query;
 
   useEffect(() => {
     if (error === "AccessDenied") {
@@ -32,8 +32,19 @@ export default function Index() {
         position: "bottom-left",
         variant: "left-accent",
       });
+    } else if (deleted === "true") {
+      window.history.replaceState(null, "", `${process.env.NEXT_PUBLIC_URL}/`);
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been deleted",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+        variant: "left-accent",
+      });
     }
-  }, [error]);
+  }, [error, deleted]);
 
   return (
     <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
@@ -75,6 +86,7 @@ export default function Index() {
                 _hover={{
                   backgroundColor: "rgba(10, 48, 78, 0.85)",
                 }}
+                mt={-1}
               >
                 <Center>
                   <Text>Continue with Google</Text>

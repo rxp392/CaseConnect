@@ -16,6 +16,7 @@
     "@splitbee/web": "^0.3.0",
     "@stripe/stripe-js": "^1.26.0",
     "axios": "^0.26.0",
+    "bad-words": "^3.0.4",
     "cloudinary": "^1.29.0",
     "emailjs-com": "^3.2.0",
     "formidable": "^2.0.1",

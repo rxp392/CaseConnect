@@ -11,9 +11,19 @@ import {
 import { useSession } from "next-auth/react";
 
 export default function ProfileCard({ user }) {
-  const { data: session } = useSession();
+  const {
+    profileImage,
+    name,
+    caseId,
+    totalQuestions,
+    answers,
+    courses,
+    subscription,
+    accountCreated,
+  } = user;
 
-  const isUser = session.user.caseId === user.caseId;
+  const { data: session } = useSession();
+  const isUser = session.user.caseId === caseId;
 
   return (
     <SlideFade in={true} offsetY="20px">
@@ -28,37 +38,36 @@ export default function ProfileCard({ user }) {
         >
           <Avatar
             size={"xl"}
-            src={user.profileImage}
-            name={user.name}
+            src={profileImage}
+            name={name}
             bg={"cwru"}
             color={"white"}
             mb={4}
             pos={"relative"}
           />
           <Heading fontSize={"2xl"} fontFamily={"body"}>
-            {user.name}
+            {isUser ? `${name} (you)` : name}
           </Heading>
           <Text fontWeight={600} color={"gray.500"} mb={4}>
-            @{user.caseId}
+            @{caseId}
           </Text>
           <Text textAlign={"center"} color={"gray.700"}>
-            {isUser ? "You" : `${user.name}`} {isUser ? "have" : "has"} <br />{" "}
-            asked{" "}
+            {isUser ? "You" : `${name}`} {isUser ? "have" : "has"} <br /> asked{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
-              {user.totalQuestions}
+              {totalQuestions}
             </span>{" "}
-            question{user.totalQuestions === 1 ? "" : "s"},<br /> answered{" "}
+            question{totalQuestions === 1 ? "" : "s"},<br /> answered{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
-              {user.answers.length}
+              {answers.length}
             </span>{" "}
             question
-            {user.answers.length === 1 ? "" : "s"}, <br /> and belong
+            {answers.length === 1 ? "" : "s"}, <br /> and belong
             {isUser ? "" : "s"} to{" "}
             <span style={{ fontWeight: "bold", color: "#0a304e" }}>
-              {user.courses.length}
+              {courses.length}
             </span>{" "}
             course
-            {user.courses.length === 1 ? "" : "s"}.
+            {courses.length === 1 ? "" : "s"}.
           </Text>
 
           <Stack
@@ -77,7 +86,7 @@ export default function ProfileCard({ user }) {
               bg="cwru"
               color="white"
             >
-              {user.subscription} Plan
+              {subscription} Plan
             </Badge>
             <Badge
               px={2}
@@ -87,8 +96,7 @@ export default function ProfileCard({ user }) {
               bg="cwru"
               color="white"
             >
-              Created{" "}
-              {new Date(user.accountCreated).toLocaleDateString("en-us")}
+              Created {new Date(accountCreated).toLocaleDateString("en-us")}
             </Badge>
           </Stack>
         </Box>

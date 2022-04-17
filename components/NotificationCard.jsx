@@ -38,8 +38,6 @@ export default function NotificationCard({
   const getBadgeColor = (_type) => {
     switch (_type) {
       case "answer":
-        return "green";
-      case "update":
         return "blue";
       case "upvote":
         return "green";

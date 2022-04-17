@@ -107,7 +107,6 @@ export const getServerSideProps = async ({ req, res }) => {
       userCaseId: true,
       publisherName: true,
       createdAt: true,
-      userImage: true,
     },
   });
 

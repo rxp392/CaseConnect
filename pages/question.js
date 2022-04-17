@@ -6,20 +6,11 @@ import {
   Heading,
   Text,
   Flex,
-  IconButton,
-  Tooltip,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   Button,
   Box,
   FormControl,
   FormErrorMessage,
   Textarea,
-  ButtonGroup,
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
@@ -28,21 +19,31 @@ import {
   AlertDialogOverlay,
   useToast,
   SlideFade,
-  Radio,
   Stack,
-  RadioGroup,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  FormLabel,
+  FormHelperText,
+  Input,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import AnswerCard from "components/AnswerCard";
-import { ImAttachment } from "react-icons/im";
 import { BsFillTrashFill } from "react-icons/bs";
-import { FiEdit } from "react-icons/fi";
 import { useRouter } from "next/router";
-import { IoCheckmarkSharp, IoFilterSharp } from "react-icons/io5";
+import { IoCheckmarkSharp } from "react-icons/io5";
 import { send } from "emailjs-com";
 import { BROWSE_LIMIT } from "constants/index";
+import Filter from "bad-words";
+import { ImAttachment } from "react-icons/im";
+import { FiEdit } from "react-icons/fi";
+import { MdHideImage } from "react-icons/md";
 
 export default function Question({ _question, caseId, isAtLimit }) {
   const {
@@ -57,14 +58,15 @@ export default function Question({ _question, caseId, isAtLimit }) {
     courseId,
   } = _question;
 
-  const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [filterBy, setFilterBy] = useState("recent");
   const [questionText, setQuestionText] = useState(question);
   const [questionAnswers, setQuestionAnswers] = useState(answers);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [editAlertOpen, setEditAlertOpen] = useState(false);
-  const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+  const [currentAttachment, setCurrentAttachment] = useState(attachment);
   const [answerModalOpen, setAnswerModalOpen] = useState(false);
+  const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+  const [attachmentModalType, setAttachmentModalType] = useState("");
+  const [attachmentModalImage, setAttachmentModalImage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const cancelRef = useRef();
   const toast = useToast();
@@ -79,9 +81,15 @@ export default function Question({ _question, caseId, isAtLimit }) {
     <>
       <Flex
         h="full"
+        minH="full"
         w="full"
-        justify="center"
-        pos="relative"
+        maxW="full"
+        overflowX="hidden"
+        overflowY="scroll"
+        justify="space-between"
+        align="center"
+        direction="column"
+        textAlign="center"
         style={
           isAtLimit
             ? {
@@ -90,137 +98,97 @@ export default function Question({ _question, caseId, isAtLimit }) {
             : {}
         }
       >
-        <Flex
-          h="min-content"
-          w="full"
-          justify="center"
-          align="center"
-          direction="column"
-        >
-          <SlideFade in={true} offsetY="20px">
-            <Flex
-              rounded={"lg"}
-              bg="cwru"
-              color="gray.200"
-              boxShadow={"lg"}
-              p={[4, 6]}
-              justifyContent="space-between"
-              alignItems="center"
-              direction={["column", "row"]}
-              w="100%"
-            >
-              <Flex
-                alignItems="center"
-                justifyContent="center"
-                direction="column"
-                gap={2}
-                textAlign="center"
+        <SlideFade in={true} offsetY="20px">
+          <Flex
+            justify="center"
+            align="center"
+            direction="column"
+            gap={2}
+            bg="cwru"
+            boxShadow={"xl"}
+            rounded="lg"
+            color="white"
+            px={8}
+            py={4}
+            w="full"
+            mb={5}
+          >
+            <Heading fontSize="1.5rem" fontWeight="normal">
+              {questionText}
+            </Heading>
+            {currentAttachment && (
+              <Button
+                onClick={() => {
+                  setAttachmentModalType("Question");
+                  setAttachmentModalImage(currentAttachment);
+                  setAttachmentModalOpen(true);
+                }}
+                leftIcon={<ImAttachment />}
+                colorScheme="black"
+                size="sm"
+                variant="link"
+                my={1}
               >
-                <Heading>{questionText}</Heading>
-                <Text fontSize={["md", "lg"]}>{courseName}</Text>
-                <Text fontSize={["sm", "md"]}>
-                  Posted {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
-                  <NextLink
-                    href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
-                    passHref
-                  >
-                    <Link>
-                      {publisherName} {isUser && "(you)"}
-                    </Link>
-                  </NextLink>
-                </Text>
-                {(attachment || isUser) && (
-                  <ButtonGroup isAttached alignSelf={"center"} mt={1.5}>
-                    {attachment && (
-                      <>
-                        <Tooltip label="Attachment">
-                          <IconButton
-                            p={2.5}
-                            size={["sm", "md"]}
-                            fontSize={["md", "lg"]}
-                            bg="cwru"
-                            color="white"
-                            colorScheme="black"
-                            _hover={{
-                              backgroundColor: "rgba(10, 48, 78, 0.85)",
-                            }}
-                            icon={<ImAttachment />}
-                            onClick={() => setAttachmentModalOpen(true)}
-                            isDisabled={isLoading}
-                          />
-                        </Tooltip>
-                        &nbsp;
-                      </>
-                    )}
-                    {isUser && (
-                      <>
-                        <Tooltip label="Edit">
-                          <IconButton
-                            p={2.5}
-                            size={["sm", "md"]}
-                            fontSize={["sm", "md"]}
-                            bg="cwru"
-                            color="white"
-                            colorScheme="black"
-                            _hover={{
-                              backgroundColor: "rgba(10, 48, 78, 0.85)",
-                            }}
-                            icon={<FiEdit />}
-                            onClick={() => setEditAlertOpen(true)}
-                            isDisabled={isLoading}
-                          />
-                        </Tooltip>
-                        &nbsp;
-                        <Tooltip label="Delete">
-                          <IconButton
-                            p={2.5}
-                            size={["sm", "md"]}
-                            fontSize={["md", "lg"]}
-                            bg="cwru"
-                            color="white"
-                            colorScheme="black"
-                            _hover={{
-                              backgroundColor: "rgba(10, 48, 78, 0.85)",
-                            }}
-                            icon={<BsFillTrashFill />}
-                            onClick={() => setDeleteAlertOpen(true)}
-                            isDisabled={isLoading}
-                          />
-                        </Tooltip>
-                      </>
-                    )}
-                  </ButtonGroup>
-                )}
+                View Attachment
+              </Button>
+            )}
+            <Text fontSize={"sm"} fontWeight="hairline">
+              {courseName}
+            </Text>
+            <Text fontSize={"sm"} fontWeight="hairline">
+              {new Date(createdAt).toLocaleDateString("en-us")} by{" "}
+              <NextLink
+                href={isUser ? "/my-profile" : `/profile/${userCaseId}`}
+                passHref
+              >
+                <Link>
+                  {publisherName} {isUser && "(you)"}
+                </Link>
+              </NextLink>
+            </Text>
+            {isUser && (
+              <ButtonGroup isAttached mt={0.5} colorScheme="black">
+                <Button
+                  leftIcon={<FiEdit />}
+                  size="xs"
+                  onClick={() => setEditAlertOpen(true)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  leftIcon={<BsFillTrashFill />}
+                  size="xs"
+                  onClick={() => setDeleteAlertOpen(true)}
+                >
+                  Delete
+                </Button>
+              </ButtonGroup>
+            )}
+          </Flex>
+        </SlideFade>
+        {questionAnswers.length > 0 ? (
+          <Box rounded={"lg"} w="100%" p={6}>
+            <SlideFade in={true} offsetY="20px">
+              <Flex justify="center" align="center" mb={4}>
+                <Heading textAlign={"center"} fontSize={["24", "32"]}>
+                  Posted Answers
+                </Heading>
               </Flex>
-            </Flex>
-          </SlideFade>
-
-          {questionAnswers.length > 0 ? (
-            <Box rounded={"lg"} w="100%" p={6}>
-              <SlideFade in={true} offsetY="20px">
-                <Flex justify="center" align="center" gap={4} mt={8} mb={0.5}>
-                  <Heading textAlign={"center"} fontSize="32">
-                    Posted Answers
-                  </Heading>
-
-                  {questionAnswers.length > 2 && (
-                    <Tooltip label="Filter">
-                      <IconButton
-                        icon={<IoFilterSharp />}
-                        size="md"
-                        color="gray.100"
-                        bg="cwru"
-                        _active={{}}
-                        _hover={{
-                          backgroundColor: "rgba(10, 48, 78, 0.85)",
-                        }}
-                        onClick={() => setFilterModalOpen(true)}
-                      />
-                    </Tooltip>
-                  )}
-                </Flex>
-              </SlideFade>
-              {questionAnswers.map((answer) => (
+            </SlideFade>
+            {questionAnswers
+              .sort((a, b) => {
+                const aThumbsUp = a.thumbsUp.length;
+                const aThumbsDown = a.thumbsDown.length;
+                const bThumbsUp = b.thumbsUp.length;
+                const bThumbsDown = b.thumbsDown.length;
+                return (
+                  bThumbsUp - bThumbsDown - (aThumbsUp - aThumbsDown) ||
+                  bThumbsUp - aThumbsUp ||
+                  aThumbsDown - bThumbsDown ||
+                  new Date(b.createdAt) - new Date(a.createdAt)
+                );
+              })
+              .map((answer) => (
                 <AnswerCard
                   key={answer.id}
                   _answer={answer}
@@ -232,47 +200,19 @@ export default function Question({ _question, caseId, isAtLimit }) {
                   question={question}
                   questionId={id}
                   courseId={courseId}
+                  setAttachmentModalType={setAttachmentModalType}
+                  setAttachmentModalOpen={setAttachmentModalOpen}
+                  setAttachmentModalImage={setAttachmentModalImage}
                 />
               ))}
-              {!hasAnswered && !isUser && (
-                <SlideFade in={true} offsetY="20px">
-                  <Flex justify="center" align="center" mt={8}>
-                    <Button
-                      leftIcon={<IoCheckmarkSharp />}
-                      variant="solid"
-                      onClick={() => setAnswerModalOpen(true)}
-                      size={"md"}
-                      bg="cwru"
-                      color="white"
-                      colorScheme="black"
-                      _hover={{
-                        backgroundColor: "rgba(10, 48, 78, 0.85)",
-                      }}
-                    >
-                      Answer Question
-                    </Button>
-                  </Flex>
-                </SlideFade>
-              )}
-            </Box>
-          ) : (
-            <SlideFade in={true} offsetY="20px">
-              <Flex
-                justify="center"
-                align="center"
-                mt={!hasAnswered && !isUser ? 32 : 24}
-                direction="column"
-                gap={6}
-              >
-                <Heading fontSize={["xl", "2xl", "3xl"]}>
-                  No Answers Have Been Posted 😥
-                </Heading>
-                {!hasAnswered && !isUser && (
+            {!hasAnswered && !isUser && (
+              <SlideFade in={true} offsetY="20px">
+                <Flex justify="center" align="center" mt={8}>
                   <Button
                     leftIcon={<IoCheckmarkSharp />}
                     variant="solid"
                     onClick={() => setAnswerModalOpen(true)}
-                    size={"md"}
+                    py={6}
                     bg="cwru"
                     color="white"
                     colorScheme="black"
@@ -282,18 +222,37 @@ export default function Question({ _question, caseId, isAtLimit }) {
                   >
                     Answer Question
                   </Button>
-                )}
-              </Flex>
-            </SlideFade>
-          )}
-        </Flex>
+                </Flex>
+              </SlideFade>
+            )}
+          </Box>
+        ) : (
+          <SlideFade in={true} offsetY="20px">
+            <Flex justify="center" align="center" direction="column" gap={6}>
+              <Heading fontSize={["xl", "2xl", "3xl"]}>
+                No Answers Have Been Posted 😥
+              </Heading>
+              {!hasAnswered && !isUser && (
+                <Button
+                  leftIcon={<IoCheckmarkSharp />}
+                  variant="solid"
+                  onClick={() => setAnswerModalOpen(true)}
+                  py={6}
+                  bg="cwru"
+                  color="white"
+                  colorScheme="black"
+                  _hover={{
+                    backgroundColor: "rgba(10, 48, 78, 0.85)",
+                  }}
+                >
+                  Answer Question
+                </Button>
+              )}
+            </Flex>
+          </SlideFade>
+        )}
+        <Box></Box>
       </Flex>
-
-      <AttachmentModal
-        isOpen={attachmentModalOpen}
-        onClose={() => setAttachmentModalOpen(false)}
-        attachment={attachment}
-      />
       <AnswerModal
         answers={questionAnswers}
         setAnswers={setQuestionAnswers}
@@ -310,6 +269,7 @@ export default function Question({ _question, caseId, isAtLimit }) {
         question={question}
         publisherName={publisherName}
         courseId={courseId}
+        Filter={Filter}
       />
       <EditAlert
         id={id}
@@ -321,6 +281,8 @@ export default function Question({ _question, caseId, isAtLimit }) {
         setIsLoading={setIsLoading}
         question={questionText}
         setQuestion={setQuestionText}
+        attachment={currentAttachment}
+        setAttachment={setCurrentAttachment}
       />
       <DeleteAlert
         cancelRef={cancelRef}
@@ -330,148 +292,21 @@ export default function Question({ _question, caseId, isAtLimit }) {
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         id={id}
-        attachment={attachment}
         router={router}
-      />
-      <FilterModal
-        filterModalOpen={filterModalOpen}
-        setFilterModalOpen={setFilterModalOpen}
-        answers={questionAnswers}
-        setAnswers={setQuestionAnswers}
-        cancelRef={cancelRef}
-        filterBy={filterBy}
-        setFilterBy={setFilterBy}
       />
       <LimitModal
         cancelRef={cancelRef}
         limitModalOpen={isAtLimit}
         router={router}
       />
+      <AttachmentModal
+        isOpen={attachmentModalOpen}
+        onClose={() => setAttachmentModalOpen(false)}
+        attachment={currentAttachment}
+        attachmentModalType={attachmentModalType}
+        attachmentModalImage={attachmentModalImage}
+      />
     </>
-  );
-}
-
-function LimitModal({ limitModalOpen, cancelRef, router }) {
-  return (
-    <AlertDialog
-      isOpen={limitModalOpen}
-      leastDestructiveRef={cancelRef}
-      closeOnOverlayClick={false}
-      isCentered
-      trapFocus={false}
-    >
-      <AlertDialogOverlay>
-        <SlideFade in={true} offsetY="20px">
-          <AlertDialogContent w="250px">
-            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
-              View Limit Reached
-            </AlertDialogHeader>
-            <AlertDialogBody>
-              To ask and view unlimited questions, upgrade to{" "}
-              <strong>premium</strong> on the{" "}
-              <NextLink href={"/subscription"} passHref>
-                <Link color="blue.500">Subscription</Link>
-              </NextLink>{" "}
-              page
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button
-                colorScheme="blue"
-                onClick={() => router.push("/questions")}
-              >
-                Ok
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </SlideFade>
-      </AlertDialogOverlay>
-    </AlertDialog>
-  );
-}
-
-function FilterModal({
-  filterModalOpen,
-  setFilterModalOpen,
-  answers,
-  setAnswers,
-  cancelRef,
-  filterBy,
-  setFilterBy,
-}) {
-  return (
-    <AlertDialog
-      isOpen={filterModalOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={() => setFilterModalOpen(false)}
-      isCentered
-      trapFocus={false}
-    >
-      <AlertDialogOverlay>
-        <SlideFade in={true} offsetY="20px">
-          <AlertDialogContent w="250px">
-            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
-              Filter Answers By
-            </AlertDialogHeader>
-            <AlertDialogBody mt={-1}>
-              <RadioGroup
-                defaultValue={filterBy}
-                transform="translateX(0.75rem)"
-              >
-                <Stack>
-                  <Radio
-                    size="md"
-                    name="recent"
-                    value="recent"
-                    onChange={() => {
-                      setFilterBy("recent");
-                      setAnswers(
-                        answers.sort(
-                          (a, b) =>
-                            new Date(b.createdAt) - new Date(a.createdAt)
-                        )
-                      );
-                      setFilterModalOpen(false);
-                    }}
-                  >
-                    Most Recent
-                  </Radio>
-                  <Radio
-                    size="md"
-                    name="upvoted"
-                    value="upvoted"
-                    onChange={() => {
-                      setFilterBy("upvoted");
-                      setAnswers(
-                        answers.sort(
-                          (a, b) => b.thumbsUp.length - a.thumbsUp.length
-                        )
-                      );
-                      setFilterModalOpen(false);
-                    }}
-                  >
-                    Most Upvoted
-                  </Radio>
-                </Stack>
-              </RadioGroup>
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button
-                isFullWidth
-                bg="cwru"
-                color="white"
-                _active={{}}
-                _hover={{
-                  backgroundColor: "rgba(10, 48, 78, 0.85)",
-                }}
-                onClick={() => setFilterModalOpen(false)}
-              >
-                Close
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </SlideFade>
-      </AlertDialogOverlay>
-    </AlertDialog>
   );
 }
 
@@ -491,10 +326,13 @@ function AnswerModal({
   question,
   publisherName,
   courseId,
+  Filter,
 }) {
   const [answer, setAnswer] = useState("");
+  const [attachment, setAttachment] = useState(null);
   const [isDisabled, setIsDisabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const filter = new Filter();
 
   useEffect(() => {
     setAnswer("");
@@ -517,38 +355,54 @@ function AnswerModal({
               Answer Question
             </AlertDialogHeader>
             <AlertDialogBody>
-              <FormControl isInvalid={errorMessage}>
-                <Textarea
-                  id="question"
-                  placeholder={"Your answer..."}
-                  value={answer}
-                  h="min-content"
-                  type="text"
-                  resize="none"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setAnswer(value);
-                    if (value.length == 0) {
-                      setErrorMessage("Question cannot be empty");
-                      setIsDisabled(true);
-                    } else if (value.length < 10) {
-                      setErrorMessage(
-                        "Question must be at least 10 characters"
-                      );
-                      setIsDisabled(true);
-                    } else if (value.length > 250) {
-                      setErrorMessage(
-                        "Question must be less than 250 characters"
-                      );
-                      setIsDisabled(true);
-                    } else {
-                      setErrorMessage("");
-                      setIsDisabled(false);
-                    }
-                  }}
-                />
-                <FormErrorMessage>{errorMessage}</FormErrorMessage>
-              </FormControl>
+              <Stack spacing={4}>
+                <FormControl isInvalid={errorMessage} isRequired>
+                  <FormLabel>Answer</FormLabel>
+                  <Textarea
+                    id="question"
+                    placeholder={"Your answer..."}
+                    value={answer}
+                    h="min-content"
+                    type="text"
+                    resize="none"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAnswer(value);
+                      if (value.length == 0) {
+                        setErrorMessage("Question cannot be empty");
+                        setIsDisabled(true);
+                      } else if (value.length < 10) {
+                        setErrorMessage(
+                          "Question must be at least 10 characters"
+                        );
+                        setIsDisabled(true);
+                      } else if (value.length > 250) {
+                        setErrorMessage(
+                          "Question must be less than 250 characters"
+                        );
+                        setIsDisabled(true);
+                      } else {
+                        setErrorMessage("");
+                        setIsDisabled(false);
+                      }
+                    }}
+                  />
+                  <FormErrorMessage>{errorMessage}</FormErrorMessage>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Attachment</FormLabel>
+                  <Input
+                    type="file"
+                    id="attachment"
+                    accept="image/jpg, image/jpeg"
+                    size="sm"
+                    onChange={(e) => setAttachment(e.target.files)}
+                  />
+                  <FormHelperText>
+                    Only .jpg and .jpeg files are allowed
+                  </FormHelperText>
+                </FormControl>
+              </Stack>
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={() => setAnswerModalOpen(false)}>
@@ -561,19 +415,36 @@ function AnswerModal({
                 spinnerPlacement="end"
                 isLoading={isLoading}
                 onClick={async () => {
+                  if (filter.isProfane(answer)) {
+                    return toast({
+                      title: "Profanity detected",
+                      description: "Please remove profanity from your answer",
+                      status: "error",
+                      position: "bottom-left",
+                      variant: "left-accent",
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                  }
                   setIsLoading(true);
                   try {
-                    const {
-                      data: { answerId, createdAt },
-                    } = await axios.post("/api/protected/answers/post", {
-                      answer: answer.trim(),
-                      caseId,
-                      userCaseId,
-                      questionId: Number(id),
-                      publisherName: name,
-                      question,
-                      courseId,
+                    const formData = new FormData();
+                    formData.append("answer", answer.trim());
+                    formData.append("caseId", caseId);
+                    formData.append("userCaseId", userCaseId);
+                    formData.append("questionId", Number(id));
+                    formData.append("publisherName", publisherName);
+                    formData.append("question", question);
+                    formData.append("courseId", courseId);
+                    formData.append(
+                      "attachment",
+                      attachment?.length === 1 ? attachment[0] : null
+                    );
+                    const res = await fetch("/api/protected/answers/post", {
+                      method: "POST",
+                      body: formData,
                     });
+                    const { answerId, createdAt } = await res.json();
                     setAnswers(
                       [
                         ...answers,
@@ -588,7 +459,16 @@ function AnswerModal({
                           createdAt,
                         },
                       ].sort((a, b) => {
-                        return new Date(b.createdAt) - new Date(a.createdAt);
+                        const aThumbsUp = a.thumbsUp.length;
+                        const aThumbsDown = a.thumbsDown.length;
+                        const bThumbsUp = b.thumbsUp.length;
+                        const bThumbsDown = b.thumbsDown.length;
+                        return (
+                          bThumbsUp - bThumbsDown - (aThumbsUp - aThumbsDown) ||
+                          bThumbsUp - aThumbsUp ||
+                          aThumbsDown - bThumbsDown ||
+                          new Date(b.createdAt) - new Date(a.createdAt)
+                        );
                       })
                     );
                     toast({
@@ -602,7 +482,6 @@ function AnswerModal({
                     });
                     setIsLoading(false);
                     setAnswerModalOpen(false);
-
                     if (process.env.NODE_ENV === "production") {
                       try {
                         await send(
@@ -646,20 +525,62 @@ function AnswerModal({
   );
 }
 
-function AttachmentModal({ isOpen, onClose, attachment }) {
+function LimitModal({ limitModalOpen, cancelRef, router }) {
+  return (
+    <AlertDialog
+      isOpen={limitModalOpen}
+      leastDestructiveRef={cancelRef}
+      closeOnOverlayClick={false}
+      isCentered
+      trapFocus={false}
+    >
+      <AlertDialogOverlay>
+        <SlideFade in={true} offsetY="20px">
+          <AlertDialogContent w="250px">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" textAlign="left">
+              View Limit Reached
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              To ask and view unlimited questions, upgrade to{" "}
+              <strong>premium</strong> on the{" "}
+              <NextLink href={"/subscription"} passHref>
+                <Link color="blue.500">Subscription</Link>
+              </NextLink>{" "}
+              page
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                colorScheme="blue"
+                onClick={() => router.push("/questions")}
+              >
+                Ok
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </SlideFade>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+}
+
+function AttachmentModal({
+  isOpen,
+  onClose,
+  attachmentModalType,
+  attachmentModalImage,
+}) {
   return (
     <SlideFade in={true} offsetY="20px">
       <Modal isOpen={isOpen} onClose={onClose} isCentered trapFocus={false}>
         <ModalOverlay />
         <ModalContent w="fit-content" h="fit-content">
           <ModalCloseButton />
-          <ModalHeader>Attachment</ModalHeader>
+          <ModalHeader>{attachmentModalType} Attachment</ModalHeader>
           <ModalBody>
             <Image
-              src={attachment}
+              src={attachmentModalImage}
               alt="attachment"
-              maxW="full"
-              maxH="full"
+              boxSize={["300", "350px"]}
               objectFit="cover"
             />
           </ModalBody>
@@ -679,14 +600,30 @@ function EditAlert({
   setIsLoading,
   question,
   setQuestion,
+  attachment,
+  setAttachment,
 }) {
-  const [questionText, setQuestionText] = useState(question);
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [editedQuestion, setEditedQuestion] = useState(question);
+  const [newAttachment, setNewAttachment] = useState(attachment);
+  const [attachmentPreview, setAttachmentPreview] = useState(attachment);
   const [errorMessage, setErrorMessage] = useState("");
+  const [questionValid, setQuestionValid] = useState(false);
+  const [attachmentValid, setAttachmentValid] = useState(false);
+  const [isAttachmentDeleting, setIsAttachmentDeleting] = useState(false);
+  const fileRef = useRef();
 
   useEffect(() => {
-    setIsDisabled(true);
+    setEditedQuestion(question);
+    setAttachmentPreview(attachment);
+    setNewAttachment(attachment);
+    setQuestionValid(false);
+    setAttachmentValid(false);
+    setErrorMessage("");
   }, [editAlertOpen]);
+
+  useEffect(() => {
+    setQuestionValid(question !== editedQuestion);
+  }, [question, editedQuestion]);
 
   return (
     <AlertDialog
@@ -703,45 +640,151 @@ function EditAlert({
               Edit Question
             </AlertDialogHeader>
             <AlertDialogBody>
-              <FormControl isInvalid={errorMessage}>
-                <Textarea
-                  id="question"
-                  placeholder={questionText}
-                  value={questionText}
-                  h="min-content"
-                  type="text"
-                  resize="none"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setQuestionText(value);
-                    if (value.length == 0) {
-                      setErrorMessage("Question cannot be empty");
-                      setIsDisabled(true);
-                    } else if (value.length < 10) {
-                      setErrorMessage(
-                        "Question must be at least 10 characters"
-                      );
-                      setIsDisabled(true);
-                    } else if (value.length > 250) {
-                      setErrorMessage(
-                        "Question must be less than 250 characters"
-                      );
-                      setIsDisabled(true);
-                    } else {
-                      setErrorMessage("");
-                      setIsDisabled(false);
-                    }
-                  }}
-                />
-                <FormErrorMessage>{errorMessage}</FormErrorMessage>
-              </FormControl>
+              <Stack spacing={4}>
+                <FormControl isInvalid={errorMessage}>
+                  <Textarea
+                    id="answer"
+                    placeholder={editedQuestion}
+                    value={editedQuestion}
+                    h="min-content"
+                    type="text"
+                    resize="none"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEditedQuestion(value);
+                      if (question === editedQuestion) {
+                        setQuestionValid(false);
+                      } else if (value.length == 0) {
+                        setErrorMessage("Question cannot be empty");
+                        setQuestionValid(false);
+                      } else if (value.length < 10) {
+                        setErrorMessage(
+                          "Question must be at least 10 characters"
+                        );
+                        setQuestionValid(false);
+                      } else if (value.length > 250) {
+                        setErrorMessage(
+                          "Question must be less than 250 characters"
+                        );
+                        setQuestionValid(false);
+                      } else {
+                        setErrorMessage("");
+                        setQuestionValid(true);
+                      }
+                    }}
+                  />
+                  <FormErrorMessage>{errorMessage}</FormErrorMessage>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Attachment</FormLabel>
+                  <Input
+                    ref={fileRef}
+                    type="file"
+                    id="attachment"
+                    accept="image/jpg, image/jpeg"
+                    size="sm"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (
+                        file &&
+                        attachment
+                          ?.split("/")
+                          .slice(-1)[0]
+                          .split(".")
+                          .slice(0, -1)
+                          .join(".") !== file.name
+                      ) {
+                        setAttachmentValid(true);
+                        setNewAttachment(file);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setAttachmentPreview(ev.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                      } else {
+                        e.target.value = null;
+                        setAttachmentValid(false);
+                      }
+                    }}
+                  />
+                  <FormHelperText>
+                    Only .jpg and .jpeg files are allowed
+                  </FormHelperText>
+                </FormControl>
+                {attachmentPreview && (
+                  <Stack align="start">
+                    <Image
+                      src={attachmentPreview}
+                      alt="attachment"
+                      boxSize={"225px"}
+                      objectFit="cover"
+                    />
+                    <Button
+                      mt={5}
+                      size="sm"
+                      variant="ghost"
+                      leftIcon={<MdHideImage />}
+                      colorScheme="red"
+                      isLoading={isAttachmentDeleting}
+                      loadingText="Deleting..."
+                      spinnerPlacement="end"
+                      onClick={async () => {
+                        if (!attachment) {
+                          setAttachmentPreview(null);
+                          setNewAttachment(null);
+                          setAttachmentValid(false);
+                        } else {
+                          setIsAttachmentDeleting(true);
+                          try {
+                            await axios.delete(
+                              "/api/protected/questions/delete-attachment",
+                              {
+                                data: { id },
+                              }
+                            );
+                            setAttachmentPreview(null);
+                            setNewAttachment(null);
+                            setAttachment(null);
+                            toast({
+                              title: "Attachment Deleted",
+                              description:
+                                "Your question attachment has been deleted",
+                              status: "success",
+                              variant: "left-accent",
+                              position: "bottom-left",
+                              duration: 5000,
+                              isClosable: true,
+                            });
+                          } catch {
+                            toast({
+                              title: "An Error Ocurred",
+                              description: "Please try again later",
+                              status: "error",
+                              variant: "left-accent",
+                              position: "bottom-left",
+                              duration: 5000,
+                              isClosable: true,
+                            });
+                          } finally {
+                            setIsAttachmentDeleting(false);
+                            setAttachmentValid(false);
+                          }
+                        }
+                        fileRef.current.value = "";
+                      }}
+                    >
+                      Delete Attachment
+                    </Button>
+                  </Stack>
+                )}
+              </Stack>
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={() => setEditAlertOpen(false)}>
                 Cancel
               </Button>
               <Button
-                isDisabled={isDisabled || question === questionText}
+                isDisabled={!questionValid && !attachmentValid}
                 colorScheme="blue"
                 loadingText="Updating..."
                 spinnerPlacement="end"
@@ -749,11 +792,17 @@ function EditAlert({
                 onClick={async () => {
                   setIsLoading(true);
                   try {
-                    await axios.post("/api/protected/questions/update", {
-                      id,
-                      question: questionText.trim(),
+                    const formData = new FormData();
+                    formData.append("id", id);
+                    formData.append("question", editedQuestion.trim());
+                    formData.append("attachment", newAttachment);
+                    const res = await fetch("/api/protected/questions/update", {
+                      method: "POST",
+                      body: formData,
                     });
-                    setQuestion(questionText);
+                    const { secure_url } = await res.json();
+                    setQuestion(editedQuestion);
+                    setAttachment(secure_url);
                     toast({
                       title: "Question Updated",
                       description: "Your question has been updated",
@@ -798,7 +847,6 @@ function DeleteAlert({
   isLoading,
   setIsLoading,
   id,
-  attachment,
   router,
 }) {
   return (
@@ -833,7 +881,6 @@ function DeleteAlert({
                     await axios.delete("/api/protected/questions/delete", {
                       data: {
                         id,
-                        attachment,
                       },
                     });
                     router.push("/questions");
@@ -931,6 +978,7 @@ export async function getServerSideProps({ req, res, query }) {
             thumbsUp: true,
             thumbsDown: true,
             createdAt: true,
+            attachment: true,
           },
         },
       },

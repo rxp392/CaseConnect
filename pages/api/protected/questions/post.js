@@ -33,7 +33,6 @@ export default async function handler(req, res) {
         userCaseId: fields.caseId,
         courseName: fields.courseName,
         attachment: secure_url,
-        userImage: fields.userImage,
       },
     });
 

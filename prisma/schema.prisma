@@ -65,7 +65,6 @@ model Question {
   postedBy      User      @relation(fields: [userCaseId], references: [caseId])
   userCaseId    String
   publisherName String
-  userImage     String?
   createdAt     DateTime  @default(now())
   answers       Answer[]
   views         History[]
@@ -74,6 +73,7 @@ model Question {
 model Answer {
   id            Int            @id @default(autoincrement())
   answer        String
+  attachment    String?
   questionId    Int
   question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
   userCaseId    String

@@ -35,6 +35,7 @@ import { IoFilterSharp } from "react-icons/io5";
 import { useRef, useState, useEffect } from "react";
 import { BiBookAlt } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
+import Loader from "./Loader";
 
 export default function CardPage({
   questions,
@@ -52,6 +53,7 @@ export default function CardPage({
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [disabledReset, setDisabledReset] = useState(false);
   const [isQuestionAltered, setIsQuestionAltered] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const topRef = useRef();
   const [mounted, setMounted] = useState(false);
   const [isLarge] = useMediaQuery("(min-width: 480px)");
@@ -90,6 +92,10 @@ export default function CardPage({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (isPageLoading) {
+    return <Loader />;
+  }
 
   return (
     <>
@@ -141,9 +147,8 @@ export default function CardPage({
                 <QuestionCard
                   _question={question}
                   isUser={session?.user.caseId === question.userCaseId}
-                  questions={questions}
-                  setQuestions={setQuestions}
-                  setIsQuestionAltered={setIsQuestionAltered}
+                  isPageLoading={isPageLoading}
+                  setIsPageLoading={setIsPageLoading}
                 />
               </WrapItem>
             ))}
