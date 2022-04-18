@@ -42,7 +42,6 @@ import NotificationCard from "./NotificationCard";
 import { useState, useRef, useEffect } from "react";
 import { GrClear } from "react-icons/gr";
 import { BROWSE_LIMIT, POST_LIMIT } from "constants";
-
 import Loader from "./Loader";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
@@ -91,6 +90,7 @@ export default function Sidebar({ caseId, children }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [notificationDeleteId, setNotificationDeleteId] = useState();
   const [notificationAlertOpen, setNotificationAlertOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -122,6 +122,27 @@ export default function Sidebar({ caseId, children }) {
 
   useEffect(() => {
     mutate();
+    setNotificationAlertOpen(false);
+    if (notificationDeleteId) {
+      axios
+        .delete("/api/protected/notifications/delete-one", {
+          data: {
+            id: Number(notificationDeleteId),
+          },
+        })
+        .then(() => {
+          setNotifications(
+            notifications.filter((_notification) => _notification.id !== id)
+          );
+        })
+        .catch((e) => {
+          console.log(e);
+        })
+        .finally(() => {
+          setNotificationDeleteId(null);
+          setIsLoading(false);
+        });
+    }
   }, [router]);
 
   const getBadgeColor = (number, limit) => {
@@ -188,7 +209,7 @@ export default function Sidebar({ caseId, children }) {
           height="calc(100vh - 5rem)"
           overflow="scroll"
         >
-          {children}
+          {isLoading ? <Loader /> : children}
         </Flex>
       </Box>
 
@@ -201,6 +222,7 @@ export default function Sidebar({ caseId, children }) {
         userCaseId={caseId}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
+        setNotificationDeleteId={setNotificationDeleteId}
       />
     </>
   );
@@ -481,6 +503,7 @@ function NotificationAlert({
   userCaseId,
   isLoading,
   setIsLoading,
+  setNotificationDeleteId,
 }) {
   return (
     <AlertDialog
@@ -530,6 +553,7 @@ function NotificationAlert({
                     setIsLoading={setIsLoading}
                     notifications={notifications}
                     setNotifications={setNotifications}
+                    setNotificationDeleteId={setNotificationDeleteId}
                   />
                 ))}
               </Flex>

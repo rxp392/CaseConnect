@@ -79,7 +79,9 @@ export default async function handler(req, res) {
     });
 
     const toDeleteId = notifications.find(
-      (notification) => notification.questionId === questionId
+      (notification) =>
+        notification.questionId === Number(questionId) &&
+        notification.type === "answer"
     )?.id;
     if (toDeleteId) {
       await prisma.notification.delete({

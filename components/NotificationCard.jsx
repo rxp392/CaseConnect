@@ -13,6 +13,7 @@ import NextLink from "next/link";
 import { IoCheckmarkSharp } from "react-icons/io5";
 import { FiEye } from "react-icons/fi";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 export default function NotificationCard({
   notification,
@@ -21,6 +22,7 @@ export default function NotificationCard({
   setIsLoading,
   notifications,
   setNotifications,
+  setNotificationDeleteId,
 }) {
   const {
     id,
@@ -34,10 +36,13 @@ export default function NotificationCard({
   } = notification;
 
   const router = useRouter();
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const getBadgeColor = (_type) => {
     switch (_type) {
       case "answer":
+        return "blue";
+      case "update":
         return "blue";
       case "upvote":
         return "green";
@@ -56,7 +61,7 @@ export default function NotificationCard({
     >
       <Flex direction="column" w="full" fontSize="sm">
         <Flex w="full" textAlign="left" align="center" gap={1}>
-          <Badge fontSize="xs" colorScheme={getBadgeColor(type)} rounded="sm">
+          <Badge fontSize="xs" colorScheme={getBadgeColor(type)} rounded="md">
             {type === "update" ? "Answer Change" : type}
           </Badge>{" "}
           from{" "}
@@ -85,7 +90,8 @@ export default function NotificationCard({
                 variant="ghost"
                 size="sm"
                 onClick={async () => {
-                  setIsLoading(true);
+                  setIsDisabled(true);
+                  setNotificationDeleteId(id);
                   await axios.delete(
                     "/api/protected/notifications/delete-one",
                     {
@@ -98,12 +104,12 @@ export default function NotificationCard({
                     (_notification) => _notification.id !== id
                   );
                   setNotifications(newNotifications);
-                  setIsLoading(false);
+                  setIsDisabled(false);
                   if (!newNotifications.length) {
                     setNotificationAlertOpen(false);
                   }
                 }}
-                isDisabled={isLoading}
+                isDisabled={isDisabled}
               />
             </Tooltip>
             <Tooltip label="View">
@@ -113,26 +119,13 @@ export default function NotificationCard({
                 size="sm"
                 onClick={async () => {
                   setIsLoading(true);
-                  await axios.delete(
-                    "/api/protected/notifications/delete-one",
-                    {
-                      data: {
-                        id,
-                      },
-                    }
-                  );
-                  setNotifications(
-                    notifications.filter(
-                      (_notification) => _notification.id !== id
-                    )
-                  );
+                  setNotificationDeleteId(id);
                   router.push(
                     `/question?id=${questionId}&courseId=${courseId}`
                   );
-                  setIsLoading(false);
                   setNotificationAlertOpen(false);
                 }}
-                isDisabled={isLoading}
+                isDisabled={isLoading || isDisabled}
               />
             </Tooltip>
           </ButtonGroup>

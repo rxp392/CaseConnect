@@ -162,13 +162,15 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
                     value={selectedCourse}
                     type="text"
                     onChange={(e) => {
-                      const course = e.target.value.split("|");
-                      if (course.length == 2) {
-                        const [courseName, id] = course;
-                        setSelectedCourse(courseName);
-                        setCurrentId(Number(id));
+                      const value = e.target.value;
+                      const foundCourse = allCourses.find(
+                        (_course) => _course.courseName == value
+                      );
+                      if (foundCourse) {
+                        setSelectedCourse(foundCourse.courseName);
+                        setCurrentId(Number(foundCourse.id));
                       } else {
-                        setSelectedCourse(e.target.value);
+                        setSelectedCourse(value);
                         setCurrentId("");
                       }
                     }}
@@ -214,9 +216,7 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
                 </InputGroup>
                 <datalist id="courses">
                   {allCourses.map(({ id, courseName }) => (
-                    <option key={id} value={`${courseName}|${id}`}>
-                      {courseName}
-                    </option>
+                    <option key={id} value={courseName} />
                   ))}
                 </datalist>
               </FormControl>

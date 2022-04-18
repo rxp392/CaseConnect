@@ -243,16 +243,15 @@ export default function AnswerCard({
           <Text
             fontSize="xl"
             fontWeight="bold"
-            textAlign={"left"}
-            maxW={"75vw"}
-            mb={attachment ? [0, -2] : [0, -3.5]}
+            textAlign={["center", "left"]}
+            mb={[0, -1.5]}
           >
             {currentAnswer}
           </Text>
           {attachment && (
             <Button
-              mt={[0.5, 2]}
-              mb={[0.5, -2.5]}
+              mt={[0.5, 2.5]}
+              mb={[1, -1]}
               onClick={() => {
                 setAttachmentModalType("Answer");
                 setAttachmentModalImage(attachment);
@@ -296,14 +295,14 @@ export default function AnswerCard({
               <Flex gap={1.5} alignSelf={["center", "start"]} mt={[2.5, 0]}>
                 <Tooltip label="Upvote" isDisabled={isUpVoted || isUser}>
                   <Button
-                    color="black"
+                    colorScheme="blackAlpha"
                     leftIcon={<HiOutlineThumbUp />}
                     variant="outline"
                     onClick={handleThumbsUp}
                     size="sm"
                     isDisabled={isUpVoted || isUser}
                     _disabled={{
-                      color: "gray.500",
+                      color: "gray.400",
                       cursor: "not-allowed",
                     }}
                   >
@@ -312,14 +311,14 @@ export default function AnswerCard({
                 </Tooltip>
                 <Tooltip label="Downvote" isDisabled={isDownVoted || isUser}>
                   <Button
-                    color="black"
+                    colorScheme="blackAlpha"
                     leftIcon={<HiOutlineThumbDown />}
                     variant="outline"
                     onClick={handleThumbsDown}
                     size="sm"
                     isDisabled={isDownVoted || isUser}
                     _disabled={{
-                      color: "gray.500",
+                      color: "gray.400",
                       cursor: "not-allowed",
                     }}
                   >
@@ -336,19 +335,19 @@ export default function AnswerCard({
               align={["center", "end"]}
               direction={["column", "row-reverse"]}
               gap={1.5}
-              mt={[-2, -1]}
+              mt={[-2, 0.5]}
             >
               <Flex gap={1.5} alignSelf={["center", "start"]} mt={[2.5, 0]}>
                 <Tooltip label="Upvote" isDisabled={isUpVoted || isUser}>
                   <Button
-                    color="black"
+                    colorScheme="blackAlpha"
                     leftIcon={<HiOutlineThumbUp />}
                     variant="outline"
                     onClick={handleThumbsUp}
                     size="sm"
                     isDisabled={isUpVoted || isUser}
                     _disabled={{
-                      color: "gray.500",
+                      color: "gray.400",
                       cursor: "not-allowed",
                     }}
                   >
@@ -357,14 +356,14 @@ export default function AnswerCard({
                 </Tooltip>
                 <Tooltip label="Downvote" isDisabled={isDownVoted || isUser}>
                   <Button
-                    color="black"
+                    colorScheme="blackAlpha"
                     leftIcon={<HiOutlineThumbDown />}
                     variant="outline"
                     onClick={handleThumbsDown}
                     size="sm"
                     isDisabled={isDownVoted || isUser}
                     _disabled={{
-                      color: "gray.500",
+                      color: "gray.400",
                       cursor: "not-allowed",
                     }}
                   >
