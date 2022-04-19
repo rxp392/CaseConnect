@@ -433,7 +433,7 @@ function AnswerModal({
                     formData.append("caseId", caseId);
                     formData.append("userCaseId", userCaseId);
                     formData.append("questionId", Number(id));
-                    formData.append("publisherName", publisherName);
+                    formData.append("publisherName", name);
                     formData.append("question", question);
                     formData.append("courseId", courseId);
                     formData.append(

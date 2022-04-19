@@ -206,6 +206,16 @@ export default function MyCourses({ userCourses, isFirstLogin }) {
                               { courseName: selectedCourse, id: currentId },
                               ...selectedCourses,
                             ]);
+                          } else {
+                            toast({
+                              title: "Course already added",
+                              description: "You have already added this course",
+                              status: "info",
+                              position: "bottom-left",
+                              variant: "left-accent",
+                              duration: 5000,
+                              isClosable: true,
+                            });
                           }
                           setSelectedCourse("");
                           selectRef.current.focus();
@@ -398,6 +408,15 @@ function AddDialog({
   const [isLoading, setIsLoading] = useState(false);
   const filter = new Filter();
 
+  useEffect(() => {
+    setCourseId("");
+    setCourseIdError("");
+    setCourseIdValid(false);
+    setCourseTitle("");
+    setCourseTitleError("");
+    setCourseTitleValid(false);
+  }, [addDialogOpen]);
+
   return (
     <AlertDialog
       isOpen={addDialogOpen}
@@ -498,9 +517,51 @@ function AddDialog({
                 loadingText="Adding..."
                 spinnerPlacement="end"
                 onClick={async () => {
+                  const _courseId = courseId
+                    .toUpperCase()
+                    .split(" ")
+                    .join("")
+                    .split(/(\d+)/)
+                    .join(" ")
+                    .trim();
+                  const _courseTitle = courseTitle
+                    .toLowerCase()
+                    .split(" ")
+                    .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+                    .join(" ")
+                    .trim();
+                  const foundCourse = allCourses.find(
+                    (_course) =>
+                      _course.courseName === `${_courseId}. ${_courseTitle}`
+                  );
+                  const courseSelected = selectedCourses.some(
+                    (c) => c.courseName === `${_courseId}. ${_courseTitle}`
+                  );
+                  if (foundCourse && !courseSelected) {
+                    setSelectedCourses([
+                      {
+                        id: Number(foundCourse.id),
+                        courseName: `${_courseId}. ${_courseTitle}`,
+                      },
+                      ...selectedCourses,
+                    ]);
+                    setSelectedCourse("");
+                    setCourseId("");
+                    setCourseTitle("");
+                    setIsLoading(false);
+                    setAddDialogOpen(false);
+                    return;
+                  } else if (courseSelected) {
+                    setSelectedCourse("");
+                    setCourseId("");
+                    setCourseTitle("");
+                    setIsLoading(false);
+                    setAddDialogOpen(false);
+                    return;
+                  }
                   if (
-                    filter.isProfane(courseId) ||
-                    filter.isProfane(courseTitle)
+                    filter.isProfane(_courseId) ||
+                    filter.isProfane(_courseTitle)
                   ) {
                     return toast({
                       title: "Profanity detected",
@@ -514,19 +575,6 @@ function AddDialog({
                   }
                   setIsLoading(true);
                   try {
-                    const _courseId = courseId
-                      .toUpperCase()
-                      .split(" ")
-                      .join("")
-                      .split(/(\d+)/)
-                      .join(" ")
-                      .trim();
-                    const _courseTitle = courseTitle
-                      .toLowerCase()
-                      .split(" ")
-                      .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-                      .join(" ")
-                      .trim();
                     const {
                       data: { addedCourseId, error },
                     } = await axios.post("/api/protected/courses/create", {

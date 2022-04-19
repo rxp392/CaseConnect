@@ -135,9 +135,7 @@ export default function Sidebar({ caseId, children }) {
             notifications.filter((_notification) => _notification.id !== id)
           );
         })
-        .catch((e) => {
-          console.log(e);
-        })
+        .catch(() => {})
         .finally(() => {
           setNotificationDeleteId(null);
           setIsLoading(false);
