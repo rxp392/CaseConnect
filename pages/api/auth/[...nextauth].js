@@ -11,9 +11,9 @@ export default NextAuth({
   callbacks: {
     async signIn({ account, profile, user }) {
       if (account.provider === "google") {
-        // if (!profile.email_verified || !profile.email.endsWith("@case.edu")) {
-        //   return false;
-        // }
+        if (!profile.email_verified || !profile.email.endsWith("@case.edu")) {
+          return false;
+        }
 
         const caseId = profile.email.split("@")[0];
 
