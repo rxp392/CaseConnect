@@ -21,6 +21,7 @@ import axios from "axios";
 import getStripe from "utils/getStripe";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
 import { MdPayment } from "react-icons/md";
+import prisma from "lib/prisma";
 
 const canvasStyles = {
   position: "fixed",

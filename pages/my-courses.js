@@ -42,6 +42,7 @@ import useSwr from "swr";
 import { FiPlus } from "react-icons/fi";
 import { BROWSE_LIMIT, POST_LIMIT, PREMIUM_PRICE } from "constants";
 import Filter from "bad-words";
+import prisma from "lib/prisma";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
