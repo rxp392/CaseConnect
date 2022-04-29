@@ -7,7 +7,7 @@ import CardPage from "components/CardPage";
 
 export default function MyQuestions({ _questions, courses }) {
   const [questions, setQuestions] = useState(_questions);
-
+——
   if (!questions.length) {
     return (
       <SlideFade in={true} offsetY="20px">
