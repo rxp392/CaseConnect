@@ -7,9 +7,9 @@
     "start": "next start",
     "cypress": "cypress open",
     "cypress:headless": "cypress run",
-    "e2e": "start-server-and-test dev http://localhost:3000 cypress",
-    "e2e:headless": "start-server-and-test dev http://localhost:3000 cypress:headless"
-  },
+    "test": "start-server-and-test dev http://localhost:3000 cypress",
+    "test:headless": "start-server-and-test dev http://localhost:3000 cypress:headless"
+  },                
   "dependencies": {
     "@chakra-ui/react": "^1.8.3",
     "@emotion/react": "^11.7.1",

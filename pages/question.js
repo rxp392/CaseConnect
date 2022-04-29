@@ -482,21 +482,23 @@ function AnswerModal({
                     });
                     setIsLoading(false);
                     setAnswerModalOpen(false);
-                    try {
-                      await send(
-                        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-                        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-                        {
-                          to_email: `${userCaseId}@case.edu`,
-                          to_name: publisherName.split(" ")[0],
-                          question,
-                          website: window.location.href,
-                          from_name: name,
-                          from_caseId: caseId,
-                        },
-                        process.env.NEXT_PUBLIC_EMAILJS_USER_ID
-                      );
-                    } catch {}
+                    if (process.env.NODE_ENV === "production") {
+                      try {
+                        await send(
+                          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+                          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+                          {
+                            to_email: `${userCaseId}@case.edu`,
+                            to_name: publisherName.split(" ")[0],
+                            question,
+                            website: window.location.href,
+                            from_name: name,
+                            from_caseId: caseId,
+                          },
+                          process.env.NEXT_PUBLIC_EMAILJS_USER_ID
+                        );
+                      } catch {}
+                    }
                   } catch {
                     toast({
                       title: "An Error Ocurred",
