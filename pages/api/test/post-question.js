@@ -5,18 +5,16 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Method not allowed" });
   }
   try {
-    const { caseId, name, subscription, isFirstLogin } = req.body;
-    await prisma.user.upsert({
-      where: {
-        caseId,
-      },
-      update: {
-        isFirstLogin: Boolean(isFirstLogin),
-      },
-      create: {
-        caseId,
-        name,
-        subscription,
+    const { question, courseId, publisherName, userCaseId, courseName } =
+      req.body;
+    await prisma.question.create({
+      data: {
+        question,
+        courseId,
+        publisherName,
+        userCaseId,
+        courseName,
+        attachment: null,
       },
     });
     return res.status(200).json();

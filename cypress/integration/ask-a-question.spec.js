@@ -1,12 +1,14 @@
 /// <reference types="Cypress" />
-describe("Ask a question page", () => {
-  it("should display the page", () => {
+describe("Ask a Question Page", () => {
+  it("should ask a question correctly", () => {
+    cy.login({ isFirstLogin: false });
     cy.visit("/ask-a-question");
-    cy.get("h1").should("contain", "Ask a question");
-  });
-  
-  it("should display the form", () => {
-    cy.visit("/ask-a-question");
-    cy.get("form").should("be.visible");
+    cy.get("textarea#question").type("What is java?");
+    cy.get("select#courseName").select(
+      "CSDS 132.  Introduction to Programming in Java"
+    );
+    cy.get("button[type='submit']").click();
+    cy.url().should("include", "/questions");
+    cy.logout();
   });
 });
