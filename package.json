@@ -15,7 +15,7 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@fontsource/ibm-plex-sans": "^4.5.5",
-    "@prisma/client": "^3.10.0",
+    "@prisma/client": "^3.13.0",
     "@splitbee/web": "^0.3.0",
     "@stripe/stripe-js": "^1.26.0",
     "axios": "^0.26.0",
