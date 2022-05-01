@@ -2,7 +2,9 @@
 describe("My Questions Page", () => {
   it("should show my question", () => {
     cy.login({ isFirstLogin: false });
-    cy.visit("/my-questions");
+    cy.visit("/my-questions", {
+      failOnStatusCode: false,
+    });
     cy.request({
       method: "POST",
       url: "/api/test/post-question",
