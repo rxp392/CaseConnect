@@ -9,10 +9,10 @@ describe("My Profile Page", () => {
       "have.text",
       "You have  asked 0 questions, answered 0 questions,  and belong to 1 course."
     );
-    cy.get("span.css-9ss27x").first().should("contain", "Basic Plan");
+    cy.get("span.css-9ss27x").eq(0).should("have.text", "Basic Plan");
     cy.get("span.css-9ss27x")
-      .first()
-      .should("contain", `Created ${new Date().toLocaleDateString()}`);
+      .eq(1)
+      .should("have.text", `Created ${new Date().toLocaleDateString()}`);
     cy.logout();
   });
 });
