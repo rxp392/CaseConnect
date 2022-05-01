@@ -1,7 +1,9 @@
 
 # Case Connect
 
-The folders in this repository are as follows:
+The live website can found at: https://case-connect.vercel.app/
+
+The folders in this repository are:
 - *components* - Application Components
 - *constants* - Application constants
 - *cypress* - Testing Files
