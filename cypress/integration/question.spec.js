@@ -22,10 +22,7 @@ describe("Question Page", () => {
     cy.get("p.css-1wixzzf")
       .first()
       .should("have.text", "CSDS 132.  Introduction to Programming in Java");
-    cy.get("p.css-1wixzzf").should(
-      "contain",
-      `${new Date().toLocaleDateString()} by Test`
-    );
+    cy.get("p.css-1wixzzf").should("contain", "by Test");
     cy.get("h2.css-jh76pu").should("contain", "No Answers Have Been Posted 😥");
     cy.get("button.css-ra0mjv").first().click();
     cy.get("textarea.css-1vzhn8z").type("?");
