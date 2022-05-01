@@ -12,7 +12,7 @@ async function getDerivedEncryptionKey(secret) {
 }
 
 export async function encode(token, secret) {
-  const maxAge = 30 * 24 * 60 * 60; 
+  const maxAge = 30 * 24 * 60 * 60;
   const encryptionSecret = await getDerivedEncryptionKey(secret);
   return await new EncryptJWT(token)
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
@@ -22,7 +22,7 @@ export async function encode(token, secret) {
     .encrypt(encryptionSecret);
 }
 
-Cypress.Commands.add("login", ({ isFirstLogin = false }) => {
+Cypress.Commands.add("login", ({ isFirstLogin }) => {
   cy.fixture("session")
     .then(({ user }) =>
       cy.request({
@@ -38,11 +38,27 @@ Cypress.Commands.add("login", ({ isFirstLogin = false }) => {
     .then((encryptedToken) =>
       cy.setCookie("next-auth.session-token", encryptedToken)
     )
-    .then(() => cy.visit("/my-courses", { failOnStatusCode: false }));
+    .then(() => cy.visit("/my-courses", { failOnStatusCode: false }))
+    .then(() => {
+      if (!isFirstLogin) {
+        cy.request({
+          method: "POST",
+          url: "/api/protected/courses/post",
+          body: { caseId: "test", courseIds: [{ id: 1295 }] },
+        });
+      }
+    });
 });
 
 Cypress.Commands.add("logout", () => {
   cy.clearCookies();
   cy.clearLocalStorage();
   cy.visit("/");
+  cy.fixture("session").then((sessionJSON) =>
+    cy.request({
+      method: "DELETE",
+      url: "/api/test/delete-user",
+      body: { caseId: sessionJSON.user.caseId },
+    })
+  );
 });
