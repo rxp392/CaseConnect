@@ -14,6 +14,6 @@ describe("My Profile Page", () => {
       "contain",
       `Created ${new Date().toLocaleDateString()}`
     );
-    // cy.logout();
+    cy.logout();
   });
 });
