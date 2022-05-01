@@ -24,6 +24,14 @@ export async function encode(token, secret) {
 
 Cypress.Commands.add("login", ({ isFirstLogin }) => {
   cy.fixture("session")
+    .then((sessionJSON) =>
+      cy.request({
+        method: "DELETE",
+        url: "/api/test/delete-user",
+        body: { caseId: sessionJSON.user.caseId },
+      })
+    )
+    .then(() => cy.fixture("session"))
     .then(({ user }) =>
       cy.request({
         method: "POST",
