@@ -1,6 +1,15 @@
 
 # Case Connect
 
+The folders in this repository are as follows:
+- *components* - Application Components
+- *constants* - Application constants
+- *cypress* - Testing Files
+- *lib* - Initialization files (i.e. prisma)
+- *pages* - Application Pages/Routes
+- *pages/api* - API Routes
+- *prisma* - Database Schema
+- *utils* - Application helper functions
 
 
 
